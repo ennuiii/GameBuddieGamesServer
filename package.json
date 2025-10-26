@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "tsx watch core/server.ts",
     "build": "tsc",
-    "start": "node dist/server.js",
+    "start": "node dist/core/server.js",
     "lint": "eslint core games --ext .ts",
     "type-check": "tsc --noEmit",
     "test": "playwright test",
