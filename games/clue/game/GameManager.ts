@@ -214,6 +214,7 @@ export function revealRoundResults(
     if (player && player.gameData) {
       const playerData = player.gameData as CluePlayerData;
       playerData.score += guess.points;
+      console.log(`[ClueScale] Guesser ${player.name} score updated: ${playerData.score - guess.points} -> ${playerData.score} (+${guess.points})`);
     }
   });
 
@@ -221,6 +222,7 @@ export function revealRoundResults(
   if (clueGiver && clueGiver.gameData) {
     const clueGiverData = clueGiver.gameData as CluePlayerData;
     clueGiverData.score += clueGiverPoints;
+  console.log(`[ClueScale] Clue giver ${clueGiver.name} score updated: ${clueGiverData.score - clueGiverPoints} -> ${clueGiverData.score} (+${clueGiverPoints})`);
   }
 
   // Sort players by score for leaderboard

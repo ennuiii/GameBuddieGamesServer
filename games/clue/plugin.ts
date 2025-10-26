@@ -163,6 +163,7 @@ class CluePlugin implements GamePlugin {
       });
 
       console.log(`[ClueScale] Sent lobby update to ${room.players.size} players in room ${room.code}`);
+      console.log(`[ClueScale] Lobby update scores:`, Array.from(room.players.values()).map(p => ({ name: p.name, score: (p.gameData as any)?.score })));
     }
   }
 
