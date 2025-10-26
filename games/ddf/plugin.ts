@@ -183,17 +183,26 @@ class DDFGamePlugin implements GamePlugin {
 
     'ddf:start-game': async (socket: Socket, data: any, room: Room, helpers: GameHelpers) => {
       try {
+        console.log(`[DDF] 🎮 START GAME called for room ${room.code}, players: ${room.players.size}`);
         const gameState = room.gameState.data as DDFGameState;
         const { soloMode } = data;
+
+        console.log(`[DDF] 🎮 Solo mode: ${soloMode}, Selected categories: ${JSON.stringify(gameState.selectedCategories)}`);
 
         // Start game
         gameState.phase = 'playing';
         gameState.roundNumber = 1;
 
+        console.log(`[DDF] ✅ Phase set to 'playing', round: 1`);
+
         // Get available questions
         const questions = this.questionManager.getQuestionsByCategories(gameState.selectedCategories);
+        console.log(`[DDF] 📚 Questions retrieved: ${questions.length}`);
+
         if (questions.length === 0) {
+          console.error(`[DDF] ❌ NO QUESTIONS for categories: ${JSON.stringify(gameState.selectedCategories)}`);
           socket.emit('error', { message: 'No questions available' });
+          helpers.sendToRoom(room.code, 'error', { message: 'No questions available for selected categories' });
           return;
         }
 
@@ -202,18 +211,26 @@ class DDFGamePlugin implements GamePlugin {
         gameState.currentQuestion = question;
         gameState.usedQuestions.push(question.id);
 
+        console.log(`[DDF] 📝 Assigned question: "${question.question.substring(0, 60)}..."`);
+
         // Assign to first player
-        const activePlayers = Array.from(room.players.values()).filter((p) => !p.gameData?.isEliminated);
+        const activePlayers = Array.from(room.players.values()).filter((p) => !(p.gameData as DDFPlayerData)?.isEliminated);
+        console.log(`[DDF] 👥 Active players: ${activePlayers.length}`);
+
         if (activePlayers.length > 0) {
           gameState.targetPlayerId = activePlayers[0].id;
           gameState.currentPlayerIndex = 0;
+          console.log(`[DDF] 🎯 Target player: ${activePlayers[0].name} (ID: ${activePlayers[0].id})`);
         }
 
         const serialized = serializeRoomToDDF(room, socket.id);
+        console.log(`[DDF] 📦 Serialized room. Game state phase: ${serialized.gameState}`);
+
         helpers.sendToRoom(room.code, 'ddf:game-state-update', { room: serialized });
-        console.log(`[DDF] Game started in room ${room.code}`);
-      } catch (error) {
-        console.error('[DDF] Error in ddf:start-game:', error);
+        console.log(`[DDF] ✅ Game started in room ${room.code}, emitted game-state-update`);
+      } catch (error: any) {
+        console.error('[DDF] ❌ ERROR in ddf:start-game:', error);
+        console.error('[DDF] ❌ Stack:', error.stack);
         socket.emit('error', { message: 'Failed to start game' });
       }
     },
