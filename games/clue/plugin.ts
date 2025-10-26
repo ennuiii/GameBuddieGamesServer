@@ -148,6 +148,24 @@ class CluePlugin implements GamePlugin {
   /**
    * Called when a player joins
    */
+  /**
+   * Helper: Send lobby update to all players in room
+   * Used when player scores or other lobby data changes
+   */
+  private sendLobbyUpdate(room: Room): void {
+    if (this.io) {
+      const namespace = this.io.of('/clue');
+
+      // Send to each player with their personalized socketId
+      room.players.forEach((p) => {
+        const serializedLobby = serializeRoomToLobby(room, p.socketId);
+        namespace.to(p.socketId).emit('clue:lobby-update', { room: serializedLobby });
+      });
+
+      console.log(`[ClueScale] Sent lobby update to ${room.players.size} players in room ${room.code}`);
+    }
+  }
+
   onPlayerJoin(room: Room, player: Player, isReconnecting?: boolean): void {
     // Initialize player's game data
     if (!player.gameData) {
@@ -384,6 +402,9 @@ class CluePlugin implements GamePlugin {
           if (room.gameState.phase === 'round_guess') {
             console.log(`[ClueScale] Room ${room.code} - Guess timeout`);
             revealRoundResults(room, helpers);
+            
+            // Broadcast updated player scores via lobby update
+            this.sendLobbyUpdate(room);
           }
         }, settings.roundDuration * 1000);
       } catch (error: any) {
@@ -468,6 +489,9 @@ class CluePlugin implements GamePlugin {
             gameState.roundTimer = undefined;
           }
           revealRoundResults(room, helpers);
+          
+          // Broadcast updated player scores via lobby update
+          this.sendLobbyUpdate(room);
         }
       } catch (error: any) {
         console.error('[ClueScale] round:submit-guess error:', error);
