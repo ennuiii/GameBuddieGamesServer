@@ -6,21 +6,12 @@
  */
 
 import { Socket } from 'socket.io';
-import { createRequire } from 'module';
-import { dirname } from 'path';
-import { fileURLToPath } from 'url';
 import { GamePlugin, Room, Player, GameHelpers } from '../../core/types/core.js';
 import { DDFGameState, DDFPlayerData } from './types/index.js';
 import { serializeRoomToDDF, serializeVotingResults } from './utils/serialization.js';
 import { supabaseService } from './services/supabaseService.js';
-
-// Create require for importing CommonJS modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-const require = createRequire(import.meta.url);
-
-const GameManager = require('./game/GameManager');
-const QuestionManager = require('./game/QuestionManager');
+import GameManager from './game/GameManager.js';
+import QuestionManager from './game/QuestionManager.js';
 
 class DDFGamePlugin implements GamePlugin {
   // =========================================================================
