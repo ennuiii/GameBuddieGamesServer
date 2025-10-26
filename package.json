@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch core/server.ts",
-    "build": "tsc && node -e \"require('fs').cpSync('games', 'dist/games', {recursive: true, filter: (src) => src.endsWith('.json')})\"",
+    "build": "tsc && node -e \"const fs = require('fs'); const path = require('path'); function copyJson(src, dest) { if (!fs.existsSync(dest)) fs.mkdirSync(dest, {recursive: true}); fs.readdirSync(src, {withFileTypes: true}).forEach(entry => { const srcPath = path.join(src, entry.name); const destPath = path.join(dest, entry.name); if (entry.isDirectory()) copyJson(srcPath, destPath); else if (entry.name.endsWith('.json')) fs.copyFileSync(srcPath, destPath); }); } copyJson('games', 'dist/games');\"",
     "start": "node dist/core/server.js",
     "lint": "eslint core games --ext .ts",
     "type-check": "tsc --noEmit",
