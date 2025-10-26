@@ -840,17 +840,13 @@ class SUSDPlugin implements GamePlugin {
       susdRoom.players.push(susdPlayer);
       console.log(`[SUSD] Player ${player.name} added to SUSD room ${room.code}`);
 
-      // Broadcast updated SUSD room to ALL players (including the joining player)
-      namespace.to(room.code).emit('room:updated', { room: susdRoom });
-      console.log(`[SUSD] Broadcast updated SUSD room to all players in ${room.code}`);
+      // Note: Core server will emit 'player:joined' with serializeRoom() result
+      // No need to emit 'room:updated' here to avoid duplicate emissions
     } else {
       // Player is reconnecting - send SUSD room only to them (not broadcast)
       namespace.to(player.socketId).emit('room:updated', { room: susdRoom });
       console.log(`[SUSD] Sent SUSD room to reconnecting player ${player.name} in ${room.code}`);
     }
-
-    // Note: Core server already emits 'player:joined' to all players,
-    // but we ignore it in the client since room:updated has the complete player list
   }
 
   /**
@@ -862,6 +858,27 @@ class SUSDPlugin implements GamePlugin {
 
     this.gameManager.leaveRoom(player.socketId);
     console.log(`[SUSD] Player ${player.name} left SUSD room ${room.code}`);
+  }
+
+  /**
+   * Serialize room for sending to clients
+   * This is called by core server when emitting room updates
+   */
+  serializeRoom(room: CoreRoom, socketId: string): any {
+    const susdRoomId = this.roomMapping.get(room.code);
+    if (!susdRoomId) {
+      // Room not initialized yet, return core room
+      return room;
+    }
+
+    const susdRoom = this.gameManager.getRoomByCode(room.code);
+    if (!susdRoom) {
+      // SUSD room doesn't exist, return core room
+      return room;
+    }
+
+    // Return the SUSD-specific room with all game data
+    return susdRoom;
   }
 
   /**
