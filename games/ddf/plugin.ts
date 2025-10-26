@@ -196,14 +196,21 @@ class DDFGamePlugin implements GamePlugin {
         console.log(`[DDF] ✅ Phase set to 'playing', round: 1`);
 
         // Get available questions
-        const questions = this.questionManager.getQuestionsByCategories(gameState.selectedCategories);
-        console.log(`[DDF] 📚 Questions retrieved: ${questions.length}`);
+        let questions = this.questionManager.getQuestionsByCategories(gameState.selectedCategories);
+        console.log(`[DDF] 📚 Questions retrieved: ${questions.length} for categories: ${JSON.stringify(gameState.selectedCategories)}`);
 
+        // If no questions found for selected categories, fallback to all questions
         if (questions.length === 0) {
-          console.error(`[DDF] ❌ NO QUESTIONS for categories: ${JSON.stringify(gameState.selectedCategories)}`);
-          socket.emit('error', { message: 'No questions available' });
-          helpers.sendToRoom(room.code, 'error', { message: 'No questions available for selected categories' });
-          return;
+          console.warn(`[DDF] ⚠️  No questions for selected categories, falling back to ALL questions`);
+          questions = this.questionManager.getQuestionsByCategories([]);
+          console.log(`[DDF] 📚 Fallback questions: ${questions.length}`);
+
+          if (questions.length === 0) {
+            console.error(`[DDF] ❌ NO QUESTIONS AT ALL!`);
+            socket.emit('error', { message: 'No questions available' });
+            helpers.sendToRoom(room.code, 'error', { message: 'No questions available in database' });
+            return;
+          }
         }
 
         // Assign first question
