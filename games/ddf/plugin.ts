@@ -10,8 +10,11 @@ import { GamePlugin, Room, Player, GameHelpers } from '../../core/types/core.js'
 import { DDFGameState, DDFPlayerData } from './types/index.js';
 import { serializeRoomToDDF, serializeVotingResults } from './utils/serialization.js';
 import { supabaseService } from './services/supabaseService.js';
-import GameManager from './game/GameManager.js';
-import QuestionManager from './game/QuestionManager.js';
+import * as GameManagerModule from './game/GameManager.js';
+import * as QuestionManagerModule from './game/QuestionManager.js';
+
+const GameManager = (GameManagerModule as any).default || GameManagerModule;
+const QuestionManager = (QuestionManagerModule as any).default || QuestionManagerModule;
 
 class DDFGamePlugin implements GamePlugin {
   // =========================================================================
