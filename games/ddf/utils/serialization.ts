@@ -59,6 +59,7 @@ export function serializeRoomToDDF(room: Room, socketId: string): any {
       time: 0,
       duration: 120,
     },
+    roundStarted: false,
     shotClock: {
       enabled: false,
       duration: 30,

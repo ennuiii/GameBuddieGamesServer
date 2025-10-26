@@ -535,14 +535,16 @@ class DDFGamePlugin implements GamePlugin {
             gameState.votingStatus = {}; // Reset voting status
 
             // Initialize voting status for all active players
-            const activePlayers = Array.from(room.players.values()).filter(p => !p.isEliminated);
+            const activePlayers = Array.from(room.players.values()).filter(p => !(p.gameData as DDFPlayerData)?.isEliminated);
             activePlayers.forEach(player => {
-              gameState.votingStatus[player.id] = {
-                hasVoted: false,
-                votedFor: null,
-                voterName: player.name,
-                votedForName: null,
-              };
+              if (gameState.votingStatus) {
+                gameState.votingStatus[player.id] = {
+                  hasVoted: false,
+                  votedFor: null,
+                  voterName: player.name,
+                  votedForName: null,
+                };
+              }
             });
 
             console.log(`[DDF] Voting initialized for ${activePlayers.length} players`);
@@ -597,7 +599,7 @@ class DDFGamePlugin implements GamePlugin {
         }
 
         // Prevent voting for eliminated players
-        if (votedPlayer.isEliminated) {
+        if ((votedPlayer.gameData as DDFPlayerData)?.isEliminated) {
           console.warn(`[DDF] Player ${voter.name} tried to vote for eliminated player ${votedPlayer.name}`);
           socket.emit('error', { message: 'Cannot vote for eliminated players' });
           return;
@@ -607,12 +609,14 @@ class DDFGamePlugin implements GamePlugin {
         gameState.votes[voter.id] = votedPlayerId;
 
         // Update voting status
-        gameState.votingStatus[voter.id] = {
-          hasVoted: true,
-          votedFor: votedPlayerId,
-          voterName: voter.name,
-          votedForName: votedPlayer.name,
-        };
+        if (gameState.votingStatus) {
+          gameState.votingStatus[voter.id] = {
+            hasVoted: true,
+            votedFor: votedPlayerId,
+            voterName: voter.name,
+            votedForName: votedPlayer.name,
+          };
+        }
 
         console.log(`[DDF] Vote recorded: ${voter.name} voted for ${votedPlayer.name} in room ${room.code}`);
 
@@ -639,12 +643,14 @@ class DDFGamePlugin implements GamePlugin {
         // Mark vote as skipped using player.id as key
         gameState.votes[voter.id] = '__SKIP__';
 
-        gameState.votingStatus[voter.id] = {
-          hasVoted: true,
-          votedFor: null,
-          voterName: voter.name,
-          votedForName: null,
-        };
+        if (gameState.votingStatus) {
+          gameState.votingStatus[voter.id] = {
+            hasVoted: true,
+            votedFor: null,
+            voterName: voter.name,
+            votedForName: null,
+          };
+        }
 
         console.log(`[DDF] Vote skipped for ${voter.name} in room ${room.code}`);
 
@@ -825,13 +831,15 @@ class DDFGamePlugin implements GamePlugin {
           // Check if player hasn't voted yet (using player.id as key)
           if (!gameState.votes[p.id]) {
             gameState.votes[p.id] = '__SKIP__';
-            gameState.votingStatus[p.id] = {
-              hasVoted: true,
-              votedFor: null,
-              voterName: p.name,
-              votedForName: null,
-              isGMSkipped: true,
-            };
+            if (gameState.votingStatus) {
+              gameState.votingStatus[p.id] = {
+                hasVoted: true,
+                votedFor: null,
+                voterName: p.name,
+                votedForName: null,
+                isGMSkipped: true,
+              };
+            }
           }
         });
 
@@ -977,7 +985,7 @@ class DDFGamePlugin implements GamePlugin {
         let questionData = gameState.finaleEvaluations.find((q: any) => q.questionId === questionId);
         if (!questionData) {
           // ✅ FIX: Find the correct question from finaleQuestions by questionId
-          const correctQuestion = gameState.finaleQuestions.find((q: any) => q.id === questionId);
+          const correctQuestion = gameState.finaleQuestions?.find((q: any) => q.id === questionId);
           questionData = {
             questionId,
             question: correctQuestion, // Store the actual question being answered
@@ -1000,7 +1008,7 @@ class DDFGamePlugin implements GamePlugin {
         });
 
         // Calculate actual question number from finaleQuestions array
-        const questionNumber = gameState.finaleQuestions.findIndex((q: any) => q.id === questionId) + 1;
+        const questionNumber = (gameState.finaleQuestions?.findIndex((q: any) => q.id === questionId) ?? -1) + 1;
         console.log(`[DDF] Player ${player.name} answered question ${questionNumber}/10`);
 
         // Send update to all clients (both players need to know answers are coming in)
@@ -1233,8 +1241,8 @@ class DDFGamePlugin implements GamePlugin {
           gameState.finaleQuestions = shuffled.slice(0, Math.min(shuffled.length, 10));
           gameState.finaleQuestionIndex = 0;
 
-          console.log(`[DDF]   ✅ Initialized ${gameState.finaleQuestions.length} finale questions`);
-          gameState.finaleQuestions.forEach((q: any, i: number) => {
+          console.log(`[DDF]   ✅ Initialized ${gameState.finaleQuestions?.length || 0} finale questions`);
+          gameState.finaleQuestions?.forEach((q: any, i: number) => {
             console.log(`[DDF]     Q${i + 1}: ${q.question.substring(0, 60)}...`);
           });
         }
@@ -1246,15 +1254,15 @@ class DDFGamePlugin implements GamePlugin {
         const nextQuestionIndex = gameState.finaleEvaluations.length;
         console.log(`[DDF]   nextQuestionIndex: ${nextQuestionIndex}`);
 
-        if (nextQuestionIndex >= gameState.finaleQuestions.length) {
-          console.log(`[DDF]   ✅ All finale questions completed (${nextQuestionIndex}/${gameState.finaleQuestions.length})`);
+        if (nextQuestionIndex >= (gameState.finaleQuestions?.length || 0)) {
+          console.log(`[DDF]   ✅ All finale questions completed (${nextQuestionIndex}/${gameState.finaleQuestions?.length || 0})`);
           gameState.finaleState = 'all-questions-complete';
         } else {
           // Set current question
-          gameState.finaleCurrentQuestion = gameState.finaleQuestions[nextQuestionIndex];
+          gameState.finaleCurrentQuestion = gameState.finaleQuestions?.[nextQuestionIndex] || null;
           gameState.finaleState = 'answering';
-          console.log(`[DDF]   ✅ Starting finale question ${nextQuestionIndex + 1}/${gameState.finaleQuestions.length}`);
-          console.log(`[DDF]     Question: ${gameState.finaleCurrentQuestion.question.substring(0, 60)}...`);
+          console.log(`[DDF]   ✅ Starting finale question ${nextQuestionIndex + 1}/${gameState.finaleQuestions?.length || 0}`);
+          console.log(`[DDF]     Question: ${gameState.finaleCurrentQuestion?.question?.substring(0, 60) || 'null'}...`);
         }
 
         const serialized = serializeRoomToDDF(room, socket.id);
