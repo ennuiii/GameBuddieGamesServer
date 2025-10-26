@@ -195,22 +195,39 @@ class DDFGamePlugin implements GamePlugin {
 
         console.log(`[DDF] ✅ Phase set to 'playing', round: 1`);
 
-        // Get available questions
-        let questions = this.questionManager.getQuestionsByCategories(gameState.selectedCategories);
-        console.log(`[DDF] 📚 Questions retrieved: ${questions.length} for categories: ${JSON.stringify(gameState.selectedCategories)}`);
+        // Get available questions - try Supabase first, fallback to local
+        let allQuestions: any[] = [];
+        if (supabaseService.isSupabaseAvailable()) {
+          console.log('[DDF] Fetching questions from Supabase for game start...');
+          allQuestions = await supabaseService.getQuestions();
+          console.log(`[DDF] 📚 Loaded ${allQuestions.length} questions from Supabase`);
+        } else {
+          console.log('[DDF] Fetching questions from local JSON...');
+          allQuestions = this.questionManager.getAllQuestions();
+          console.log(`[DDF] 📚 Loaded ${allQuestions.length} questions from local file`);
+        }
 
-        // If no questions found for selected categories, fallback to all questions
+        // Filter by selected categories
+        let questions = allQuestions;
+        if (gameState.selectedCategories && gameState.selectedCategories.length > 0) {
+          questions = allQuestions.filter((q: any) =>
+            gameState.selectedCategories.includes(q.category)
+          );
+          console.log(`[DDF] 📚 Filtered to ${questions.length} questions for categories: ${JSON.stringify(gameState.selectedCategories)}`);
+        }
+
+        // If no questions found for selected categories, use all questions
         if (questions.length === 0) {
-          console.warn(`[DDF] ⚠️  No questions for selected categories, falling back to ALL questions`);
-          questions = this.questionManager.getQuestionsByCategories([]);
-          console.log(`[DDF] 📚 Fallback questions: ${questions.length}`);
+          console.warn(`[DDF] ⚠️  No questions for selected categories, using ALL questions`);
+          questions = allQuestions;
+          console.log(`[DDF] 📚 Using all ${questions.length} questions`);
+        }
 
-          if (questions.length === 0) {
-            console.error(`[DDF] ❌ NO QUESTIONS AT ALL!`);
-            socket.emit('error', { message: 'No questions available' });
-            helpers.sendToRoom(room.code, 'error', { message: 'No questions available in database' });
-            return;
-          }
+        if (questions.length === 0) {
+          console.error(`[DDF] ❌ NO QUESTIONS AVAILABLE!`);
+          socket.emit('error', { message: 'No questions available' });
+          helpers.sendToRoom(room.code, 'error', { message: 'No questions available in database' });
+          return;
         }
 
         // Assign first question
