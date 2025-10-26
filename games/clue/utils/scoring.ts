@@ -1,4 +1,4 @@
-import { Guess, Round } from '../types';
+import { Guess, Round } from '../types/index.js';
 
 /**
  * Calculate points for guessers based on their accuracy

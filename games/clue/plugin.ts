@@ -1,4 +1,4 @@
-import type { GamePlugin, Room, Player, GameHelpers } from '../../core/types/core';
+import type { GamePlugin, Room, Player, GameHelpers } from '../../core/types/core.js';
 import type { Socket } from 'socket.io';
 import {
   ClueGameState,
@@ -6,13 +6,13 @@ import {
   ClueSettings,
   DEFAULT_CLUE_SETTINGS,
   Guess,
-} from './types';
+} from './types/index.js';
 import {
   startNewRound,
   revealRoundResults,
   initializeGameState,
   initializePlayerData,
-} from './game/GameManager';
+} from './game/GameManager.js';
 
 /**
  * Serialize Room to client Lobby format

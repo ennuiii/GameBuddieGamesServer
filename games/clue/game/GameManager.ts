@@ -1,6 +1,6 @@
-import { Room, Player, GameHelpers } from '../../../core/types/core';
-import { ClueGameState, CluePlayerData, Round, ClueSettings } from '../types';
-import { scoreRound } from '../utils/scoring';
+import { Room, Player, GameHelpers } from '../../../core/types/core.js';
+import { ClueGameState, CluePlayerData, Round, ClueSettings } from '../types/index.js';
+import { scoreRound } from '../utils/scoring.js';
 
 // ========================================
 // Helper Functions

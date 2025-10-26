@@ -5,8 +5,8 @@
  * Critical for multiplayer functionality - ensures client receives correct data structure.
  */
 
-import { Room, Player } from '../../../core/types/core';
-import { DDFGameState, DDFPlayerData } from '../types';
+import { Room, Player } from '../../../core/types/core.js';
+import { DDFGameState, DDFPlayerData } from '../types/index.js';
 
 /**
  * Serialize a unified server Room to DDF client format

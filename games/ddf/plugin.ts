@@ -9,10 +9,10 @@ import { Socket } from 'socket.io';
 import { createRequire } from 'module';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { GamePlugin, Room, Player, GameHelpers } from '../../core/types/core';
-import { DDFGameState, DDFPlayerData } from './types';
-import { serializeRoomToDDF, serializeVotingResults } from './utils/serialization';
-import { supabaseService } from './services/supabaseService';
+import { GamePlugin, Room, Player, GameHelpers } from '../../core/types/core.js';
+import { DDFGameState, DDFPlayerData } from './types/index.js';
+import { serializeRoomToDDF, serializeVotingResults } from './utils/serialization.js';
+import { supabaseService } from './services/supabaseService.js';
 
 // Create require for importing CommonJS modules
 const __filename = fileURLToPath(import.meta.url);
