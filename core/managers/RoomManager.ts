@@ -55,6 +55,9 @@ export class RoomManager {
       isGameBuddiesRoom: false, // Will be set by game plugin if from platform
       messages: [],
     };
+    
+    // Add host as the first player
+    room.players.set(hostPlayer.socketId, hostPlayer);
 
     this.rooms.set(roomCode, room);
     this.playerRoomMap.set(hostPlayer.socketId, roomCode);
