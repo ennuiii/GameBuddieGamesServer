@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch core/server.ts",
-    "build": "tsc",
+    "build": "tsc && node -e \"require('fs').cpSync('games', 'dist/games', {recursive: true, filter: (src) => src.endsWith('.json')})\"",
     "start": "node dist/core/server.js",
     "lint": "eslint core games --ext .ts",
     "type-check": "tsc --noEmit",
