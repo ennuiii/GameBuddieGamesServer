@@ -1,0 +1,4970 @@
+[
+  {
+    "id": "6c17b96d-ed47-48df-b972-b54c7e5b6037",
+    "type": "normal",
+    "question": "Wie lautet der Name der Hauptstadt von Demacia?",
+    "answer": "Die Große Stadt von Demacia",
+    "category": "League of Legends",
+    "difficulty": "Einfach"
+  },
+  {
+    "id": "29eb4792-a2bc-44bc-bce8-28ec466f2fc4",
+    "type": "normal",
+    "question": "Welcher Champion ist als 'der Dunkle Spross' bekannt?",
+    "answer": "Syndra",
+    "category": "League of Legends",
+    "difficulty": "Einfach"
+  },
+  {
+    "id": "f8a7d2e7-e49d-4469-87cd-5d052455411a",
+    "type": "normal",
+    "question": "Aus welcher Region stammt Miss Fortune?",
+    "answer": "Bilgewasser",
+    "category": "League of Legends",
+    "difficulty": "Einfach"
+  },
+  {
+    "id": "7881a92c-d222-4822-89a9-de37074eda1b",
+    "type": "normal",
+    "question": "Wer ist der Bruder von Darius?",
+    "answer": "Draven",
+    "category": "League of Legends",
+    "difficulty": "Einfach"
+  },
+  {
+    "id": "8df53b95-ee02-4eb2-8e42-d26901cf4920",
+    "type": "normal",
+    "question": "Welche Taste wird standardmäßig verwendet, um einen Champion zurück zur Basis zu rufen?",
+    "answer": "B",
+    "category": "League of Legends",
+    "difficulty": "Einfach"
+  },
+  {
+    "id": "02f19838-4fa0-48d4-8ae8-5c193287a4bb",
+    "type": "normal",
+    "question": "Wie heißt die Waffe von Leona?",
+    "answer": "Zenith-Klinge",
+    "category": "League of Legends",
+    "difficulty": "Einfach"
+  },
+  {
+    "id": "e6bc17a9-430b-498c-99b8-c5787230e410",
+    "type": "normal",
+    "question": "Was ist das Ziel des ARAM-Spielmodus?",
+    "answer": "Die Zerstörung des gegnerischen Nexus in der Heulenden Schlucht.",
+    "category": "League of Legends",
+    "difficulty": "Einfach"
+  },
+  {
+    "id": "6b857782-8e89-46ab-873b-26152a77738b",
+    "type": "normal",
+    "question": "Welche Kreatur erscheint im Fluss, nachdem der Baron Nashor getötet wurde?",
+    "answer": "Keine, das Töten des Barons gibt den Spielern einen Stärkungszauber.",
+    "category": "League of Legends",
+    "difficulty": "Einfach"
+  },
+  {
+    "id": "beb00a62-f0cf-479c-839e-853f539864b2",
+    "type": "normal",
+    "question": "Wie heißt die Schwester von Kayle?",
+    "answer": "Morgana",
+    "category": "League of Legends",
+    "difficulty": "Einfach"
+  },
+  {
+    "id": "d0c39ed0-c088-4be8-a350-d9d721e29d53",
+    "type": "normal",
+    "question": "Welche Rasse ist Teemo?",
+    "answer": "Yordle",
+    "category": "League of Legends",
+    "difficulty": "Einfach"
+  },
+  {
+    "id": "22278cde-c8af-4cc6-a3b0-ef95740a79ec",
+    "type": "normal",
+    "question": "In welcher Stadt spielt die Serie 'Arcane' hauptsächlich?",
+    "answer": "Piltover und Zhaun",
+    "category": "League of Legends",
+    "difficulty": "Einfach"
+  },
+  {
+    "id": "739e2b42-70c8-4ad4-92c1-39ef41e2ca84",
+    "type": "normal",
+    "question": "Welcher Champion hat eine Schlange als Begleiter?",
+    "answer": "Cassiopeia (sie ist selbst zur Hälfte eine Schlange)",
+    "category": "League of Legends",
+    "difficulty": "Einfach"
+  },
+  {
+    "id": "1af154a3-f469-4669-8ee7-2e8ef8e8755a",
+    "type": "normal",
+    "question": "Was sammelt Thresh, um seine Rüstung und Fähigkeitsstärke zu erhöhen?",
+    "answer": "Seelen",
+    "category": "League of Legends",
+    "difficulty": "Einfach"
+  },
+  {
+    "id": "aab147e2-c64b-44b4-930f-3f49b0efd78f",
+    "type": "normal",
+    "question": "Welcher Champion ist ein Roboter aus Zhaun?",
+    "answer": "Blitzcrank",
+    "category": "League of Legends",
+    "difficulty": "Einfach"
+  },
+  {
+    "id": "c50c1135-ee56-433f-9a23-24c2902ed197",
+    "type": "normal",
+    "question": "Wie heißt der Anführer des Winter's Claw-Stammes in Freljord?",
+    "answer": "Sejuani",
+    "category": "League of Legends",
+    "difficulty": "Einfach"
+  },
+  {
+    "id": "a698d65c-5246-416f-a4dd-f3c3f7a0d926",
+    "type": "normal",
+    "question": "Welcher Gegenstand ist für Schützen grundlegend und wird aus einem B. F. Sword und einem Cloak of Agility gebaut?",
+    "answer": "Klinge der Unendlichkeit",
+    "category": "League of Legends",
+    "difficulty": "Einfach"
+  },
+  {
+    "id": "7b01a201-a8db-47c1-af83-5391499e194d",
+    "type": "normal",
+    "question": "Wie viele Spieler sind in einem Standard-Match in der Kluft der Beschwörer?",
+    "answer": "10 (5 pro Team)",
+    "category": "League of Legends",
+    "difficulty": "Einfach"
+  },
+  {
+    "id": "72d0385c-18af-4978-b1f1-59636795d7e6",
+    "type": "normal",
+    "question": "Welcher Champion ist als 'der Stolz von Noxus' bekannt?",
+    "answer": "Darius",
+    "category": "League of Legends",
+    "difficulty": "Einfach"
+  },
+  {
+    "id": "c6acf5b3-7c02-4503-83dd-de3f8f6f33fe",
+    "type": "normal",
+    "question": "Wie heißt die passive Fähigkeit von Annie?",
+    "answer": "Pyromanie",
+    "category": "League of Legends",
+    "difficulty": "Einfach"
+  },
+  {
+    "id": "cd2c5d25-ffe0-406b-bd12-9835e4855736",
+    "type": "normal",
+    "question": "Welcher Champion stammt vom Berg Targon und ist der Aspekt des Krieges?",
+    "answer": "Pantheon",
+    "category": "League of Legends",
+    "difficulty": "Einfach"
+  },
+  {
+    "id": "702b5944-89e3-4eb4-8394-f48d49047d58",
+    "type": "normal",
+    "question": "Welcher Champion ist Jinx' Schwester?",
+    "answer": "Vi",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "bf23eb2a-d785-4a92-b0fc-98690ccd5158",
+    "type": "normal",
+    "question": "Wie lautet der Name der Organisation in Ionia, die das Gleichgewicht wahren will und von Shen angeführt wird?",
+    "answer": "Der Kinkou-Orden",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "f4119c33-102f-45a5-8897-1efdda742156",
+    "type": "normal",
+    "question": "Was ist der wahre Name von Fiddlesticks in der Lore?",
+    "answer": "Ein Ur-Dämon ohne spezifischen Namen, nur als 'Die erste von Zehn' bekannt.",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "add34227-d2c1-4c99-8058-3826ffddec3b",
+    "type": "normal",
+    "question": "Welcher Gegenstand wurde in einem früheren Patch eingeführt, um AP-Champions eine 'Anti-Schild'-Option zu geben?",
+    "answer": "Schattenflamme",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "83251c84-f16a-4e61-b636-6cc556e75a67",
+    "type": "normal",
+    "question": "Welcher Champion wurde von der Schwarzen Rose wiederbelebt, um als Waffe für Noxus zu dienen?",
+    "answer": "Sion",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "d95dcb18-e419-4c27-9e37-4e9ed33b517a",
+    "type": "normal",
+    "question": "Was war der ursprüngliche Zweck der Brackern-Kristalle, aus denen die Hextech-Technologie entwickelt wurde?",
+    "answer": "Sie enthielten die Bewusstseine der Vorfahren der Brackern (Skarner's Rasse).",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "5d70559c-5307-4774-a11d-40b67cd31758",
+    "type": "normal",
+    "question": "Welcher Champion ist der Anführer der 'Söhne von Ur' und verehrt den Bärengeist Volibear?",
+    "answer": "Udyr",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "cee70d3e-3463-4b64-8eb2-86000d8f1582",
+    "type": "normal",
+    "question": "Welche Fähigkeit wurde bei Skarners VGU (Visual Gameplay Update) grundlegend überarbeitet, um ihm mehr Kontrolle über das Terrain zu geben?",
+    "answer": "Seine Q-Fähigkeit 'Shattered Earth / Upheaval'",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "310d9593-cf5b-4d5f-8bd0-39a52962ab54",
+    "type": "normal",
+    "question": "Wie heißt die Leerenkreatur, die als 'das Auge der Leere' bekannt ist?",
+    "answer": "Vel'Koz",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "2e7d596e-f364-4620-bedd-d1b57a4d8617",
+    "type": "normal",
+    "question": "Welcher Mechanismus wurde vor einigen Saisons eingeführt, um Kopfgelder auf Spieler zu setzen, die viel Gold ansammeln, ohne zu sterben?",
+    "answer": "Objekt-Kopfgelder (Objective Bounties)",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "48394ac3-aeba-44cf-bce9-e86b643f3271",
+    "type": "normal",
+    "question": "Wer war der König, der die Ruination auslöste, um seine Frau wiederzubeleben?",
+    "answer": "Viego",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "b1dac8a5-24e5-4ecb-94fd-6b70c7df1062",
+    "type": "normal",
+    "question": "Welche ionische Kriegerin wurde von Noxus gezwungen, eine chemische Waffe gegen ihr eigenes Volk einzusetzen?",
+    "answer": "Riven",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "5300be88-bc9e-4f87-b0e7-35ae75ba56c3",
+    "type": "normal",
+    "question": "Welcher neue Drache wurde dem Spiel hinzugefügt, dessen Seele Exekutionsschaden gewährt?",
+    "answer": "Der Hextech-Drache",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "bafdb4ba-662b-4888-8ced-922cebaa2700",
+    "type": "normal",
+    "question": "Wie heißt die vastayanische Rasse, zu der Xayah und Rakan gehören?",
+    "answer": "Lhotlan",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "445f6c23-5ab9-4aed-9f55-d541d3be6a64",
+    "type": "normal",
+    "question": "Welcher Gegenstand erlaubt es einem Champion, nach dem Tod kurzzeitig weiterzukämpfen?",
+    "answer": "Schutzengel",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "334327a2-d787-4255-b47d-c80079c98138",
+    "type": "normal",
+    "question": "Wer war der Meister von Zed und Shen?",
+    "answer": "Kusho",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "3b9b94cc-6019-4331-b0fe-8b6faa19afe3",
+    "type": "normal",
+    "question": "Welcher Champion wurde speziell als AP-basierter Schütze für die Bot-Lane entworfen?",
+    "answer": "Nilah (obwohl sie AD skaliert, war Zeri als AP-Schütze konzipiert)",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "d08a6136-cb74-400d-b2b8-3b96a89e8413",
+    "type": "normal",
+    "question": "Was ist die 'Letzte Umarmung' in der Lore?",
+    "answer": "Der Name des Dämons, der Evelynn ihre Macht gibt.",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "864bc148-8ade-4d18-8ece-1df2bb8e4972",
+    "type": "normal",
+    "question": "Welcher neue mythische Gegenstand wurde für Tanks eingeführt, um ihnen eine starke Initiationsoption zu geben?",
+    "answer": "Herzstahl (Heartsteel)",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "10772af5-d43b-4608-b65e-64af86c981ec",
+    "type": "normal",
+    "question": "Wer ist der 'Unvergessene', der aus dem Reich der Geister zurückkehrte?",
+    "answer": "Yone",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "2cddfe33-276a-426e-8f73-afb7babf50bf",
+    "type": "normal",
+    "question": "Wer war der Großgeneral von Noxus, bevor Swain die Macht übernahm?",
+    "answer": "Boram Darkwill",
+    "category": "League of Legends",
+    "difficulty": "Schwer"
+  },
+  {
+    "id": "4f8da170-7f7f-4ccf-8f02-f0664fe25685",
+    "type": "normal",
+    "question": "Wie lautet der Name des Dämons, der mit Swain einen Pakt geschlossen hat?",
+    "answer": "Raum",
+    "category": "League of Legends",
+    "difficulty": "Schwer"
+  },
+  {
+    "id": "06f6eb4a-2ead-483d-8cbd-886f3197e8b1",
+    "type": "normal",
+    "question": "Welche der ursprünglichen drei Freljord-Schwestern schloss einen Pakt mit den Leerenbeobachtern?",
+    "answer": "Lissandra",
+    "category": "League of Legends",
+    "difficulty": "Schwer"
+  },
+  {
+    "id": "726041c3-118e-43f8-8eb8-9d780f748306",
+    "type": "normal",
+    "question": "Welche Änderung wurde an der Fähigkeit 'Teleport' vorgenommen, die ihre frühe Spielstärke stark beeinflusste?",
+    "answer": "In den ersten 14 Minuten kann 'Teleport' nur auf verbündete Türme gewirkt werden (Unleashed Teleport).",
+    "category": "League of Legends",
+    "difficulty": "Schwer"
+  },
+  {
+    "id": "332dc8df-c27d-4c2a-b193-99e9bbf16847",
+    "type": "normal",
+    "question": "Wie hieß die Nation, aus der Jax stammt, die durch die Entfesselung der Leere zerstört wurde?",
+    "answer": "Icathia",
+    "category": "League of Legends",
+    "difficulty": "Schwer"
+  },
+  {
+    "id": "3f933058-8c1a-4b89-a306-f52d00380b45",
+    "type": "normal",
+    "question": "Welcher Aspekt des Targon war vor Taric der menschliche Wirt des 'Beschützers'?",
+    "answer": "Es ist nicht namentlich bekannt, aber Taric war nicht der erste Wirt.",
+    "category": "League of Legends",
+    "difficulty": "Schwer"
+  },
+  {
+    "id": "a1b3b571-f148-4e1a-81b1-9b3d49037b64",
+    "type": "normal",
+    "question": "Welche passive Fähigkeit wurde K'Sante hinzugefügt, die es ihm erlaubt, seine defensiven Werte in offensive umzuwandeln?",
+    "answer": "Ntofo – Volle Kraft (All Out)",
+    "category": "League of Legends",
+    "difficulty": "Schwer"
+  },
+  {
+    "id": "276f1d5c-3b49-4685-8f35-32c25b9bbabd",
+    "type": "normal",
+    "question": "Was ist der 'Welt-Ender' in Aatrox's Lore?",
+    "answer": "Aatrox selbst, als ein Darkin, dessen Ziel die Zerstörung von allem ist.",
+    "category": "League of Legends",
+    "difficulty": "Schwer"
+  },
+  {
+    "id": "91e18554-47c5-4b5f-a388-0252efe53282",
+    "type": "normal",
+    "question": "Welcher Gegenstand wurde aus dem Spiel entfernt, der früher eine beliebte Wahl für AP-Champions war und eine verlangsamende aktive Fähigkeit hatte?",
+    "answer": "Zwillingsschatten (Twin Shadows)",
+    "category": "League of Legends",
+    "difficulty": "Schwer"
+  },
+  {
+    "id": "646fa87e-96a0-45ca-9966-387a639d9c3f",
+    "type": "normal",
+    "question": "Wer ist die 'graue Dame' in der Demacianischen Lore?",
+    "answer": "Eine mysteriöse Figur, von der angenommen wird, dass sie die Petricite-Wälder beschützt; möglicherweise eine Manifestation des Landes selbst.",
+    "category": "League of Legends",
+    "difficulty": "Schwer"
+  },
+  {
+    "id": "827fb731-762d-472b-befc-fed8c78437e5",
+    "type": "normal",
+    "question": "Wie heißt die kleine Fee, die Lulu begleitet?",
+    "answer": "Pix",
+    "category": "League of Legends",
+    "difficulty": "Einfach"
+  },
+  {
+    "id": "66722ede-2103-4699-9cdc-7e1db39ee95f",
+    "type": "normal",
+    "question": "Welcher Champion ist ein Minotaurus?",
+    "answer": "Alistar",
+    "category": "League of Legends",
+    "difficulty": "Einfach"
+  },
+  {
+    "id": "fbf04839-8288-4b21-8eef-e97915167673",
+    "type": "normal",
+    "question": "Welcher Gegenstand heilt Verbündete in der Nähe, wenn man einen Gegner bewegungsunfähig macht?",
+    "answer": "Mikaels Segen",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "1b58d0bc-fdb6-450a-9271-9ddbbaaaa374",
+    "type": "normal",
+    "question": "Was ist der Spitzname von Zhaun?",
+    "answer": "Die Stadt aus Glas und Eisen",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "07b64c53-42a7-4043-b33f-198ca266565a",
+    "type": "normal",
+    "question": "Welcher Champion sagt: 'Die Dunkelheit ist mein Mantel'?",
+    "answer": "Nocturne",
+    "category": "League of Legends",
+    "difficulty": "Einfach"
+  },
+  {
+    "id": "c45b4bc6-b145-4ae1-9848-5cc992d88e0f",
+    "type": "normal",
+    "question": "Wie heißt die Währung, mit der man im Spiel Gegenstände kauft?",
+    "answer": "Gold",
+    "category": "League of Legends",
+    "difficulty": "Einfach"
+  },
+  {
+    "id": "afb46cba-dc23-4fc4-b4f3-895917a58188",
+    "type": "normal",
+    "question": "Welcher Champion kann sich in einen Puma verwandeln?",
+    "answer": "Nidalee",
+    "category": "League of Legends",
+    "difficulty": "Einfach"
+  },
+  {
+    "id": "c07792b4-6a72-40a8-b50c-131e07e7624c",
+    "type": "normal",
+    "question": "Was ist die ultimative Fähigkeit von Malphite?",
+    "answer": "Unaufhaltsame Gewalt",
+    "category": "League of Legends",
+    "difficulty": "Einfach"
+  },
+  {
+    "id": "962c5f92-be34-48be-a8c8-290fb8573129",
+    "type": "normal",
+    "question": "In welcher Lane spielt man traditionell zu zweit?",
+    "answer": "Bot-Lane",
+    "category": "League of Legends",
+    "difficulty": "Einfach"
+  },
+  {
+    "id": "5d64cd4f-030b-4eb8-b783-9f3d7a5c790b",
+    "type": "normal",
+    "question": "Welcher Champion ist der 'König der Trolle'?",
+    "answer": "Trundle",
+    "category": "League of Legends",
+    "difficulty": "Einfach"
+  },
+  {
+    "id": "1143f4b2-2354-4791-8c23-f54927ae593b",
+    "type": "normal",
+    "question": "Was ist die Hauptaufgabe eines Junglers im frühen Spiel?",
+    "answer": "Monster im Dschungel töten und den Lanes helfen (Ganks).",
+    "category": "League of Legends",
+    "difficulty": "Einfach"
+  },
+  {
+    "id": "bc2e200f-cd9d-450f-8cf2-511ff062edeb",
+    "type": "normal",
+    "question": "Welcher Champion ist ein Vastaya, der wie ein Waschbär aussieht?",
+    "answer": "Kennen (obwohl er ein Yordle ist, passt die Beschreibung oft)",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "6836d71a-38ed-4e52-bd85-521a678e6ab4",
+    "type": "normal",
+    "question": "Wer hat den Hextech-Kern erfunden?",
+    "answer": "Jayce",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "72e4b06e-59a2-48d5-b135-10082531eda0",
+    "type": "normal",
+    "question": "Welcher Gegenstand wurde als mythische Alternative für Assassinen eingeführt, der Unsichtbarkeit gewährt?",
+    "answer": "Dämmerungsklinge von Draktharr",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "a056c639-cf4f-4cb4-9fa7-8b6e85509d39",
+    "type": "normal",
+    "question": "Wie heißt der Halbgott des Donners, den Ornn bekämpft hat?",
+    "answer": "Volibear",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "9b78ed62-22bd-45fb-bacc-b8cf98c4c914",
+    "type": "normal",
+    "question": "Welcher Champion ist der letzte seiner Art, ein Brackern?",
+    "answer": "Skarner",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "7b1f6f09-a6a5-4f71-a84b-220454fb1e78",
+    "type": "normal",
+    "question": "Welche Fähigkeit erlaubt es Bard, durch Wände zu reisen?",
+    "answer": "Magische Reise",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "a1556c74-de2b-4b9a-80fc-f031d66e3df5",
+    "type": "normal",
+    "question": "Wer ist der 'Meister der Schatten'?",
+    "answer": "Zed",
+    "category": "League of Legends",
+    "difficulty": "Einfach"
+  },
+  {
+    "id": "a0533079-5a2a-4ce0-bcdc-2d6fba4ef51b",
+    "type": "normal",
+    "question": "Welche Ressource verwendet Vladimir anstelle von Mana?",
+    "answer": "Leben",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "e88aa5b7-6c41-47fb-943d-b5c0905f4503",
+    "type": "normal",
+    "question": "Wie heißt die riesige Leerenkreatur, die man im Baron-Pit bekämpft?",
+    "answer": "Baron Nashor",
+    "category": "League of Legends",
+    "difficulty": "Einfach"
+  },
+  {
+    "id": "128a30d1-24f0-45ba-8b4e-2162d3d569b2",
+    "type": "normal",
+    "question": "Welche ionische Sekte verehrt die Dunkelheit, um Stärke zu finden?",
+    "answer": "Der Orden des Schattens",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "ea904635-ae6b-4000-af2d-0b65d123a04b",
+    "type": "normal",
+    "question": "Welcher Champion hat die Fähigkeit, die Zeit in einem kleinen Bereich zurückzudrehen?",
+    "answer": "Ekko",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "638d8501-1e10-4d5d-9419-1d7d485f7bc3",
+    "type": "normal",
+    "question": "Wer war der erste Champion, der im Jahr 2023 veröffentlicht wurde?",
+    "answer": "Milio",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "bfd02b12-87f0-4847-b840-fdaa413d155a",
+    "type": "normal",
+    "question": "Wie nennt man die kleinen Kreaturen, die auf den Lanes kämpfen und Gold geben, wenn man sie tötet?",
+    "answer": "Vasallen (Minions)",
+    "category": "League of Legends",
+    "difficulty": "Einfach"
+  },
+  {
+    "id": "d5262609-790d-40fd-a3ef-6a720cfec809",
+    "type": "normal",
+    "question": "Welcher Champion ist ein verrückter Chemiker aus Zhaun?",
+    "answer": "Singed",
+    "category": "League of Legends",
+    "difficulty": "Einfach"
+  },
+  {
+    "id": "87960b23-0e9b-4d11-aaa5-484209eb78c4",
+    "type": "normal",
+    "question": "Was passiert, wenn man vier Drachen des gleichen Typs tötet?",
+    "answer": "Man erhält die Drachenseele dieses Typs.",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "845d5a9d-91ca-4782-bd63-91a37d408840",
+    "type": "normal",
+    "question": "Welcher Champion hat einen Poro als ständigen Begleiter in einem seiner Skins?",
+    "answer": "Braum (im Drachentöter-Skin)",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "d46b4702-d678-49e7-bd1e-bfe6d12d3637",
+    "type": "normal",
+    "question": "Wie heißt die Göttin, die die Soraka verehrt?",
+    "answer": "Soraka ist selbst eine Himmlische, sie verehrt niemanden direkt.",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "3db5c087-3390-41a1-9022-045a45aa14f7",
+    "type": "normal",
+    "question": "Welcher Gegenstand wurde überarbeitet, um kritischen Trefferschaden in wahren Schaden umzuwandeln?",
+    "answer": "Navori-Schnellklingen (Quickblades) hatten diese Mechanik, jetzt ist es eher Klinge der Unendlichkeit, die den Schaden erhöht.",
+    "category": "League of Legends",
+    "difficulty": "Schwer"
+  },
+  {
+    "id": "5493e79e-9ce6-49f1-9f28-df863cdeef11",
+    "type": "normal",
+    "question": "Wie heißt die Spezies, zu der Gnar gehört?",
+    "answer": "Ein prähistorischer Yordle.",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "498e58bc-0698-4422-8a85-4e40597c76a5",
+    "type": "normal",
+    "question": "Welcher Champion war ursprünglich ein Grabräuber, bevor er zum Aspekt des Schutzes wurde?",
+    "answer": "Taric",
+    "category": "League of Legends",
+    "difficulty": "Schwer"
+  },
+  {
+    "id": "f2f5fbf3-d52f-4702-bd83-18236382de5f",
+    "type": "normal",
+    "question": "Welche Runen-Hauptkategorie konzentriert sich auf anhaltenden Schaden und Ausdauer?",
+    "answer": "Präzision",
+    "category": "League of Legends",
+    "difficulty": "Einfach"
+  },
+  {
+    "id": "fd966abf-ab21-4a7a-84bd-44e447bdf415",
+    "type": "normal",
+    "question": "Wie heißt die Tochter von Kai'Sa in der Lore?",
+    "answer": "Sie hat keine Tochter, Kai'Sa ist die Tochter von Kassadin.",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "ebcfedb2-f04d-4b64-938d-63798ef9acc4",
+    "type": "normal",
+    "question": "Welcher Gegenstand wurde für Supporter eingeführt, der einen Teil des erlittenen Schadens auf einen verbündeten Champion umleitet?",
+    "answer": "Ritterschwur (Knight's Vow)",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "981cb55a-8d6f-4e5c-9069-ea26e67cd0fa",
+    "type": "normal",
+    "question": "Was war der Name des Imperators von Shurima, der von Xerath verraten wurde?",
+    "answer": "Azir",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "6f924c05-c89c-46da-af4b-1f550f94a4f0",
+    "type": "normal",
+    "question": "Welcher Champion kann eine Wand aus Wind erschaffen, um Projektile zu blockieren?",
+    "answer": "Yasuo",
+    "category": "League of Legends",
+    "difficulty": "Einfach"
+  },
+  {
+    "id": "b5fca717-df71-45df-8e35-02ef663d6644",
+    "type": "normal",
+    "question": "Welche Fähigkeit von Karthus kann alle gegnerischen Champions auf der Karte treffen?",
+    "answer": "Requiem",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "fc81e000-c8d4-4e7e-9abb-752dfd4b256d",
+    "type": "normal",
+    "question": "Wer ist der 'Waffenschmied der Götter' aus Freljord?",
+    "answer": "Ornn",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "8e64a065-8c3c-4d6e-a006-c17bb8326311",
+    "type": "normal",
+    "question": "Welcher Champion ist ein Darkin, der in einer Sense gefangen ist?",
+    "answer": "Kayn (bzw. der Darkin Rhaast)",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "3f53607b-84b3-4ae9-b441-c2e43841ad7e",
+    "type": "normal",
+    "question": "Welche Fähigkeit musste bei Aurelion Sols Überarbeitung (CGU) weichen, bei der er Sterne um sich kreisen ließ?",
+    "answer": "Seine passive/W-Fähigkeit 'Zentrum des Universums'.",
+    "category": "League of Legends",
+    "difficulty": "Schwer"
+  },
+  {
+    "id": "4c4cbf31-7bc9-43c6-ae30-e703547d3166",
+    "type": "normal",
+    "question": "Welche Organisation wurde von Lucian und Senna gegründet, um die Untoten zu bekämpfen?",
+    "answer": "Die Wächter des Lichts (Sentinels of Light).",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "2806dff6-f73c-41df-8468-9668ecbc6a8b",
+    "type": "normal",
+    "question": "Welche Art von Schaden verursachen die Türme?",
+    "answer": "Physischer Schaden.",
+    "category": "League of Legends",
+    "difficulty": "Einfach"
+  },
+  {
+    "id": "a49b757d-11d2-4698-8e6f-7980712a7dbe",
+    "type": "normal",
+    "question": "Welcher Champion ist ein Vastaya, der die Macht hat, Illusionen zu erschaffen?",
+    "answer": "Neeko",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "51780aa7-c39f-4678-89ce-838a443ea326",
+    "type": "normal",
+    "question": "Welcher Gegenstand erhöht die Heilung und Schilde, die ein Champion wirkt?",
+    "answer": "Stab des fließenden Wassers oder Kelch der Harmonie",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "da0089d0-3672-4729-9a4e-d9a4893ad94e",
+    "type": "normal",
+    "question": "Wie heißt die Königin der Spinnen?",
+    "answer": "Elise",
+    "category": "League of Legends",
+    "difficulty": "Einfach"
+  },
+  {
+    "id": "45cb35b1-dcbe-4095-93bd-e4c702be5a21",
+    "type": "normal",
+    "question": "Welcher Champion hat die passive Fähigkeit, nach dem Tod für kurze Zeit weiter Schaden zu verursachen?",
+    "answer": "Kog'Maw",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "284a38dc-59c3-4bc6-8b6a-a21206824e05",
+    "type": "normal",
+    "question": "Welche Rolle hat Silco in der Serie Arcane?",
+    "answer": "Der Anführer der Unterstadt von Zhaun und Ziehvater von Jinx.",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "a895abbf-4f6e-46a7-a536-1caf6e2b0c6e",
+    "type": "normal",
+    "question": "Welcher Champion ist der 'Sternenschmied'?",
+    "answer": "Aurelion Sol",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "b58b9f31-ea2b-4210-a47f-5850b201054d",
+    "type": "normal",
+    "question": "Welcher Mechanismus wurde entfernt, der es Junglern erlaubte, ihre Dschungel-Items durch das Töten von Monstern aufzuwerten?",
+    "answer": "Die 'Smite-Charges' und die spezifischen Dschungel-Gegenstände wie 'Chilling Smite' oder 'Challenging Smite' wurden durch Dschungel-Begleiter ersetzt.",
+    "category": "League of Legends",
+    "difficulty": "Schwer"
+  },
+  {
+    "id": "ce65ef0d-5f74-4a4f-a445-50ac79cfe4a3",
+    "type": "normal",
+    "question": "Welcher Champion ist der Hüter des Gleichgewichts?",
+    "answer": "Shen",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "0ec80c46-8569-4393-8734-4107ed902257",
+    "type": "normal",
+    "question": "Wie heißt die ultimative Fähigkeit von Fiddlesticks?",
+    "answer": "Krähenschwarm",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "21e991f2-1aba-4ce5-8a3b-63772c22d008",
+    "type": "normal",
+    "question": "Wer war der erste König von Camavor?",
+    "answer": "Viego",
+    "category": "League of Legends",
+    "difficulty": "Schwer"
+  },
+  {
+    "id": "4e6078f4-d126-4d21-954c-132123c7e47e",
+    "type": "normal",
+    "question": "Welche Art von Wesen sind die 'Aspects' vom Berg Targon?",
+    "answer": "Himmlische Wesen, die sterbliche Wirte übernehmen, um ihre Macht in Runeterra auszuüben.",
+    "category": "League of Legends",
+    "difficulty": "Schwer"
+  },
+  {
+    "id": "14bf80b7-ad2c-4f67-8158-efe5b3eb4de3",
+    "type": "normal",
+    "question": "Welcher Champion wurde von Swain beauftragt, die 'Schwarze Rose' zu infiltrieren?",
+    "answer": "Samira",
+    "category": "League of Legends",
+    "difficulty": "Schwer"
+  },
+  {
+    "id": "9aa02d93-c1c4-4c1e-b126-ffc636b7a8b1",
+    "type": "normal",
+    "question": "Welche Rune wurde eingeführt, um Champions eine bessere Möglichkeit zu geben, in Kämpfe einzusteigen, indem sie kurzzeitig an Tempo gewinnen?",
+    "answer": "Phasenrausch",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "aedda4f3-a21f-48ef-b142-ef86d096f6b4",
+    "type": "normal",
+    "question": "Was ist die 'Sonnen-Scheibe' in Shurima?",
+    "answer": "Ein riesiges Artefakt, das Sterbliche in gottähnliche 'Aufgestiegene' verwandeln kann.",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "3be3c1e7-b061-4777-9b24-a3aac97c7af1",
+    "type": "normal",
+    "question": "Welcher Champion ist ein Yordle-Erfinder aus Piltover?",
+    "answer": "Heimerdinger",
+    "category": "League of Legends",
+    "difficulty": "Einfach"
+  },
+  {
+    "id": "12ee286f-7de3-4e8c-a2e7-323fc31bfd32",
+    "type": "normal",
+    "question": "Wie heißt die ultimative Fähigkeit von Lux?",
+    "answer": "Finales Funkeln",
+    "category": "League of Legends",
+    "difficulty": "Einfach"
+  },
+  {
+    "id": "edfbcabd-d5d6-4079-acdf-aa8de9ad8782",
+    "type": "normal",
+    "question": "Welches Volk lebt in Ixtal und beherrscht die Elementarmagie?",
+    "answer": "Die Ixtali",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "f30f30d9-3ce7-4599-8bfe-5e2a6bdd3f72",
+    "type": "normal",
+    "question": "Welcher Champion kann die Gestalt anderer Champions annehmen?",
+    "answer": "Neeko",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "5aff236d-4034-4daa-8853-c1311ef3b1c5",
+    "type": "normal",
+    "question": "Wer ist der 'Kettenwärter'?",
+    "answer": "Thresh",
+    "category": "League of Legends",
+    "difficulty": "Einfach"
+  },
+  {
+    "id": "1c291d4c-2160-44b0-bf1c-4c1112151e66",
+    "type": "normal",
+    "question": "Was war der ursprüngliche Name von 'Herzstahl' während der Entwicklung?",
+    "answer": "Goliath's Ascendiary",
+    "category": "League of Legends",
+    "difficulty": "Schwer"
+  },
+  {
+    "id": "29d2b9e5-2d93-490c-81f7-482d457134c6",
+    "type": "normal",
+    "question": "Welcher Champion ist ein Geist der Rache, der nach denen jagt, die ihn verraten haben?",
+    "answer": "Kalista",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "30cd721a-1d86-4902-9cea-9d56cad04dd5",
+    "type": "normal",
+    "question": "Wie heißt die passive Fähigkeit, die Yasuo einen Schild gewährt, nachdem er sich bewegt hat?",
+    "answer": "Weg des Wanderers",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "de49008c-33c8-407f-9231-c864f203abeb",
+    "type": "normal",
+    "question": "Welches Ereignis führte zur Entstehung der Schatteninseln?",
+    "answer": "Die Ruination",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "505a36e0-8c8d-4760-aae3-b7162515c0de",
+    "type": "normal",
+    "question": "Welcher Champion ist ein riesiger Golem aus Petricite, dem magieresistenten Stein Demacias?",
+    "answer": "Galio",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "afa4f128-233e-4801-b4da-2e3eaa7bce57",
+    "type": "normal",
+    "question": "Welcher Champion war der erste, der mit einem einzigartigen 'Evolutions'-System für seine Fähigkeiten entworfen wurde?",
+    "answer": "Kha'Zix",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "faf98b88-2a4a-4608-aebe-e7e091663a12",
+    "type": "normal",
+    "question": "Wie heißt die Anführerin der Solari, der Sonnenanbeter vom Berg Targon?",
+    "answer": "Leona",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "54ff5db0-c5ed-4869-9e22-a072ff54298d",
+    "type": "normal",
+    "question": "Welcher Gegenstand wurde aus 'Stärke der Dreieinigkeit' entfernt, um ihn für mehr Champions zugänglich zu machen?",
+    "answer": "Der 'Phage'-Effekt (Bewegungstempo bei Angriffen) wurde verändert.",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "2b874f2d-ee53-4abb-bdfe-579b4f22959b",
+    "type": "normal",
+    "question": "Wer ist der 'König des Flusses'?",
+    "answer": "Tahm Kench",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "e19ade5f-901b-4698-97d3-b8c36ff47098",
+    "type": "normal",
+    "question": "Welche Fähigkeit von Zoe erlaubt es ihr, die Beschwörerzauber und aktiven Gegenstände von Gegnern zu stehlen?",
+    "answer": "Zauberdieb",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "1ac437d5-8b02-4ca5-94a5-582b422f9151",
+    "type": "normal",
+    "question": "Was ist der Name des Reichs, aus dem Mordekaiser stammt und das er erobert hat?",
+    "answer": "Das Reich des Todes (Death Realm) oder Mitternachts-Reich.",
+    "category": "League of Legends",
+    "difficulty": "Schwer"
+  },
+  {
+    "id": "5cb81c4d-8120-458f-bf76-26e19b2bd8cc",
+    "type": "normal",
+    "question": "Welcher Aspekt ist in Diana verkörpert?",
+    "answer": "Der Aspekt des Mondes",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "dab195f0-a86f-4c61-808f-b87867382d3a",
+    "type": "normal",
+    "question": "Welche zwei neuen Dschungel-Begleiter wurden eingeführt, die den alten 'Smite'-Varianten ähneln?",
+    "answer": "Der rote (Scorchclaw) und der blaue (Gustwalker) Begleiter.",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "b7195933-7221-4c36-8991-968db94deae4",
+    "type": "normal",
+    "question": "Wie heißt der Anführer der 'Schwarzen Rose'?",
+    "answer": "LeBlanc",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "a1a7d02f-f4d3-4f56-9977-a491459d5423",
+    "type": "normal",
+    "question": "Welcher Champion hat die ultimative Fähigkeit, einen Klon von sich selbst zu erschaffen?",
+    "answer": "Shaco",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "bd2d22da-06c6-4607-8823-f7ca50cb6b92",
+    "type": "normal",
+    "question": "Welche Art von Magie ist in Demacia verboten?",
+    "answer": "Jede Art von Magie.",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "0188152c-1e7e-4f2b-9a91-0239a1c43f0e",
+    "type": "normal",
+    "question": "Welcher Champion ist der 'Kopfgeldjäger von Bilgewasser'?",
+    "answer": "Miss Fortune",
+    "category": "League of Legends",
+    "difficulty": "Einfach"
+  },
+  {
+    "id": "389e5cb4-cf37-4678-9d44-3572e857afca",
+    "type": "normal",
+    "question": "Was ist der Zweck der 'Kontroll-Auge'?",
+    "answer": "Unsichtbare Einheiten und Augen aufzudecken.",
+    "category": "League of Legends",
+    "difficulty": "Einfach"
+  },
+  {
+    "id": "6bf57d33-a906-41a6-a27c-9ff91d1f7358",
+    "type": "normal",
+    "question": "Welcher Champion ist ein Baumwesen?",
+    "answer": "Maokai",
+    "category": "League of Legends",
+    "difficulty": "Einfach"
+  },
+  {
+    "id": "f4a3c130-3bd7-4b90-b9aa-099f77c615f7",
+    "type": "normal",
+    "question": "Wie heißt die ultimative Fähigkeit von Ashe?",
+    "answer": "Verzauberter Kristallpfeil",
+    "category": "League of Legends",
+    "difficulty": "Einfach"
+  },
+  {
+    "id": "605e9cf0-0497-45aa-8289-92b3e18b8395",
+    "type": "normal",
+    "question": "Welcher Champion ist der 'Meister der Karten'?",
+    "answer": "Twisted Fate",
+    "category": "League of Legends",
+    "difficulty": "Einfach"
+  },
+  {
+    "id": "a8ba26be-4330-4f98-93e4-ff0380e8f5f5",
+    "type": "normal",
+    "question": "Was erhält ein Team, nachdem es den Herold der Kluft besiegt hat?",
+    "answer": "Das Auge des Herolds, das den Herold beschwören kann, um Türme anzugreifen.",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "17cb876d-59c1-450e-9996-f42d735d8af6",
+    "type": "normal",
+    "question": "Welcher Champion ist ein Yordle und ein Pilot?",
+    "answer": "Corki",
+    "category": "League of Legends",
+    "difficulty": "Einfach"
+  },
+  {
+    "id": "aa20d706-bb7b-42f7-8816-5e0bdce362ab",
+    "type": "normal",
+    "question": "Was ist die passive Fähigkeit von Jhin?",
+    "answer": "Flüstern",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "9f496309-e66a-4875-b41d-09e740475fb2",
+    "type": "normal",
+    "question": "Welcher Champion ist ein Vastaya, der die Geistermagie von Ionia nutzt?",
+    "answer": "Ahri",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "079a7285-6b52-4cf0-99e4-0eaadefe998b",
+    "type": "normal",
+    "question": "Welcher Gegenstand wurde eingeführt, um AP-Kämpfern eine Option mit anhaltendem Schaden und Omnivampir zu geben?",
+    "answer": "Riftmaker (Kluftformer)",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "45fceb0e-cfff-4c48-b9e5-f52d0877a278",
+    "type": "normal",
+    "question": "Wer ist der 'Henker von Noxus'?",
+    "answer": "Urgot (früher), jetzt eher mit Draven assoziiert.",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "cd3f8368-5563-4a51-a1d4-abba501200af",
+    "type": "normal",
+    "question": "Welche Fähigkeit erlaubt es Nocturne, die Sicht aller Gegner zu reduzieren?",
+    "answer": "Paranoia",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "e6872f75-eff6-4176-9760-fc11b42cbf7a",
+    "type": "normal",
+    "question": "Welcher Champion wurde von dem Dämon der Gier, Tahm Kench, getäuscht?",
+    "answer": "Viele, aber Aatrox in einer speziellen Geschichte.",
+    "category": "League of Legends",
+    "difficulty": "Schwer"
+  },
+  {
+    "id": "98cdc150-0be0-455e-b37c-b50f0ed4698d",
+    "type": "normal",
+    "question": "Welcher neue Champion wurde als 'die Freude von Ixtal' eingeführt?",
+    "answer": "Milio",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "efa95def-a10b-46c5-830c-ab5a170240df",
+    "type": "normal",
+    "question": "Welcher Champion ist der 'unvergessliche Held' von Demacia?",
+    "answer": "Garen",
+    "category": "League of Legends",
+    "difficulty": "Einfach"
+  },
+  {
+    "id": "5203bdd7-ceba-4982-a825-33ef5efe861a",
+    "type": "normal",
+    "question": "Wie heißt die ultimative Fähigkeit von Blitzcrank?",
+    "answer": "Statisches Feld",
+    "category": "League of Legends",
+    "difficulty": "Einfach"
+  },
+  {
+    "id": "b5a71c63-4152-4df6-8f8f-dedf3f938f24",
+    "type": "normal",
+    "question": "Welcher Champion ist ein 'Aufgestiegener' Krieger aus Shurima, der wie ein Krokodil aussieht?",
+    "answer": "Renekton",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "98e51d39-ddbe-4335-9adc-3a78c661b363",
+    "type": "normal",
+    "question": "Welcher Gegenstand gibt Fähigkeitsstärke und einen Zauberschild, der eine Fähigkeit blockiert?",
+    "answer": "Banshees Schleier",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "801b2247-f1a5-4a59-a65a-8be5c473e07f",
+    "type": "normal",
+    "question": "Welcher Champion ist der 'Meisterschütze von Piltover'?",
+    "answer": "Caitlyn",
+    "category": "League of Legends",
+    "difficulty": "Einfach"
+  },
+  {
+    "id": "1036d992-0c2c-450c-aa51-25242fbe26b4",
+    "type": "normal",
+    "question": "Welche Fähigkeit von Bard platziert Heilungsschreine auf der Karte?",
+    "answer": "Schrein des Beschützers",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "3eeebd72-11ac-42f8-813a-74a0d709f98e",
+    "type": "normal",
+    "question": "Wie heißt die Organisation, der die Eltern von Caitlyn angehören?",
+    "answer": "Der Rat von Piltover (Clan Kiramman).",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "86c440e0-b66a-423a-882c-86cc2e440909",
+    "type": "normal",
+    "question": "Welcher Champion ist ein 'Darkin', der in einem Bogen gefangen ist?",
+    "answer": "Varus",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "86b6ae0f-dabb-450c-8b54-f3611298ef67",
+    "type": "normal",
+    "question": "Welcher Mechanismus wurde an 'Chemtech-Drachenseele' geändert, um weniger frustrierend zu sein?",
+    "answer": "Anstatt einer Zombie-Wiederbelebung gewährt sie nun mehr Schaden bei niedrigem Leben.",
+    "category": "League of Legends",
+    "difficulty": "Schwer"
+  },
+  {
+    "id": "69628334-b371-42f8-a5b1-de0412f54fb9",
+    "type": "normal",
+    "question": "Wer ist der 'Wandernde Beschützer'?",
+    "answer": "Bard",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "7a62404e-b566-4f88-88a2-77e23f39175c",
+    "type": "normal",
+    "question": "Welcher Champion kann mit seiner Ultimativen einen Verbündeten vor dem Tod retten?",
+    "answer": "Kindred (Lamm's Gnadenfrist)",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "a549a150-5db4-4c93-b11f-8e372c555489",
+    "type": "normal",
+    "question": "Was war der 'Große Darkin-Krieg'?",
+    "answer": "Ein Konflikt nach dem Fall Shurimas, in dem die überlebenden, korrumpierten Aufgestiegenen (Darkin) gegeneinander und gegen die Welt kämpften.",
+    "category": "League of Legends",
+    "difficulty": "Schwer"
+  },
+  {
+    "id": "3eaa061c-401e-4cb5-aeea-3a5648fee551",
+    "type": "normal",
+    "question": "Wie lautet der Name der Leerenkaiserin, die aus dem Lavendelmeer aufgestiegen ist?",
+    "answer": "Bel'Veth",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "1ed2a18b-8592-45a3-8eae-33a48b8e9bbe",
+    "type": "normal",
+    "question": "Welcher Gegenstand wurde als Reaktion auf die Dominanz von Heilung im Spiel eingeführt und verstärkt die 'Klaffende Wunden'-Effekte?",
+    "answer": "Chemtech-Putrifizierer und andere 'Klaffende Wunden'-Items wurden angepasst, nicht unbedingt ein neuer eingeführt, um sie zu verstärken.",
+    "category": "League of Legends",
+    "difficulty": "Schwer"
+  },
+  {
+    "id": "93b9d534-bb3e-42d5-9671-ff739d9ecc12",
+    "type": "normal",
+    "question": "Welcher Champion war ursprünglich ein Mensch, wurde aber von der Leere verschlungen und wiedergeboren?",
+    "answer": "Kassadin (seine Tochter Kai'Sa wurde verschlungen und überlebte)",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "3c9eb774-b552-4b6f-910c-d2be7e09a4b8",
+    "type": "normal",
+    "question": "Welcher Champion kann eine 'Chronobreak' durchführen, um an eine frühere Position zurückzukehren?",
+    "answer": "Ekko",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "b0e86b54-be10-469b-b401-170a2febaf9c",
+    "type": "normal",
+    "question": "Wie heißt der 'Ewige Jäger'?",
+    "answer": "Kindred",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "0dde107c-4394-4d18-a1b1-9435fd7f4bbf",
+    "type": "normal",
+    "question": "Welcher Champion ist der 'große Erfinder'?",
+    "answer": "Heimerdinger",
+    "category": "League of Legends",
+    "difficulty": "Einfach"
+  },
+  {
+    "id": "d36753c6-ecc5-405a-a7bc-f4dc209cd2f6",
+    "type": "normal",
+    "question": "Welche Art von Schaden verursacht 'Zerschmettern' (Smite) auf Champions?",
+    "answer": "Wahrer Schaden.",
+    "category": "League of Legends",
+    "difficulty": "Einfach"
+  },
+  {
+    "id": "5dc5f903-b82f-4b16-8dc0-493f4b0f6b4a",
+    "type": "normal",
+    "question": "Welcher Champion ist eine Meerjungfrau?",
+    "answer": "Nami",
+    "category": "League of Legends",
+    "difficulty": "Einfach"
+  },
+  {
+    "id": "c8f6ab0f-6f06-43b5-96f8-f2819aaf00e5",
+    "type": "normal",
+    "question": "Wie heißt die ultimative Fähigkeit von Jarvan IV?",
+    "answer": "Kataklysmus",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "87e2fe2d-2a0a-43b1-91ce-d2cac79b276e",
+    "type": "normal",
+    "question": "Welcher Champion ist der 'Stolz von Nazumah'?",
+    "answer": "K'Sante",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "5aeea44e-b7f7-4989-9112-eebb262bf9a4",
+    "type": "normal",
+    "question": "Was ist der 'Schwarze Nebel'?",
+    "answer": "Ein verfluchter Nebel von den Schatteninseln, der Lebewesen tötet und ihre Seelen einfängt.",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "30ba6bc0-b28c-45de-ad14-7294143c3298",
+    "type": "normal",
+    "question": "Welcher Champion war ein Gladiator in der noxianischen Arena?",
+    "answer": "Alistar",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "5e624aea-7cd0-4e35-b4f4-902334a9e8b3",
+    "type": "normal",
+    "question": "Welcher Gegenstand wurde als mythische Option für Tanks eingeführt, die Schaden basierend auf dem maximalen Leben des Trägers austeilt?",
+    "answer": "Sonnenfeuer-Ägide (in seiner mythischen Form)",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "cd00d49c-5b9e-486a-baef-66b9b11b0d96",
+    "type": "normal",
+    "question": "Wer ist die 'Klinge des Exils'?",
+    "answer": "Riven",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "2f7a32df-57a6-4eec-b053-a2375e1512f8",
+    "type": "normal",
+    "question": "Welche Fähigkeit von Tahm Kench erlaubt es ihm, einen Verbündeten oder Gegner zu verschlingen?",
+    "answer": "Verschlingen",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "075839eb-df79-4fac-83d3-39d238c830ec",
+    "type": "normal",
+    "question": "Wer war der Mentor von Viego, der versuchte, ihn von seinem dunklen Pfad abzubringen?",
+    "answer": "Kalista",
+    "category": "League of Legends",
+    "difficulty": "Schwer"
+  },
+  {
+    "id": "ab0197d9-30fc-41f1-a0ad-22fd9a9e10dd",
+    "type": "normal",
+    "question": "Wie heißt die shurimanische Stadt, die über der Leere schwebt?",
+    "answer": "Nazumah",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "27520c0d-8e52-42fa-9605-538597385546",
+    "type": "normal",
+    "question": "Welcher Champion war der erste, der mit einem 'Begleiter'-System für den Dschungel veröffentlicht wurde?",
+    "answer": "Ivern",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "beb302ea-fb4c-4177-aefd-e7b176e87087",
+    "type": "normal",
+    "question": "Wie heißt der Anführer der 'Lunari', der Anhänger des Mondes?",
+    "answer": "Diana (obwohl die Lunari größtenteils ausgelöscht wurden)",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "7ed045b2-ebe5-4e1e-801a-57b204b05de2",
+    "type": "normal",
+    "question": "Welcher Champion hat die Fähigkeit, Portale durch die Landschaft zu erschaffen?",
+    "answer": "Ryze (Reichskrümmung)",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "abd7a349-a6c4-4f7d-bf20-c95cf565b677",
+    "type": "normal",
+    "question": "Was ist das 'Auge von Vecna' in der League of Legends Lore?",
+    "answer": "Es gibt kein 'Auge von Vecna' in der League of Legends Lore, das ist aus Dungeons & Dragons.",
+    "category": "League of Legends",
+    "difficulty": "Schwer"
+  },
+  {
+    "id": "f49037ad-014b-406d-bde5-e22dfa5f971f",
+    "type": "normal",
+    "question": "Welcher Champion ist der 'Virtuose'?",
+    "answer": "Jhin",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "5283902e-7f2c-4d92-b8f5-a5ddeceb7868",
+    "type": "normal",
+    "question": "Welche neue Fähigkeit wurde Smolder, dem Drachenjungen, gegeben, die mit Stacks skaliert?",
+    "answer": "Seine Q-Fähigkeit 'Super Scorcher Breath'.",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "0804b55c-2077-41e7-8fdf-fa5d4b282af3",
+    "type": "normal",
+    "question": "Wer ist der 'Sheriff von Piltover'?",
+    "answer": "Caitlyn",
+    "category": "League of Legends",
+    "difficulty": "Einfach"
+  },
+  {
+    "id": "f9c1b7cb-94fd-4f4e-8b2d-c69a041f23aa",
+    "type": "normal",
+    "question": "Welche Ressource verwendet Gnar?",
+    "answer": "Wut",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "264a2ee0-b4b7-49ea-8348-9ad4083428b8",
+    "type": "normal",
+    "question": "Welche Stadt wurde von Gangplank regiert, bevor Miss Fortune ihn stürzte?",
+    "answer": "Bilgewasser",
+    "category": "League of Legends",
+    "difficulty": "Einfach"
+  },
+  {
+    "id": "a7535e32-466b-4c2b-a9f3-da3710ba86a8",
+    "type": "normal",
+    "question": "Welcher Champion ist eine 'lebende Waffe' aus Zhaun?",
+    "answer": "Zac",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "cc26d529-10d2-4717-92f1-5e9c7cae9f47",
+    "type": "normal",
+    "question": "Welcher Gegenstand wurde für AD-Assassinen überarbeitet, um ihnen mehr Fähigkeitstempo zu geben, aber weniger 'Lethality'?",
+    "answer": "Youmuus Geistklinge",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "dac44397-7f28-47bf-9b72-dd5e98c25c34",
+    "type": "normal",
+    "question": "Wie heißt die shurimanische Kriegerin, die eine riesige Steinschleuder als Waffe benutzt?",
+    "answer": "Taliyah",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "c08bd1c7-80e4-4a0d-8a2d-4d6b07a9024f",
+    "type": "normal",
+    "question": "Welcher Champion kann mit seiner Ultimativen die Position mit einem Schatten tauschen?",
+    "answer": "Zed",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "ea0b8da0-e727-4daf-9f76-6335b1158b67",
+    "type": "normal",
+    "question": "Was ist die 'Leere' in der League of Legends Lore?",
+    "answer": "Eine Dimension des Nichts und der unendlichen Leere, aus der monströse Kreaturen stammen.",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "0c0ba97d-400a-4f4a-a085-158926378bbd",
+    "type": "normal",
+    "question": "Welcher Champion ist ein 'Gezeitenrufer'?",
+    "answer": "Nami",
+    "category": "League of Legends",
+    "difficulty": "Einfach"
+  },
+  {
+    "id": "cd68395c-65c4-481b-afeb-d893a7559f69",
+    "type": "normal",
+    "question": "Welche Rune erlaubt es einem Champion, nach dem Einsatz von 3 Fähigkeiten einen Schadens-Burst zu verursachen?",
+    "answer": "Elektrisieren",
+    "category": "League of Legends",
+    "difficulty": "Einfach"
+  },
+  {
+    "id": "2c223ef0-008e-4529-88ee-d2b1a5afedc2",
+    "type": "normal",
+    "question": "Welcher Champion ist der 'König der Barbaren'?",
+    "answer": "Tryndamere",
+    "category": "League of Legends",
+    "difficulty": "Einfach"
+  },
+  {
+    "id": "0da792bb-abe2-4c21-bf9d-bf271950f866",
+    "type": "normal",
+    "question": "Wie heißt die ultimative Fähigkeit von Vi?",
+    "answer": "Sturmangriff",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "5b528793-acba-4a9a-9f6d-fa5570e61a20",
+    "type": "normal",
+    "question": "Welcher Champion ist die 'Kaiserin der Elemente'?",
+    "answer": "Qiyana",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "a812c3df-e545-41f3-832d-f1bd45c65bd9",
+    "type": "normal",
+    "question": "Welche geheime Organisation manipuliert die Geschicke von Noxus aus den Schatten heraus?",
+    "answer": "Die Schwarze Rose",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "6b852db4-a731-4f21-80fc-9d42f760d56a",
+    "type": "normal",
+    "question": "Welcher Champion ist ein Yordle, der die Zeit kontrollieren kann?",
+    "answer": "Zilean (er ist kein Yordle, sondern ein Mensch aus Icathia)",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "5a1581d4-faf8-4501-9e0e-ea2c78de05ab",
+    "type": "normal",
+    "question": "Welche Änderung wurde an 'Gefrorenes Herz' vorgenommen, um es effektiver gegen Champions mit hoher Angriffsgeschwindigkeit zu machen?",
+    "answer": "Der 'Rock Solid'-Effekt wurde hinzugefügt, der einen Teil des Schadens von Angriffen blockiert.",
+    "category": "League of Legends",
+    "difficulty": "Schwer"
+  },
+  {
+    "id": "e947cc24-ece5-4c2e-99d2-21a338ca7d49",
+    "type": "normal",
+    "question": "Wer ist die 'strahlende Dämmerung'?",
+    "answer": "Leona",
+    "category": "League of Legends",
+    "difficulty": "Einfach"
+  },
+  {
+    "id": "ca4b5f30-dc58-45f5-9e3e-a35d5f56e9fa",
+    "type": "normal",
+    "question": "Welche Fähigkeit von Shaco platziert eine unsichtbare Falle, die Gegner in Angst und Schrecken versetzt?",
+    "answer": "Springteufel",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "06fb92e7-ed9d-450c-b081-12cafc15ad09",
+    "type": "normal",
+    "question": "Wie heißt der Prozess, durch den die shurimanischen Herrscher ihre gottähnlichen Kräfte erhielten?",
+    "answer": "Der Aufstieg (Ascension)",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "2de35079-edb6-4f49-8675-4365b26fd344",
+    "type": "normal",
+    "question": "Welcher Champion ist der 'verfallene König'?",
+    "answer": "Viego",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "09b7cea2-3993-4fa0-860f-380e39217321",
+    "type": "normal",
+    "question": "Welcher neue Gegenstand wurde eingeführt, der eine Mischung aus AP, Leben und einer verlangsamenden aktiven Fähigkeit bietet?",
+    "answer": "Immerfrost (Everfrost)",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "8df20904-ed7c-487c-a9ae-d77aa2d5b819",
+    "type": "normal",
+    "question": "Wer ist der 'Meister der Metalle'?",
+    "answer": "Mordekaiser",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "0421b3f9-7097-45f6-b2f4-f2faa9e02fb2",
+    "type": "normal",
+    "question": "Welche Fähigkeit erlaubt es Sylas, die ultimative Fähigkeit eines Gegners zu stehlen?",
+    "answer": "Hijack",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "f2466a32-51b6-4bba-9a1d-ba02ebe01805",
+    "type": "normal",
+    "question": "Wer war die Frau von Viego, deren Tod die Ruination auslöste?",
+    "answer": "Isolde",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "89a68f06-14f8-44f5-970c-eaca1c276585",
+    "type": "normal",
+    "question": "Welche Art von Kreaturen sind Kindred?",
+    "answer": "Eine Manifestation des Todes, bestehend aus Lamm und Wolf.",
+    "category": "League of Legends",
+    "difficulty": "Schwer"
+  },
+  {
+    "id": "e9383207-d63a-4fcb-90b8-9efbab630b2e",
+    "type": "normal",
+    "question": "Welcher Champion wurde als erster mit einer Fähigkeit veröffentlicht, die das Terrain der Kluft permanent verändert?",
+    "answer": "Ornn (kann Gegenstände schmieden) oder Taliyah (mit ihrer Ultimativen).",
+    "category": "League of Legends",
+    "difficulty": "Schwer"
+  },
+  {
+    "id": "450c649e-39d0-4843-8572-88f025adf8e2",
+    "type": "normal",
+    "question": "Wie heißt das Trifarianische Legion, das von Darius angeführt wird?",
+    "answer": "Die Trifarianische Legion",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "7fc97820-750b-4b15-8a28-b48edfdb9cbf",
+    "type": "normal",
+    "question": "Welcher Champion ist der 'Speer der Rache'?",
+    "answer": "Kalista",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "200ff2c2-dda6-4939-9867-81e1a2170881",
+    "type": "normal",
+    "question": "Welche mythische Gegenstands-Klasse wurde mit der Vorsaison 2024 wieder aus dem Spiel entfernt?",
+    "answer": "Alle mythischen Gegenstände.",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "95afda5b-6409-48c8-be0d-0ff51e167904",
+    "type": "normal",
+    "question": "Wer ist die 'neunschwänzige Füchsin'?",
+    "answer": "Ahri",
+    "category": "League of Legends",
+    "difficulty": "Einfach"
+  },
+  {
+    "id": "9d15d507-2abe-49d2-a88e-d7cb14d64298",
+    "type": "normal",
+    "question": "Welcher Champion ist der 'verfluchte Mumi'?",
+    "answer": "Amumu",
+    "category": "League of Legends",
+    "difficulty": "Einfach"
+  },
+  {
+    "id": "dddf1ec2-1434-49f3-a34c-ffc1ef325320",
+    "type": "normal",
+    "question": "Was ist die ultimative Fähigkeit von Twisted Fate?",
+    "answer": "Schicksal",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "8d25d90e-2645-4471-bdcb-a61a6cb984d7",
+    "type": "normal",
+    "question": "Welcher Champion ist ein Yordle und ein Artillerist?",
+    "answer": "Tristana",
+    "category": "League of Legends",
+    "difficulty": "Einfach"
+  },
+  {
+    "id": "dc6f31e1-b1e5-4d7a-9d03-e7bbaf93c984",
+    "type": "normal",
+    "question": "Welche Rune heilt einen Champion, wenn er einem Gegner Schaden zufügt?",
+    "answer": "Eroberer oder Leichtfüßigkeit",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "58131979-47f7-4071-9cc0-ff8da01541e5",
+    "type": "normal",
+    "question": "Aus welchem Material bestehen die Mauern von Demacia?",
+    "answer": "Petricite",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "858a58be-5546-48d9-9065-0424a0d516ee",
+    "type": "normal",
+    "question": "Welcher Champion ist der 'Auge der Dämmerung'?",
+    "answer": "Shen",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "15860204-e0c9-4d8f-8a42-3b6f4bafcf9e",
+    "type": "normal",
+    "question": "Welcher neue Champion wurde als finsterer Maler aus Ionia vorgestellt?",
+    "answer": "Hwei",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "9be0ac8b-1ab1-4393-a629-b8c5d20aa4d9",
+    "type": "normal",
+    "question": "Wie heißt die Technologie, die in Piltover und Zhaun verwendet wird und auf magischen Kristallen basiert?",
+    "answer": "Hextech",
+    "category": "League of Legends",
+    "difficulty": "Einfach"
+  },
+  {
+    "id": "bfba355b-773c-4c65-948c-2eba8db0f3c6",
+    "type": "normal",
+    "question": "Welcher Champion kann mit seiner Ultimativen einen riesigen Hai beschwören?",
+    "answer": "Fizz",
+    "category": "League of Legends",
+    "difficulty": "Einfach"
+  },
+  {
+    "id": "4192744c-cf2b-43fb-bc88-0676cdcbd24b",
+    "type": "normal",
+    "question": "Welcher Champion ist der 'Leerenwanderer'?",
+    "answer": "Kassadin",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "2b3d4d6c-5ced-41d6-99e4-3be7458fe692",
+    "type": "normal",
+    "question": "Was ist die 'Letzte Klinge' in Rivens Geschichte?",
+    "answer": "Das riesige Runenschwert, das sie einst trug und das sie zerbrach.",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "f05c7c3f-1754-4f33-ab11-b4b162f34380",
+    "type": "normal",
+    "question": "Welcher Champion war ursprünglich ein noxianischer Scharfrichter, der in den Minen von Zhaun wiedergeboren wurde?",
+    "answer": "Urgot",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "f00e4c1c-e9c0-4a8f-a292-cb462a0586a5",
+    "type": "normal",
+    "question": "Welcher neue Gegenstand wurde für Supporter eingeführt, der auf die Karte gelegt werden kann, um Verbündeten einen Schild zu geben?",
+    "answer": "Wachsamer Auge (Vigilant Wardstone) wurde überarbeitet, aber kein neuer Gegenstand mit dieser Funktion.",
+    "category": "League of Legends",
+    "difficulty": "Schwer"
+  },
+  {
+    "id": "8ea9525c-0232-4648-994b-160497a6971d",
+    "type": "normal",
+    "question": "Wer ist der 'unzerbrechliche Speer'?",
+    "answer": "Pantheon",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "5cfeeb06-aed2-43de-b1c1-af988e61e360",
+    "type": "normal",
+    "question": "Welche Fähigkeit von Illaoi beschwört Tentakel, die Gegner angreifen?",
+    "answer": "Prophet eines fremden Gottes (Passive)",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "768ea31e-f2be-4b11-8340-3a26b6f8f724",
+    "type": "normal",
+    "question": "Wie lautet der Name des Gottes, dem Illaoi dient?",
+    "answer": "Nagakabouros",
+    "category": "League of Legends",
+    "difficulty": "Schwer"
+  },
+  {
+    "id": "46c231a9-abee-4deb-8500-a0388b905864",
+    "type": "normal",
+    "question": "Welcher Champion ist die 'Tochter der Leere'?",
+    "answer": "Kai'Sa",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "218388ca-f53b-4406-86ee-87dd2357261b",
+    "type": "normal",
+    "question": "Welcher Champion wurde als erster mit 10 verschiedenen Fähigkeiten (durch seine Ulti) eingeführt?",
+    "answer": "Hwei",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "6c2aadc0-a7b2-4da1-8a68-6b0bfd46f4f7",
+    "type": "normal",
+    "question": "Wer ist der 'Ewige Alptraum'?",
+    "answer": "Nocturne",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "e6465f0d-63fb-48aa-87b9-be8debd8cc3c",
+    "type": "normal",
+    "question": "Welcher Champion kann eine Kopie eines Verbündeten erstellen?",
+    "answer": "Neeko (kann das Aussehen annehmen), aber keiner kann eine funktionale Kopie erstellen.",
+    "category": "League of Legends",
+    "difficulty": "Schwer"
+  },
+  {
+    "id": "24045ba1-9ffd-4c4d-8c1f-1048b7393c5d",
+    "type": "normal",
+    "question": "Wie hieß die Geliebte von Lucian, die von Thresh gefangen genommen wurde?",
+    "answer": "Senna",
+    "category": "League of Legends",
+    "difficulty": "Einfach"
+  },
+  {
+    "id": "075505e3-c399-44fb-acd7-1cca6656b1e4",
+    "type": "normal",
+    "question": "Welcher Champion ist der 'stolze Jäger'?",
+    "answer": "Rengar",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "550b2c62-04b3-43e6-8636-778dc484d98a",
+    "type": "normal",
+    "question": "Welcher Champion ist ein 'Aufgestiegener', der wie ein Falke aussieht?",
+    "answer": "Azir",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "f1a29860-a9bd-4800-8348-88aa8d5e9fa4",
+    "type": "normal",
+    "question": "Welcher Gegenstand wurde als mythische Option für AD-Kämpfer eingeführt, die auf Angriffstempo und Lebensraub basiert?",
+    "answer": "Unsterblicher Schildbogen",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "eb91f236-2235-434b-8288-cafffdef4350",
+    "type": "normal",
+    "question": "Wer ist der 'König der Trolle'?",
+    "answer": "Trundle",
+    "category": "League of Legends",
+    "difficulty": "Einfach"
+  },
+  {
+    "id": "86322de3-e533-4d80-b673-01c2b0b2a0f4",
+    "type": "normal",
+    "question": "Welche Fähigkeit von Ivern erlaubt es ihm, Dschungelmonster zu befreien, anstatt sie zu töten?",
+    "answer": "Freund des Waldes",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "a1f9b7c6-e9d6-4836-b68d-21f9b43fb6d9",
+    "type": "normal",
+    "question": "Welcher der Aspekte wurde von einem Darkin (Aatrox) getötet?",
+    "answer": "Der Aspekt des Krieges (der vorherige Wirt von Pantheon).",
+    "category": "League of Legends",
+    "difficulty": "Schwer"
+  },
+  {
+    "id": "d18480fe-ff3a-4aba-93e3-8101861be85d",
+    "type": "normal",
+    "question": "Wie heißt der Vastaya-Stamm, der in den Bäumen von Ionia lebt und zu dem Wukong gehört?",
+    "answer": "Die Shimon.",
+    "category": "League of Legends",
+    "difficulty": "Schwer"
+  },
+  {
+    "id": "4f7f4b60-bc41-4d6d-b881-b6a82e6fe9d1",
+    "type": "normal",
+    "question": "Welche Fähigkeit wurde bei Tahm Kenchs Überarbeitung von seiner W zu seiner Ultimativen gemacht (und umgekehrt)?",
+    "answer": "Seine 'Verschlingen'-Fähigkeit wurde von seiner Ultimativen zu seiner W, und seine 'Abyssal Dive' wurde von W zu R.",
+    "category": "League of Legends",
+    "difficulty": "Schwer"
+  },
+  {
+    "id": "bb375107-314f-46fa-b923-2af33ee8e69a",
+    "type": "normal",
+    "question": "Welcher Champion ist die 'Eishexe'?",
+    "answer": "Lissandra",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "a0bebf6f-5d37-4294-95cf-870ce1ab4390",
+    "type": "normal",
+    "question": "Welcher Champion kann mit seiner Ultimativen über die gesamte Karte fliegen, um Verbündeten zu helfen?",
+    "answer": "Soraka (Wunsch), Galio (Heldenhafter Auftritt), Pantheon (Großer Himmelssturz)",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "bd8ded67-fd31-4654-8371-3922e8cf80a7",
+    "type": "normal",
+    "question": "Was ist das 'Herz von Freljord' in der Lore?",
+    "answer": "Ein riesiger, wahrer Eiskristall, der von Ornn geformt wurde und den Braum jetzt als Schild trägt.",
+    "category": "League of Legends",
+    "difficulty": "Schwer"
+  },
+  {
+    "id": "7ec23cf3-280e-444a-906d-73650f1cf03a",
+    "type": "normal",
+    "question": "Welcher Champion ist der 'Erlöser'?",
+    "answer": "Lucian",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "bc521acc-d904-4772-8598-7d6c390cccde",
+    "type": "normal",
+    "question": "Welcher neue Gegenstand gewährt Fähigkeitstempo für ultimative Fähigkeiten und Bewegungstempo?",
+    "answer": "Axiom-Bogen",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "2f7a80cf-a909-4830-98d6-0382e8fefb1a",
+    "type": "normal",
+    "question": "Wer ist die 'mechanische Bedrohung'?",
+    "answer": "Rumble",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "428ea621-2bda-484d-881d-bd40b3f99396",
+    "type": "normal",
+    "question": "Welche Fähigkeit von Zilean kann einen Verbündeten wiederbeleben?",
+    "answer": "Zeitschleife",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "e864014a-35e5-4443-bd29-3f9f5f92eea1",
+    "type": "normal",
+    "question": "Welche Verschwörung führte zum vermeintlichen Tod von Jarvan III, dem König von Demacia?",
+    "answer": "Eine Verschwörung der Magier, angeführt von Sylas, die eine Rebellion anzettelten.",
+    "category": "League of Legends",
+    "difficulty": "Schwer"
+  },
+  {
+    "id": "88af62d9-6ea0-48ce-8a2f-96be8ebd4557",
+    "type": "normal",
+    "question": "Welcher Champion ist der 'Schamane'?",
+    "answer": "Udyr",
+    "category": "League of Legends",
+    "difficulty": "Mittel"
+  },
+  {
+    "id": "033a5865-0809-4429-9879-f658300ba435",
+    "type": "normal",
+    "question": "Welche Fähigkeit wurde bei der Überarbeitung von Udyr komplett neu gestaltet, um einen seiner alten Stände zu ersetzen?",
+    "answer": "Sein Phönix-Stand wurde durch den 'Awakened Spirit'-Stand ersetzt.",
+    "category": "League of Legends",
+    "difficulty": "Schwer"
+  },
+  {
+    "id": "50c8fe44-e360-44f4-be0a-0bff26b1cc13",
+    "type": "normal",
+    "question": "Buenos Aires ist die Hauptstadt von?",
+    "answer": "Argentinien",
+    "category": "Geografie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "0a0d4cd7-e50e-40be-b0d9-32bf1b0a5506",
+    "type": "normal",
+    "question": "Welches Land hat die größte Waldfläche?",
+    "answer": "Russland",
+    "category": "Geografie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "ac03c3da-4ea7-44cd-be56-bba612070bff",
+    "type": "normal",
+    "question": "Buchstabiere Interesse.",
+    "answer": "I N T E R E S S E",
+    "category": "Sprache",
+    "difficulty": "easy"
+  },
+  {
+    "id": "fdd8c762-f333-4ce3-a421-af58365d2f8d",
+    "type": "normal",
+    "question": "Welche Farben enthält die Flagge von Argentinien?",
+    "answer": "Blau, weiß, Gelb",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "b64c0a19-d8d1-4eb5-b74c-13485f42ed91",
+    "type": "normal",
+    "question": "Welches deutsche Bundesland hat die meisten Einwohner?",
+    "answer": "NRW",
+    "category": "Geografie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "aad7e24b-31d0-4033-9bd1-2178237b0f6c",
+    "type": "normal",
+    "question": "Wo steht das Burj Khalifa?",
+    "answer": "Dubai",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "b6972c4c-60e1-4796-af79-3f7ed10dfc61",
+    "type": "normal",
+    "question": "In welchem US Bundesstaat befindet sich Alcatraz?",
+    "answer": "Kalifornien",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "9aadb2bc-aad2-4b5d-abf1-8dd508a12df5",
+    "type": "normal",
+    "question": "Wie viele Spieler stehen beim Eishockey auf dem Feld?",
+    "answer": "12",
+    "category": "Popkultur",
+    "difficulty": "easy"
+  },
+  {
+    "id": "28b55fa0-7ac7-430b-8b04-cd8f1ce3fde5",
+    "type": "normal",
+    "question": "Wie lange geht ein reguläres Fußballspiel?",
+    "answer": "90 min",
+    "category": "Popkultur",
+    "difficulty": "easy"
+  },
+  {
+    "id": "a9d8f442-fa70-4796-92d8-63cd8f86862c",
+    "type": "normal",
+    "question": "Wie nennt man die Haare von Schweinen?",
+    "answer": "Borsten",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "5dc6e35d-6eff-4094-ae6b-6f29aad0de8d",
+    "type": "normal",
+    "question": "Wie lange ist die reguläre Amtszeit des Bundeskanzlers?",
+    "answer": "4 Jahre",
+    "category": "Politik",
+    "difficulty": "easy"
+  },
+  {
+    "id": "a1904a5b-11e2-4e7c-a5f7-e9cfbb240dfb",
+    "type": "normal",
+    "question": "Was war Arnold Schwarzenegger vor seiner Karriere als Schauspieler?",
+    "answer": "Bodybuilder",
+    "category": "Popkultur",
+    "difficulty": "easy"
+  },
+  {
+    "id": "8b975cb1-92d9-41f1-bfde-099ed5a9ea88",
+    "type": "normal",
+    "question": "Was misst man mit einem Geodreieck?",
+    "answer": "Winkel und Längen",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "c566fbda-55e1-4233-a1f4-25fa3be920fc",
+    "type": "normal",
+    "question": "Nenne einen der vier Gründer von Facebook",
+    "answer": "Zuckerberg, Dustin Moskovitz, Chris Hughes, Eduardo Saverin",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "3dbee715-c08b-4a0a-8738-209a2914b834",
+    "type": "normal",
+    "question": "Nach wem wurde der Nobelpreis benannt?",
+    "answer": "Alfred Nobel",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "512ff691-354a-42a4-9360-9deb0c5b72a7",
+    "type": "normal",
+    "question": "Welcher Planet ist der Sonne am nächsten?",
+    "answer": "Merkur",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "3ec8908a-364d-4b35-8d96-42cc36283333",
+    "type": "normal",
+    "question": "Welche Uhr kann man nur tagsüber ablesen?",
+    "answer": "Sonnenuhr",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "8ca438e9-9c0d-4aca-91b9-a2adc71b6721",
+    "type": "normal",
+    "question": "In welcher bekannten Serie sprach David Hasselhoff regelmäßig mit seinem Auto?",
+    "answer": "Knight Rider",
+    "category": "Popkultur",
+    "difficulty": "easy"
+  },
+  {
+    "id": "8d65f89e-e1c9-4532-bbde-fdd4b0eed9ef",
+    "type": "normal",
+    "question": "Wofür steht die Abkürzung DGS beim Getriebe?",
+    "answer": "Direktschaltgetriebe",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "ac192ca1-bfa2-4050-8c33-040b6c882c80",
+    "type": "normal",
+    "question": "Wenn zwei sich streiten, freut sich der … ?",
+    "answer": "Dritte",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "064ba102-9e86-412d-b77f-ca4427fa8cf8",
+    "type": "normal",
+    "question": "In welchem Jahr fiel die Berliner Mauer?",
+    "answer": "1998",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "45897cd7-9e72-4650-ac43-f2e069d4ea6e",
+    "type": "normal",
+    "question": "In welchem Küchengerät kann man sehr schnell essen erwärmen und Auftauen?",
+    "answer": "Mikrowelle",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "f19dbd96-457f-474c-a182-6c0bb762f26c",
+    "type": "normal",
+    "question": "Wie nennt man den Funkstandard um auf kurze Distanzen Daten, Musik, Bilder oder videos zwischen Geräten auszutauschen?",
+    "answer": "Bluetooth",
+    "category": "Kunst",
+    "difficulty": "easy"
+  },
+  {
+    "id": "dbe2fbb1-e3a8-461a-b668-d41e2165a2f3",
+    "type": "normal",
+    "question": "Julius Caesar war ein bedeutender Feldherr und Diktator welchen Reiches ?",
+    "answer": "Römisches Reich",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "94d979a2-3588-469d-a15c-81fbfa2fff63",
+    "type": "normal",
+    "question": "War oder Falsch: Die Blackbox in einem Flugzeug ist schwarz.",
+    "answer": "False",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "37a2b7b8-db00-4757-89f3-b30c93b7decc",
+    "type": "normal",
+    "question": "Was machen Fledermäuse im Winter?",
+    "answer": "Winterschlaf",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "3e55ab1b-382a-49e3-a3bb-71feaf5cb38c",
+    "type": "normal",
+    "question": "Welches Dokument bestätigt den Besitz eines KFZ`s ?",
+    "answer": "Fahrzeugbrief",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "d540599f-a8cf-4a9a-9ff0-d2a897ab4b6a",
+    "type": "normal",
+    "question": "Das flächenstärkste Land in der EU ist?",
+    "answer": "Frankreich",
+    "category": "Geografie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "c68fde89-ac7f-48b2-aa74-bcd0e0398847",
+    "type": "normal",
+    "question": "Auf welchem Kontinent liegt Uganda?",
+    "answer": "Afrika",
+    "category": "Geografie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "bafea90b-49dc-45a4-b56c-63acf94e93dc",
+    "type": "normal",
+    "question": "Was ist 12 * 12 ?",
+    "answer": "144",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "dbdef1d6-31a5-42bf-a4a8-4a06465f3213",
+    "type": "normal",
+    "question": "Für einen Vollzeitjob sind mindestens wie viele bezahlte Urlaubstage gesetzlich vorgeschrieben?",
+    "answer": "20",
+    "category": "Mathematik",
+    "difficulty": "easy"
+  },
+  {
+    "id": "d477cdd7-8170-40c3-ab7d-71bddf5b995e",
+    "type": "normal",
+    "question": "Was ist der RAM bei einem Computer?",
+    "answer": "Arbeitsspeicher",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "4a609a27-02af-4bc6-a3b5-35e82f6a5e16",
+    "type": "normal",
+    "question": "Ein Quartal besteht aus wie vielen Monaten?",
+    "answer": "3",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "1e5adff6-1028-4788-b951-84ab5cec21a5",
+    "type": "normal",
+    "question": "Microsoft hat das Spiel Minecraft entwickelt, wahr oder falsch?",
+    "answer": "False",
+    "category": "Popkultur",
+    "difficulty": "easy"
+  },
+  {
+    "id": "6b858113-cc4f-4f5a-b517-572355b465ec",
+    "type": "normal",
+    "question": "Wie viele Minuten hat ein Tag?",
+    "answer": "1440min",
+    "category": "Mathematik",
+    "difficulty": "easy"
+  },
+  {
+    "id": "e81fd2ff-0702-47d7-ab48-56b3ae1640bf",
+    "type": "normal",
+    "question": "Was ist jedes Jahr am 31.10?",
+    "answer": "Halloween, Reformationstag",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "4f012178-0b6e-479a-a6d1-23eb77ba6ef1",
+    "type": "normal",
+    "question": "Was ist der Überbegriff für Google, Yahoo, Bing, etc?",
+    "answer": "Suchmaschine",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "393bc5a0-0419-4c43-a220-9378bd7295bb",
+    "type": "normal",
+    "question": "Wo geht die Sonne auf?",
+    "answer": "Osten",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "d8bab540-757e-413f-b330-332189168379",
+    "type": "normal",
+    "question": "Welche Konstante wird immer bei der Berechnung einer Kreisfläche benötigt?",
+    "answer": "PI",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "669ccf4d-9ac3-4e6f-b9e4-f9f731565773",
+    "type": "normal",
+    "question": "Dein Herz pumpt Blut, Richtig oder Falsch?",
+    "answer": "Wahr",
+    "category": "Biologie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "3355071f-56d3-4ef6-a7b2-de7afa988fed",
+    "type": "normal",
+    "question": "Was bedeutet LOL ausgeschrieben?",
+    "answer": "laughing out loud",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "540ce388-be1a-4e90-853a-fc35b88eac42",
+    "type": "normal",
+    "question": "Die Gravitation der Erde ist niedriger als auf dem Mond, wahr oder falsch?",
+    "answer": "False",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "83e48048-0519-4d6e-8cce-e9511e53c08b",
+    "type": "normal",
+    "question": "Wie viele Kräuter sind im Jägermeister?",
+    "answer": "56",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "e8bdd6e3-1418-483e-bfc3-79c7eaee7a86",
+    "type": "normal",
+    "question": "Maschinen die Luft komprimieren, nennt man?",
+    "answer": "Kompressor",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "b606fa8c-652d-47c8-9e47-4fcc5abcbeb3",
+    "type": "normal",
+    "question": "Wie heißt das jüngste Kind der Simpsons?",
+    "answer": "Maggie",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "557837c0-c04a-4233-ac7f-fb0a8b6c3d3c",
+    "type": "normal",
+    "question": "Mit wem verbindet man die Baker Street?",
+    "answer": "Sherlock Holmes",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "f0cf6c3a-bb47-4cc0-8297-1b1f964b6dd4",
+    "type": "normal",
+    "question": "In welchem Verein spielt Christiano Ronaldo ?",
+    "answer": "Vereinslos",
+    "category": "Popkultur",
+    "difficulty": "easy"
+  },
+  {
+    "id": "56285cdb-5a81-468a-ba0f-e8a221ea7caf",
+    "type": "normal",
+    "question": "Welche Farben hat die Flagge von China?",
+    "answer": "Rot, Gelb",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "e0efbf5f-d2aa-4657-9152-9401c5b49153",
+    "type": "normal",
+    "question": "Was ist die tiefstmögliche Temperatur?",
+    "answer": "(-273°C)",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "c23098d3-9eb3-4902-941d-6567bd5966ff",
+    "type": "normal",
+    "question": "Amtssprache in Zypern ist?",
+    "answer": "griechisch / Türkisch",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "3afe5c22-56b7-403d-870e-30da21ca0895",
+    "type": "normal",
+    "question": "Ein Schein Medikament ohne Wirkung heißt?",
+    "answer": "Placebo",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "be8eaca0-c109-41c1-87a3-538c2161df09",
+    "type": "normal",
+    "question": "Wie wird Trinkalkohol fachsprachlich noch genannt?",
+    "answer": "Ethanol",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "ae8a3067-a990-4c70-b85e-f58f090c895c",
+    "type": "normal",
+    "question": "Alle Wespen haben einen Giftstachel, wahr oder Falsch?",
+    "answer": "False",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "972fba22-695d-4cf2-b6ea-4a10432f1418",
+    "type": "normal",
+    "question": "Ab wie vielen Jahren ist man in Deutschland volljährig?",
+    "answer": "18",
+    "category": "Geografie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "0faa2552-4289-4b94-aba4-94003ef78a8e",
+    "type": "normal",
+    "question": "Wie viele Spieler stehen bei einem Fußballspiel auf dem Platz?",
+    "answer": "22",
+    "category": "Popkultur",
+    "difficulty": "easy"
+  },
+  {
+    "id": "b8e84c6e-02fb-45be-a435-051b602bc04c",
+    "type": "normal",
+    "question": "Welche Vögel können nicht fliegen?",
+    "answer": "bspw. Pinguine",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "4811cf8f-51eb-40d1-ad09-0d7c736b562e",
+    "type": "normal",
+    "question": "Wie viele Bundesländer hat Österreich?",
+    "answer": "9",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "2f866fed-9425-43d3-a041-4fd05eef21a7",
+    "type": "normal",
+    "question": "Wie heißt die Kinderserie mit Tieren wie dem Esel I-ah oder einem Ferkel ?",
+    "answer": "Winnie Puuh",
+    "category": "Biologie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "bc18bb3a-5e0f-40fb-8a54-06ebbe8c31a5",
+    "type": "normal",
+    "question": "Wie nennt man Knochen bei Fischen?",
+    "answer": "Gräten",
+    "category": "Biologie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "caee0286-5bec-4c54-8ac5-e6e33ab58967",
+    "type": "normal",
+    "question": "Welcher Ozean liegt zwischen Europa und Amerika?",
+    "answer": "Atlantik",
+    "category": "Geografie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "55c8fec3-84fb-4323-943f-5e42fa478d7f",
+    "type": "normal",
+    "question": "Welches Schiff ging nach einem Zusammenstoß mit einem Eisberg unter?",
+    "answer": "Titanic",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "42f8971c-d858-4791-8088-c4ac1eab5ccb",
+    "type": "normal",
+    "question": "Wie nennt man den blauen Igel aus der gleichnamigen Spiele Reihe?",
+    "answer": "Sonic",
+    "category": "Popkultur",
+    "difficulty": "easy"
+  },
+  {
+    "id": "1d95cd8f-89ff-4ec8-a332-d392dd4a554e",
+    "type": "normal",
+    "question": "Dehydration bedeutet was?",
+    "answer": "Wassermangel",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "a8cd5820-7ad5-4916-bce1-2932a8bb31eb",
+    "type": "normal",
+    "question": "Rot ist eine Farbe, wahr oder falsch?",
+    "answer": "True",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "f462972d-8ddc-496c-aa4c-4ff9f70c8aaf",
+    "type": "normal",
+    "question": "Was ist die größte Insel der Welt?",
+    "answer": "Grönland",
+    "category": "Geografie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "7ff86904-cfbe-404a-a0be-e3be33d71628",
+    "type": "normal",
+    "question": "Was ist das Plural von Maximum ?",
+    "answer": "Maxima",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "020e83d4-54dd-4205-8ebb-c25e39e204b5",
+    "type": "normal",
+    "question": "Als zweiter Fall, oder „Wessen-Fall“ wird welcher Kasus der deutschen Grammatik bezeichnet?",
+    "answer": "Genitiv",
+    "category": "Mathematik",
+    "difficulty": "easy"
+  },
+  {
+    "id": "af08c35f-634c-42ec-a36c-2130904a7dc4",
+    "type": "normal",
+    "question": "Welcher deutsche Basketballspieler beendete 2019 seine Karriere?",
+    "answer": "Dirk Nowitzki",
+    "category": "Popkultur",
+    "difficulty": "easy"
+  },
+  {
+    "id": "539f5131-4c1e-4a04-a95c-7f5788081ea2",
+    "type": "normal",
+    "question": "Die Insel Mallorca liegt im?",
+    "answer": "Mittelmeer",
+    "category": "Geografie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "75311d30-5c1e-4599-bb11-5b411c043a5b",
+    "type": "normal",
+    "question": "Wer hat die Mona Lisa gemalt?",
+    "answer": "Leonardo Da Vinci",
+    "category": "Kunst",
+    "difficulty": "easy"
+  },
+  {
+    "id": "ec8fde90-2d55-4f5d-ace1-d4672dbd84c9",
+    "type": "normal",
+    "question": "Was sind die Farben der Flagge von Chile?",
+    "answer": "Rot, Blau & Weiß",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "58f33b17-95d1-4809-8323-6e0253a8beba",
+    "type": "normal",
+    "question": "Wie hoch ist die Strafe für einen Gefängnisausbruch in Deutschland?",
+    "answer": "Es gibt keine Strafe",
+    "category": "Geografie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "98dee75e-1013-4ac0-aafd-c7454eaf382e",
+    "type": "normal",
+    "question": "In welchem Haus wohnt der amerikanische Präsident?",
+    "answer": "im Weißen Haus",
+    "category": "Politik",
+    "difficulty": "easy"
+  },
+  {
+    "id": "3b7233f0-48e6-40fd-b16b-1b387a5e649c",
+    "type": "normal",
+    "question": "Welcher amerikanische Präsident ist auf der Dollar-Note abgebildet?",
+    "answer": "Washington",
+    "category": "Politik",
+    "difficulty": "easy"
+  },
+  {
+    "id": "0e278749-8e68-4789-94cb-29cbbfadcc27",
+    "type": "normal",
+    "question": "Welche ist die meist gesprochene Sprache in Belgien?",
+    "answer": "Niederländisch",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "903384a1-94d1-4d85-badf-9efdc1d3df77",
+    "type": "normal",
+    "question": "In welchem Jahr ist Angela Merkel in den Ruhestand getreten?",
+    "answer": "2021",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "a2f08b4e-15b7-4635-8c5a-1415f9b827e7",
+    "type": "normal",
+    "question": "Luna Nelson Mandela war Präsident von welchem Land?",
+    "answer": "Süd-Afrika",
+    "category": "Geografie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "beeb05a1-e7b5-433c-abd1-c5919a15ae1a",
+    "type": "normal",
+    "question": "Buenos Aires ist die Hauptstadt von?",
+    "answer": "Argentinien",
+    "category": "Geografie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "be831210-da0a-4dee-a035-3e3d7c237746",
+    "type": "normal",
+    "question": "Welches Land hat die größte Waldfläche?",
+    "answer": "Russland",
+    "category": "Geografie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "9bc41cf9-4e62-4c0c-9a99-fdf8b60bd9a3",
+    "type": "normal",
+    "question": "Buchstabiere Interesse.",
+    "answer": "I N T E R E S S E",
+    "category": "Sprache",
+    "difficulty": "easy"
+  },
+  {
+    "id": "63f547ec-f8a8-47b2-9e62-62b23ca451fe",
+    "type": "normal",
+    "question": "Welche Farben enthält die Flagge von Argentinien?",
+    "answer": "Blau, weiß, Gelb",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "10e261f5-3be2-45f6-a87a-ee0ebae33975",
+    "type": "normal",
+    "question": "Welches deutsche Bundesland hat die meisten Einwohner?",
+    "answer": "NRW",
+    "category": "Geografie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "ad173b88-0799-4b68-9ce7-c8a7df9e02de",
+    "type": "normal",
+    "question": "Wo steht das Burj Khalifa?",
+    "answer": "Dubai",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "16c0423a-04a5-4221-b64f-6e577f9b0a96",
+    "type": "normal",
+    "question": "In welchem US Bundesstaat befindet sich Alcatraz?",
+    "answer": "Kalifornien",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "cf8b412f-e371-4a9d-adeb-f378d8b3e8db",
+    "type": "normal",
+    "question": "Wie viele Spieler stehen beim Eishockey auf dem Feld?",
+    "answer": "12",
+    "category": "Popkultur",
+    "difficulty": "easy"
+  },
+  {
+    "id": "bccc152f-3521-43b9-a469-aa53d25656b6",
+    "type": "normal",
+    "question": "Wie lange geht ein reguläres Fußballspiel?",
+    "answer": "90 min",
+    "category": "Popkultur",
+    "difficulty": "easy"
+  },
+  {
+    "id": "c048ad8c-7c09-4e8f-8ddf-9391541cef5e",
+    "type": "normal",
+    "question": "Wie nennt man die Haare von Schweinen?",
+    "answer": "Borsten",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "8cdf26f1-7d70-4aa5-b43a-cb6748e4ab95",
+    "type": "normal",
+    "question": "Wie lange ist die reguläre Amtszeit des Bundeskanzlers?",
+    "answer": "4 Jahre",
+    "category": "Politik",
+    "difficulty": "easy"
+  },
+  {
+    "id": "5882dd86-07bf-467e-ae3b-81d0b5cbec39",
+    "type": "normal",
+    "question": "Was war Arnold Schwarzenegger vor seiner Karriere als Schauspieler?",
+    "answer": "Bodybuilder",
+    "category": "Popkultur",
+    "difficulty": "easy"
+  },
+  {
+    "id": "3a39f513-1555-4e90-a207-6f78dcedb9c0",
+    "type": "normal",
+    "question": "Was misst man mit einem Geodreieck?",
+    "answer": "Winkel und Längen",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "32944298-d012-4abc-a9a7-a7f6c2585ea8",
+    "type": "normal",
+    "question": "Nenne einen der vier Gründer von Facebook",
+    "answer": "Zuckerberg, Dustin Moskovitz, Chris Hughes, Eduardo Saverin",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "c916b209-55a8-4f77-87ec-3519091c62b9",
+    "type": "normal",
+    "question": "Nach wem wurde der Nobelpreis benannt?",
+    "answer": "Alfred Nobel",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "a302c04e-69fb-4399-b021-6b973d56a735",
+    "type": "normal",
+    "question": "Welcher Planet ist der Sonne am nächsten?",
+    "answer": "Merkur",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "385d71b9-a347-4dd0-9073-bd933f2ac80d",
+    "type": "normal",
+    "question": "Welche Uhr kann man nur tagsüber ablesen?",
+    "answer": "Sonnenuhr",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "f240e47a-3a22-4a3e-b30e-b378b224e7bd",
+    "type": "normal",
+    "question": "In welcher bekannten Serie sprach David Hasselhoff regelmäßig mit seinem Auto?",
+    "answer": "Knight Rider",
+    "category": "Popkultur",
+    "difficulty": "easy"
+  },
+  {
+    "id": "748e28bd-7cd8-42c9-ad13-8a95e578f22d",
+    "type": "normal",
+    "question": "Wofür steht die Abkürzung DGS beim Getriebe?",
+    "answer": "Direktschaltgetriebe",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "38e2ecea-69e9-4363-9e4e-ff6d38c864d4",
+    "type": "normal",
+    "question": "Wenn zwei sich streiten, freut sich der … ?",
+    "answer": "Dritte",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "8fc192cd-8ab6-437a-8087-6a68fbb8730b",
+    "type": "normal",
+    "question": "In welchem Jahr fiel die Berliner Mauer?",
+    "answer": "1998",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "7c2e11fe-fe4a-4507-8f23-1f239ac8a5db",
+    "type": "normal",
+    "question": "In welchem Küchengerät kann man sehr schnell essen erwärmen und Auftauen?",
+    "answer": "Mikrowelle",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "2d6e9f23-961a-4864-9547-83ce758214b3",
+    "type": "normal",
+    "question": "Wie nennt man den Funkstandard um auf kurze Distanzen Daten, Musik, Bilder oder videos zwischen Geräten auszutauschen?",
+    "answer": "Bluetooth",
+    "category": "Kunst",
+    "difficulty": "easy"
+  },
+  {
+    "id": "5bf51233-02e7-4131-8adf-96dfa8a1e2d7",
+    "type": "normal",
+    "question": "Julius Caesar war ein bedeutender Feldherr und Diktator welchen Reiches ?",
+    "answer": "Römisches Reich",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "d75c42bf-36e2-4303-bc4c-297c2b201412",
+    "type": "normal",
+    "question": "War oder Falsch: Die Blackbox in einem Flugzeug ist schwarz.",
+    "answer": "False",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "272fc903-7836-4450-851f-148c3e6233b7",
+    "type": "normal",
+    "question": "Was machen Fledermäuse im Winter?",
+    "answer": "Winterschlaf",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "4032255e-ba89-4938-80b6-9dba42e2847f",
+    "type": "normal",
+    "question": "Welches Dokument bestätigt den Besitz eines KFZ`s ?",
+    "answer": "Fahrzeugbrief",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "4b49f9c0-0419-4b46-89c2-32aac04bd5f1",
+    "type": "normal",
+    "question": "Das flächenstärkste Land in der EU ist?",
+    "answer": "Frankreich",
+    "category": "Geografie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "24b7dccd-c409-4ac2-b2b2-8a87c2936d02",
+    "type": "normal",
+    "question": "Auf welchem Kontinent liegt Uganda?",
+    "answer": "Afrika",
+    "category": "Geografie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "27db80c5-1375-436e-a440-6d006a63e1d2",
+    "type": "normal",
+    "question": "Was ist 12 * 12 ?",
+    "answer": "144",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "6b53f4ad-30ee-469f-9fd9-75574e7d3058",
+    "type": "normal",
+    "question": "Für einen Vollzeitjob sind mindestens wie viele bezahlte Urlaubstage gesetzlich vorgeschrieben?",
+    "answer": "20",
+    "category": "Mathematik",
+    "difficulty": "easy"
+  },
+  {
+    "id": "36b7f904-b971-4439-a6dc-4c31d843c9b0",
+    "type": "normal",
+    "question": "Was ist der RAM bei einem Computer?",
+    "answer": "Arbeitsspeicher",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "6f2d7ac2-a4ee-4275-89a9-00492912d43f",
+    "type": "normal",
+    "question": "Ein Quartal besteht aus wie vielen Monaten?",
+    "answer": "3",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "3796334d-0c18-48e2-af58-40c565388a5c",
+    "type": "normal",
+    "question": "Microsoft hat das Spiel Minecraft entwickelt, wahr oder falsch?",
+    "answer": "False",
+    "category": "Popkultur",
+    "difficulty": "easy"
+  },
+  {
+    "id": "b8027aeb-fc7d-43eb-8454-1c772509f468",
+    "type": "normal",
+    "question": "Wie viele Minuten hat ein Tag?",
+    "answer": "1440min",
+    "category": "Mathematik",
+    "difficulty": "easy"
+  },
+  {
+    "id": "a9cecc76-71eb-458e-86c0-b23167c5128e",
+    "type": "normal",
+    "question": "Was ist jedes Jahr am 31.10?",
+    "answer": "Halloween, Reformationstag",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "a445c39d-9905-4936-95a1-58ca271f08d0",
+    "type": "normal",
+    "question": "Was ist der Überbegriff für Google, Yahoo, Bing, etc?",
+    "answer": "Suchmaschine",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "d0b0876f-5c45-4542-8089-e485e315f481",
+    "type": "normal",
+    "question": "Wo geht die Sonne auf?",
+    "answer": "Osten",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "1b733377-59f7-4857-b3e2-9605e444d3ed",
+    "type": "normal",
+    "question": "Welche Konstante wird immer bei der Berechnung einer Kreisfläche benötigt?",
+    "answer": "PI",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "ce27b485-019a-42f3-96a9-de1de504e2d9",
+    "type": "normal",
+    "question": "Dein Herz pumpt Blut, Richtig oder Falsch?",
+    "answer": "Wahr",
+    "category": "Biologie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "b1d33626-d0f1-4f23-85c9-8d66e74bc464",
+    "type": "normal",
+    "question": "Was bedeutet LOL ausgeschrieben?",
+    "answer": "laughing out loud",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "6138663b-0fd2-4316-896b-59e6903b3e8d",
+    "type": "normal",
+    "question": "Die Gravitation der Erde ist niedriger als auf dem Mond, wahr oder falsch?",
+    "answer": "False",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "46dd3636-816a-41be-8802-98042d074672",
+    "type": "normal",
+    "question": "Wie viele Kräuter sind im Jägermeister?",
+    "answer": "56",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "b1d5b3dd-d9ad-4d17-9209-c01d8deed126",
+    "type": "normal",
+    "question": "Maschinen die Luft komprimieren, nennt man?",
+    "answer": "Kompressor",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "da2cfb35-2493-4fde-a2cf-308058a85df2",
+    "type": "normal",
+    "question": "Wie heißt das jüngste Kind der Simpsons?",
+    "answer": "Maggie",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "9619ff6e-998a-4001-a5c3-1c595794b9f8",
+    "type": "normal",
+    "question": "Mit wem verbindet man die Baker Street?",
+    "answer": "Sherlock Holmes",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "9282e713-be23-401f-80d4-670e5597b3b8",
+    "type": "normal",
+    "question": "In welchem Verein spielt Christiano Ronaldo ?",
+    "answer": "Vereinslos",
+    "category": "Popkultur",
+    "difficulty": "easy"
+  },
+  {
+    "id": "69e386a2-59e2-4d0e-9571-367f6abe1103",
+    "type": "normal",
+    "question": "Welche Farben hat die Flagge von China?",
+    "answer": "Rot, Gelb",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "60e68153-232a-413e-8a13-7e95a83459e9",
+    "type": "normal",
+    "question": "Was ist die tiefstmögliche Temperatur?",
+    "answer": "(-273°C)",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "8b122cb2-1ce3-44a3-8af2-430cabffa123",
+    "type": "normal",
+    "question": "Amtssprache in Zypern ist?",
+    "answer": "griechisch / Türkisch",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "3fdf2d85-e314-40d4-be00-8797c74166b3",
+    "type": "normal",
+    "question": "Ein Schein Medikament ohne Wirkung heißt?",
+    "answer": "Placebo",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "f2079a45-0a51-4b3a-b4b1-43cd202dd1cc",
+    "type": "normal",
+    "question": "Wie wird Trinkalkohol fachsprachlich noch genannt?",
+    "answer": "Ethanol",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "53ab8c05-9106-417b-8902-e5d558a920c7",
+    "type": "normal",
+    "question": "Alle Wespen haben einen Giftstachel, wahr oder Falsch?",
+    "answer": "False",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "2993188b-efa3-46ca-91a1-4a6a8f01bbe8",
+    "type": "normal",
+    "question": "Ab wie vielen Jahren ist man in Deutschland volljährig?",
+    "answer": "18",
+    "category": "Geografie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "a28549f4-fe28-4bb0-85e4-751129952386",
+    "type": "normal",
+    "question": "Wie viele Spieler stehen bei einem Fußballspiel auf dem Platz?",
+    "answer": "22",
+    "category": "Popkultur",
+    "difficulty": "easy"
+  },
+  {
+    "id": "05d3b44d-04dd-409c-a992-c03181237e3d",
+    "type": "normal",
+    "question": "Welche Vögel können nicht fliegen?",
+    "answer": "bspw. Pinguine",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "04545f6f-f0dc-4dbb-b721-b2950163edbe",
+    "type": "normal",
+    "question": "Wie viele Bundesländer hat Österreich?",
+    "answer": "9",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "32479bb3-21a5-4f6b-a441-1a5cda724a48",
+    "type": "normal",
+    "question": "Wie heißt die Kinderserie mit Tieren wie dem Esel I-ah oder einem Ferkel ?",
+    "answer": "Winnie Puuh",
+    "category": "Biologie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "d85cc5c1-0eda-4f1f-95aa-d8f1212a4510",
+    "type": "normal",
+    "question": "Wie nennt man Knochen bei Fischen?",
+    "answer": "Gräten",
+    "category": "Biologie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "821793ba-05c0-4db1-a853-c8756af5059d",
+    "type": "normal",
+    "question": "Welcher Ozean liegt zwischen Europa und Amerika?",
+    "answer": "Atlantik",
+    "category": "Geografie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "4762d27c-5874-4ab7-8223-3e207d493c98",
+    "type": "normal",
+    "question": "Welches Schiff ging nach einem Zusammenstoß mit einem Eisberg unter?",
+    "answer": "Titanic",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "34b627b6-6a3f-4347-9e35-2c8160053121",
+    "type": "normal",
+    "question": "Wie nennt man den blauen Igel aus der gleichnamigen Spiele Reihe?",
+    "answer": "Sonic",
+    "category": "Popkultur",
+    "difficulty": "easy"
+  },
+  {
+    "id": "26a2cb67-93fc-4490-8be5-7db12eb7c1f2",
+    "type": "normal",
+    "question": "Dehydration bedeutet was?",
+    "answer": "Wassermangel",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "2c3447d0-04de-4da3-8320-b2c25aa4af30",
+    "type": "normal",
+    "question": "Rot ist eine Farbe, wahr oder falsch?",
+    "answer": "True",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "50189ccd-464b-4204-9c41-97d41a5811f6",
+    "type": "normal",
+    "question": "Was ist die größte Insel der Welt?",
+    "answer": "Grönland",
+    "category": "Geografie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "7c57a425-2e25-4095-af7a-854105b2f048",
+    "type": "normal",
+    "question": "Was ist das Plural von Maximum ?",
+    "answer": "Maxima",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "2782427c-a00b-41cc-affa-c9f82fe58395",
+    "type": "normal",
+    "question": "Als zweiter Fall, oder „Wessen-Fall“ wird welcher Kasus der deutschen Grammatik bezeichnet?",
+    "answer": "Genitiv",
+    "category": "Mathematik",
+    "difficulty": "easy"
+  },
+  {
+    "id": "6ac6e8fc-6b2d-4e76-a278-32db5a4dfe29",
+    "type": "normal",
+    "question": "Welcher deutsche Basketballspieler beendete 2019 seine Karriere?",
+    "answer": "Dirk Nowitzki",
+    "category": "Popkultur",
+    "difficulty": "easy"
+  },
+  {
+    "id": "be6d9db9-9a50-407e-8f62-9e3cdb10aa8d",
+    "type": "normal",
+    "question": "Die Insel Mallorca liegt im?",
+    "answer": "Mittelmeer",
+    "category": "Geografie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "3460926f-8b79-4e08-8944-d93ce6785a49",
+    "type": "normal",
+    "question": "Wer hat die Mona Lisa gemalt?",
+    "answer": "Leonardo Da Vinci",
+    "category": "Kunst",
+    "difficulty": "easy"
+  },
+  {
+    "id": "4afc79a8-12f1-4546-85c3-7c3465678c03",
+    "type": "normal",
+    "question": "Was sind die Farben der Flagge von Chile?",
+    "answer": "Rot, Blau & Weiß",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "088da4bf-9985-448c-8921-a4823c8e4367",
+    "type": "normal",
+    "question": "Wie hoch ist die Strafe für einen Gefängnisausbruch in Deutschland?",
+    "answer": "Es gibt keine Strafe",
+    "category": "Geografie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "912f4cee-0abb-475d-a17b-44c286b93eac",
+    "type": "normal",
+    "question": "In welchem Haus wohnt der amerikanische Präsident?",
+    "answer": "im Weißen Haus",
+    "category": "Politik",
+    "difficulty": "easy"
+  },
+  {
+    "id": "79926188-a0dc-4071-8d82-8d4818f51b4e",
+    "type": "normal",
+    "question": "Welcher amerikanische Präsident ist auf der Dollar-Note abgebildet?",
+    "answer": "Washington",
+    "category": "Politik",
+    "difficulty": "easy"
+  },
+  {
+    "id": "a80d416d-4545-4958-9da8-cb300327264d",
+    "type": "normal",
+    "question": "Welche ist die meist gesprochene Sprache in Belgien?",
+    "answer": "Niederländisch",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "1ad1501c-1e91-4691-a374-3ec569e70fa9",
+    "type": "normal",
+    "question": "In welchem Jahr ist Angela Merkel in den Ruhestand getreten?",
+    "answer": "2021",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "2c27ab00-3c92-47a1-9b5b-9c7a03b0f839",
+    "type": "normal",
+    "question": "Luna Nelson Mandela war Präsident von welchem Land?",
+    "answer": "Süd-Afrika",
+    "category": "Geografie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "c987a8d8-4216-4978-8885-4527bae77fad",
+    "type": "normal",
+    "question": "In welchem Land gibt es eine Weltmeisterschaft in Luftgitarre spielen?",
+    "answer": "Finnland",
+    "category": "Geografie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "8f4e1238-e039-4847-a734-369066ee1e87",
+    "type": "normal",
+    "question": "In welchem Land wurde Pablo Picasso geboren?",
+    "answer": "Spanien",
+    "category": "Geografie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "bd257d78-a9d4-4906-9b07-ebdb75473f8d",
+    "type": "normal",
+    "question": "Von wem stammt das Zitat: „Leni vidi vici“?",
+    "answer": "Julius Caesar",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "b39868e3-dc8d-4556-99c3-b209a46c9654",
+    "type": "normal",
+    "question": "Wie heißt das größte Technologieunternehmen in Südkorea?",
+    "answer": "Samsung",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "877b2bae-b011-4f71-849f-7f07f7dbec53",
+    "type": "normal",
+    "question": "Wie bezeichnet man den Urknall noch?",
+    "answer": "Big Bang",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "bdee1f0b-2f97-48a0-8cbb-0632a8d6b7c5",
+    "type": "normal",
+    "question": "Was ist die Hauptstadt von Mexico?",
+    "answer": "Mexico City / Stadt",
+    "category": "Geografie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "a2b2d2c2-ec86-485b-ba40-f116deb34437",
+    "type": "normal",
+    "question": "Wofür hält Paul Hunn den Rekord, welcher bei 118,1 Dezibel lag?",
+    "answer": "Laut Rülpsen",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "31bc81a6-aa27-41a8-93fa-de43d08ad7e4",
+    "type": "normal",
+    "question": "Wie lautet der zweite Planet in unserem Sonnensystem?",
+    "answer": "Venus",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "93769515-7bf0-4592-95e9-cfde33fb25d5",
+    "type": "normal",
+    "question": "Wie viele Spieler gibt es in einem Wasserball Team im Wasser?",
+    "answer": "7",
+    "category": "Popkultur",
+    "difficulty": "easy"
+  },
+  {
+    "id": "ebfaa1b8-46b7-40be-b6bf-74f23c021178",
+    "type": "normal",
+    "question": "Von Wem ist das Lied 99 Luftballons",
+    "answer": "Nena",
+    "category": "Popkultur",
+    "difficulty": "easy"
+  },
+  {
+    "id": "fbf4d663-8042-47b4-811f-cb586a831cc5",
+    "type": "normal",
+    "question": "In Welchem Land befindet sich die Stonehenge",
+    "answer": "England",
+    "category": "Geografie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "ebf3a19f-6764-489e-be09-9008f6f43a03",
+    "type": "normal",
+    "question": "Eulen gelten als Symbol der?",
+    "answer": "Weisheit",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "21a65c01-89cd-4523-a9e3-df3ba4e2a3c0",
+    "type": "normal",
+    "question": "Wofür ist Juri Gagarin bekannt?",
+    "answer": "Erster Mann im All",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "d77d5156-154d-46c1-bbc0-c81a10993de0",
+    "type": "normal",
+    "question": "Wo befindet sich die Klagemauer",
+    "answer": "Jerusalem",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "a094622a-1245-424a-b920-15b756ea0c95",
+    "type": "normal",
+    "question": "Wer war der 1. Präsident der USA",
+    "answer": "Washington",
+    "category": "Politik",
+    "difficulty": "easy"
+  },
+  {
+    "id": "31d06244-aa60-4f02-9fe3-8159ae6a0b76",
+    "type": "normal",
+    "question": "Welche Betriebsystem stammt von Apple",
+    "answer": "IOS",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "c6bd0cab-d4dc-4d32-b97e-673a6233849e",
+    "type": "normal",
+    "question": "Welches ist das Höchste Bauwerk Deutschlands",
+    "answer": "Berliner Fernsehturm",
+    "category": "Geografie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "bf150abc-fcb8-4798-8361-4b6462466ef2",
+    "type": "normal",
+    "question": "Wie viel hat der Bau der Berliner Flughafens BER gekostet",
+    "answer": "6 Milliarden",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "e063e88e-ef3f-4478-aceb-64cb1ab957e5",
+    "type": "normal",
+    "question": "Wie heißt die Hauptstadt von Thüringen",
+    "answer": "Erfurt",
+    "category": "Geografie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "6b47decf-888a-4aa4-86b0-2540bd1647bb",
+    "type": "normal",
+    "question": "Wofür steht das L in RTL",
+    "answer": "Luxemburg",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "e923271a-c2ab-43f4-8038-9fdd91158c5d",
+    "type": "normal",
+    "question": "In Welchem Meer liegt die Insel Hawaii",
+    "answer": "Pacific",
+    "category": "Geografie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "99a83209-dafc-483d-a6b4-9f4da1844aea",
+    "type": "normal",
+    "question": "Wer sang 2 mal 3 macht 4",
+    "answer": "Pipi Langstrumpf",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "d100deec-d561-44f5-8e96-58f3649eecac",
+    "type": "normal",
+    "question": "Wieviele Pokemon gibt es insgesamt",
+    "answer": "1008",
+    "category": "Popkultur",
+    "difficulty": "easy"
+  },
+  {
+    "id": "b499f268-4762-4d5a-9b83-8602037194c2",
+    "type": "normal",
+    "question": "Ist es wahr, dass Kanada und Russland direkt gegenüber liegen?",
+    "answer": "Wahr",
+    "category": "Geografie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "4b998c1b-ace7-4a5a-9006-627c526fe9bb",
+    "type": "normal",
+    "question": "Welche Stadt hat nach Berlin die meisten Einwohner in DE",
+    "answer": "Hamburg (1,8 mio)",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "8583d6aa-d1d2-4ba8-9bac-6a3349f59e63",
+    "type": "normal",
+    "question": "3. Nachkommastelle von Pi lautet?",
+    "answer": "1",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "9c69a66c-8e09-4fa8-b3f5-00ea006215db",
+    "type": "normal",
+    "question": "Lichtwellen bewegen sich schneller als Schallwellen, wahr oder falsch.",
+    "answer": "Wahr",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "469997be-3ced-4a4c-8e5d-82c65fd1bad0",
+    "type": "normal",
+    "question": "Wer war der Vorgänger/in von Angela Merkel?",
+    "answer": "Gerhard Schröder",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "3d93e97d-b7a6-4b44-bc3c-112c65cbd135",
+    "type": "normal",
+    "question": "Wie viele Weihnachtsbäume werden in Deutschland pro Jahr verkauft?",
+    "answer": "None",
+    "category": "Geografie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "be4004f8-1d59-442f-93cb-4e648f12b639",
+    "type": "normal",
+    "question": "Wie viele Liter Bier werden in Deutschland pro Kopf jährlich getrunken?",
+    "answer": "100 Liter Bier.",
+    "category": "Geografie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "785e575e-28b3-4e9d-9d26-1135f5a73817",
+    "type": "normal",
+    "question": "Wie lang ist der Begattungsapparat der 15 cm langen Bananenschnecke?",
+    "answer": "Circa 80 cm, das entspricht 550 Prozent der Körpergröße.",
+    "category": "Mathematik",
+    "difficulty": "easy"
+  },
+  {
+    "id": "59586f00-f829-4b15-a9ab-80c46f3da0e2",
+    "type": "normal",
+    "question": "Wie viele Buchstaben hat das hawaiianische Alphabet?",
+    "answer": "12",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "80e607a8-3ad7-4a75-a785-598fba02c458",
+    "type": "normal",
+    "question": "Wie viele Einkerbungen hat ein Golfball?",
+    "answer": "336",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "d24ae942-5805-4674-a838-21a472d0ce28",
+    "type": "normal",
+    "question": "Im Laufe eines 60 Jährigen Lebens hat ein Mann durchschnittliche wie lange eine Erektion während er schläft?",
+    "answer": "5 Jahre",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "319bb262-00cc-4383-8010-a9f8c01b5725",
+    "type": "normal",
+    "question": "Wo ist der Karpaltunnel?",
+    "answer": "Das ist kein Verkehrstunnel, sondern eine Knochenrinne der Hand, durch die Sehnen und Nerven laufen.",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "9b38561f-59ff-4dcb-86cc-d61c1dff7df5",
+    "type": "normal",
+    "question": "Welcher ist der „rote Planet“ unseres Sonnensystems?",
+    "answer": "Der Mars",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "be206914-0a1d-4387-9b0d-4a516fa03e23",
+    "type": "normal",
+    "question": "Welches Land ist flächenmäßig das zweitgrößte der Erde?",
+    "answer": "Kanada",
+    "category": "Geografie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "160f9437-0064-492e-b7eb-cb76db12e3c9",
+    "type": "normal",
+    "question": "Welcher ist der längste Fluss der Welt?",
+    "answer": "Amazonas",
+    "category": "Geografie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "a7629cb4-0743-461c-b076-d607f498ff0e",
+    "type": "normal",
+    "question": "Welches ist die größte Stadt der Welt?",
+    "answer": "Mexiko-Stadt",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "21eec3be-6fbd-4d43-8053-6dec59a7a6fb",
+    "type": "normal",
+    "question": "Wie heißt die Hauptstadt von Brasilien?",
+    "answer": "Brasilia",
+    "category": "Geografie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "a73fcc71-3efd-4bac-8eda-7222fdb066ce",
+    "type": "normal",
+    "question": "Wie viele Knochen hat ein Erwachsenenkörper?",
+    "answer": "206",
+    "category": "Biologie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "54506908-f013-4780-a7e1-cb0b4583bb10",
+    "type": "normal",
+    "question": "Wie lange hat Goethe an seinem „Faust“ gearbeitet?",
+    "answer": "64 Jahre!",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "3c205dda-a452-4987-8ee5-d01df14fd461",
+    "type": "normal",
+    "question": "Mit wie vielen Figuren startet ein Schachspiel?",
+    "answer": "32",
+    "category": "Popkultur",
+    "difficulty": "easy"
+  },
+  {
+    "id": "29491a84-dc92-485a-9b39-f1afcddc28fd",
+    "type": "normal",
+    "question": "Wie viele Tasten hat ein Klavier?",
+    "answer": "88",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "778aff3b-81e9-49fd-ad97-479e3eca186d",
+    "type": "normal",
+    "question": "Wie heißt das Element Gold auf Latein?",
+    "answer": "Aurum – im Periodensystem dargestellt als „Au“.",
+    "category": "Physik",
+    "difficulty": "easy"
+  },
+  {
+    "id": "5dfe709d-7eb9-421d-a544-4790fb3bc6e8",
+    "type": "normal",
+    "question": "Wie hoch hängt ein Basketball-Korb?",
+    "answer": "3.05 Meter",
+    "category": "Mathematik",
+    "difficulty": "easy"
+  },
+  {
+    "id": "2467ca22-19d8-4c2c-b879-a7cdf0a51642",
+    "type": "normal",
+    "question": "Was ist die Judikative?",
+    "answer": "Die rechtsprechende Institution im Staat",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "10e0eff8-cb41-4b9b-8105-9b6b6bc7037d",
+    "type": "normal",
+    "question": "Wen beten Buddhisten an?",
+    "answer": "Niemanden",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "24cb3a82-3b73-4322-a42d-649212e52fb5",
+    "type": "normal",
+    "question": "Wie viele Bandscheiben hat ein Mensch?",
+    "answer": "23",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "96bd8e83-6d4d-4a68-a578-7298136d15bd",
+    "type": "normal",
+    "question": "Nach welcher Zeit feiert man die „Petersilienhochzeit“?",
+    "answer": "Nach 12 1/2 Jahren",
+    "category": "Mathematik",
+    "difficulty": "easy"
+  },
+  {
+    "id": "98dccf17-b29a-4b96-a055-641bc3c22ae7",
+    "type": "normal",
+    "question": "In welchem Jahr war die Einführung des Euro?",
+    "answer": "2002",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "f3146e5e-4b1d-4b4a-8fb9-4018d22e4f56",
+    "type": "normal",
+    "question": "Wie werden die Nachkommen einer Kreuzung aus Tigern und Löwen genannt?",
+    "answer": "Die heißen „Liger“.",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "62c8b7b9-c3c2-4cc4-8fe0-0ec8560c139c",
+    "type": "normal",
+    "question": "Was wird durch Antibiotika bekämpft? Viren, Bakterien, Pilze?",
+    "answer": "Antibiotika bekämpfen nur Bakterienerkrankungen",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "cf66233f-5377-4a19-9a01-c87eac3936e9",
+    "type": "normal",
+    "question": "Woraus besteht ein Diamant?",
+    "answer": "Aus Kohlenstoff",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "eb506cff-ef1a-4c85-a425-bae33f2629f2",
+    "type": "normal",
+    "question": "Wie heißt die Hauptstadt der Slowakei?",
+    "answer": "Bratislava",
+    "category": "Geografie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "3ebe9f61-57cd-40cb-be03-07533e522c49",
+    "type": "normal",
+    "question": "Wie viele Zähne hat ein erwachsener Mensch normalerweise?",
+    "answer": "32",
+    "category": "Biologie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "fab29e51-9f28-45d3-b188-7744fea4b14a",
+    "type": "normal",
+    "question": "Wer wählt den Bundespräsidenten?",
+    "answer": "Bundesversammlung",
+    "category": "Politik",
+    "difficulty": "easy"
+  },
+  {
+    "id": "9c0e07ea-8727-4447-987b-e1b1ccbd5748",
+    "type": "normal",
+    "question": "Wie hoch ist die Mehrwertsteuer in Deutschland?",
+    "answer": "19 Prozent",
+    "category": "Geografie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "5379c29b-b879-4a10-bf52-80373acee1cd",
+    "type": "normal",
+    "question": "Eichhörnchen halten Winterschlafen, war oder falsch?",
+    "answer": "nein, falsch",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "3c5346cf-a4eb-4486-b188-598903a89f6d",
+    "type": "normal",
+    "question": "In welcher Einheit wird der elektrische Widerstand gemessen?",
+    "answer": "Ohm",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "d3930f21-f9cf-44f6-a8fa-32753bc694cd",
+    "type": "normal",
+    "question": "Was ist ein Oxymoron?",
+    "answer": "Ein innerer Widerspruch",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "00da4bfe-9804-4797-abed-b1fb7b58a3c1",
+    "type": "normal",
+    "question": "Wie heißt die Hauptstadt von Äthiopien?",
+    "answer": "Addis Abeba",
+    "category": "Geografie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "d31e4b21-8f57-43a4-b4ca-8c667f14437a",
+    "type": "normal",
+    "question": "Was soll Cäsar gesagt haben, als er den Rubikon überquerte?",
+    "answer": "alea iacta est",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "6bf4190d-85b4-4fdc-987b-d86f43772d08",
+    "type": "normal",
+    "question": "Wer ist Rekordtorschütze der Bundesliga?",
+    "answer": "Gerd Müller",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "130f88cd-8202-4f3c-9af6-4ecbdc1a4883",
+    "type": "normal",
+    "question": "Wie viele Oscars gewann der Film „Titanic“?",
+    "answer": "11",
+    "category": "Popkultur",
+    "difficulty": "easy"
+  },
+  {
+    "id": "35eb9171-bb60-4cb0-b2f8-77321205e418",
+    "type": "normal",
+    "question": "Teneriffa, Gran Canaria und Fuerteventura gehören zu den…?",
+    "answer": "Kanarischen Inseln",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "094628cc-8384-4196-a745-731f533ec39f",
+    "type": "normal",
+    "question": "Wie beginnt Artikel 1 des deutschen Grundgesetzes?",
+    "answer": "„Die Würde des Menschen ist unantastbar.“",
+    "category": "Politik",
+    "difficulty": "easy"
+  },
+  {
+    "id": "20d012da-3066-45a1-b267-cedd2e9f8319",
+    "type": "normal",
+    "question": "Wie lautet das chemische Symbol für Blei?",
+    "answer": "Pb",
+    "category": "Physik",
+    "difficulty": "easy"
+  },
+  {
+    "id": "cf86fa71-db87-4cb8-af3e-3bf7efa7ad95",
+    "type": "normal",
+    "question": "Wie viele Planeten hat unser Sonnensystem?",
+    "answer": "8",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "77c366c2-292c-423f-a8a1-7d4b8bcfd0cb",
+    "type": "normal",
+    "question": "Welchen Namen trägt die Universität Frankfurt am Main?",
+    "answer": "Johann Wolfgang von Goethe",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "6bc056e3-8f89-48a1-9d54-3d063923b71c",
+    "type": "normal",
+    "question": "An welchem Datum fiel die Berliner Mauer?",
+    "answer": "9-Nov-89",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "b796051e-0f57-4693-b734-bb8c04e46dc7",
+    "type": "normal",
+    "question": "Was ist ein Sonett?",
+    "answer": "Eine Gedichtsform",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "17196172-071f-4922-93a4-54786dc3424e",
+    "type": "normal",
+    "question": "Wie lautet der Satz des Pythagoras?",
+    "answer": "a2+b2=c2",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "a03a73f6-876e-4e02-8550-5cf66dd1fcba",
+    "type": "normal",
+    "question": "Was ist die Flora?",
+    "answer": "Gesamte Pflanzenwelt",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "ed2c658b-6092-45ec-bd7b-64bbdbadcf5a",
+    "type": "normal",
+    "question": "Woraus besteht die Luft?",
+    "answer": "78% Stickstoff, 21% Sauerstoff",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "6ad49177-c644-4ad8-8370-10816c5ce364",
+    "type": "normal",
+    "question": "Wie heißt der kleinste Staat der Welt?",
+    "answer": "Vatikan",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "e4601d1c-48cc-49b2-9d8e-6e907817a5e1",
+    "type": "normal",
+    "question": "Der Vatikan hat ca. 10.000 Einwohner, wahr oder falsch?",
+    "answer": "Falsch, es sind weniger als 1000",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "eebde074-67db-402b-b26c-dc6436e2917d",
+    "type": "normal",
+    "question": "Welche drei Staatsgewalten gibt es in Deutschland?",
+    "answer": "Legislative, Exekutive, Judikative",
+    "category": "Geografie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "17738d30-5ad5-43ef-bbdd-b03046f435a6",
+    "type": "normal",
+    "question": "Von wem stammt das Zitat: „Dies ist ein kleiner Schritt für einen Menschen, aber ein riesiger Sprung für die Menschheit.“?",
+    "answer": "Neil Armstrong",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "a150ff63-ec23-42cc-a38c-fccbf3ce6284",
+    "type": "normal",
+    "question": "Wofür stehen die olympischen Ringe?",
+    "answer": "für die fünf Kontinente",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "3edad290-2af6-440b-ac8c-9417b6dc9b59",
+    "type": "normal",
+    "question": "Was bedeutet LCD?",
+    "answer": "liquid crystal display",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "3cf98753-c9cb-42b2-939d-15f7d6b0bec6",
+    "type": "normal",
+    "question": "Wann wurde der Fußball in Deutschland eingeführt?",
+    "answer": "im Jahre 1874 in Braunschweig",
+    "category": "Geografie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "c3c7b36b-a095-41fe-9380-1e5d8c15b7fa",
+    "type": "normal",
+    "question": "Wie lange dauerte der Bau des Kölner Doms?",
+    "answer": "von 1248 bis 1880, insgesamt 632 Jahre",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "5ae40ddd-0006-48bd-81e5-10b9c5bc5431",
+    "type": "normal",
+    "question": "Wer war der zweite Bundeskanzler der Bundesrepublik Deutschland?",
+    "answer": "Ludwig Erhard",
+    "category": "Geografie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "3d880772-2e65-458b-b63b-6bc5811793d5",
+    "type": "normal",
+    "question": "Wann wurde das erste iPhone vorgestellt?",
+    "answer": "Jan-07",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "575acbf2-08ea-482e-ac58-1602d3c3bcde",
+    "type": "normal",
+    "question": "Wie viele Bundesländer hat Deutschland?",
+    "answer": "16 Bundesländer",
+    "category": "Geografie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "d13137b0-a21e-4931-b9ea-33f4a621ad58",
+    "type": "normal",
+    "question": "Wofür steht die Abkürzung „MINT“?",
+    "answer": "Mathematik, Informatik, Naturwissenschaften und Technik",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "d81cc57d-84a5-45ac-973d-f063cbf248b3",
+    "type": "normal",
+    "question": "Wie lang ist eine Meile?",
+    "answer": "1609,344 Meter",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "875c0c01-8b31-43ca-b8c4-f7172ff60d85",
+    "type": "normal",
+    "question": "Was ist der sogenannte Club 27?",
+    "answer": "Unter dieser Bezeichnung werden einige Musiker zusammengefasst, die im Alter von 27 Jahren gestorben sind",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "a7b7f864-6d15-4539-bf27-0aa873dc71da",
+    "type": "normal",
+    "question": "Mit wie vielen Nachbarländern teilt Deutschland sich eine Grenze?",
+    "answer": "Neun Länder grenzen an Deutschland",
+    "category": "Geografie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "44a2d601-db01-4c92-85f0-2866c5f73de0",
+    "type": "normal",
+    "question": "Wie lang ist die Strecke eines Marathons?",
+    "answer": "42,195 Kilometer",
+    "category": "Mathematik",
+    "difficulty": "easy"
+  },
+  {
+    "id": "6173179c-d61e-4ab8-969d-e36f89a03766",
+    "type": "normal",
+    "question": "Wie heißt die Hauptstadt von Bulgarien?",
+    "answer": "Sofia",
+    "category": "Geografie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "493a49f1-234a-4efb-ad7b-cd072ab72661",
+    "type": "normal",
+    "question": "Was bedeutet die Abkürzung IT in Begriffen wie IT-Branche?",
+    "answer": "Informationstechnik",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "08eaaf79-defd-4b50-84ba-f33bf925a678",
+    "type": "normal",
+    "question": "In welchem Körperorgan wird Insulin produziert?",
+    "answer": "Bauchspeicheldrüse",
+    "category": "Biologie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "d34d3256-7ac1-49bb-9ad0-82a57afe6aec",
+    "type": "normal",
+    "question": "50% der Erde sind ca. mit Wasser bedeckt, wahr oder falsch?",
+    "answer": "Falsch, es sind ca. 70%",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "f452c676-faf0-4f81-b54c-5f3449f2e7b2",
+    "type": "normal",
+    "question": "Der zweithöchste Berg Deutschlands ist der Hochwanner, wahr oder falsch?",
+    "answer": "Ja, Wahr",
+    "category": "Geografie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "065dbbf7-0ba0-42d4-86a0-416c79c2d2cf",
+    "type": "normal",
+    "question": "Die Hauptstadt der US-Bundestaates Kentucky heißt Hamborg, wahr oder falsch?",
+    "answer": "nein, falsch",
+    "category": "Geografie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "b69bd244-db13-4e00-87ff-bd157babf603",
+    "type": "normal",
+    "question": "Wie heißt die Hauptstadt des US-Bundesstaates Kentucky?",
+    "answer": "Frankfort",
+    "category": "Geografie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "dfeb108d-9b3f-4790-9a89-6cbd329441ec",
+    "type": "normal",
+    "question": "Welches Bundesland ist flächenmäßig das größte?",
+    "answer": "Bayern",
+    "category": "Geografie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "a165f906-95eb-4e3e-a892-b9177cecdcf0",
+    "type": "normal",
+    "question": "Welcher ist der längste innerdeutsche Fluss?",
+    "answer": "Rhein",
+    "category": "Geografie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "29d54aae-3c6c-430d-8483-e9e78664400c",
+    "type": "normal",
+    "question": "Wie tief ist der Marianengraben? 3k meter, 30k meter, 13k meter",
+    "answer": "13.000 Meter",
+    "category": "Mathematik",
+    "difficulty": "easy"
+  },
+  {
+    "id": "9ddbc635-24ad-4c0c-9a4a-fd47bfc90735",
+    "type": "normal",
+    "question": "Wie viele Einwohner hat Russland ungefähr?",
+    "answer": "145 Millionen",
+    "category": "Geografie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "528b330a-9af8-4f86-942c-bcef6d11d8de",
+    "type": "normal",
+    "question": "Wie heißt die Hauptstadt von Indonesien?",
+    "answer": "Jakarta",
+    "category": "Geografie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "203a9814-e281-4d6c-8ec9-2cbd8ad0c6f4",
+    "type": "normal",
+    "question": "Wie lang ist die Chinesische Mauer (gerundet)?",
+    "answer": "21.000 Kilometer",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "a7bb69af-da2c-43ef-bc98-596d792cd6d0",
+    "type": "normal",
+    "question": "Der wievielte US-Präsident war Barack Obama?",
+    "answer": "44",
+    "category": "Politik",
+    "difficulty": "easy"
+  },
+  {
+    "id": "b44a7fb6-6b43-461e-872f-d36d2db2d185",
+    "type": "normal",
+    "question": "Welches ist das höchste Amt in Deutschland?",
+    "answer": "Bundespräsident",
+    "category": "Geografie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "00b71f27-d73b-46e7-a294-bfe7f0cf2b13",
+    "type": "normal",
+    "question": "Zu welchem Land gehört Grönland politisch?",
+    "answer": "Dänemark",
+    "category": "Geografie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "ab6b6ea3-0f18-4cdf-a27f-0d62ec1e8e36",
+    "type": "normal",
+    "question": "Welcher Partei gehörte Konrad Adenauer an?",
+    "answer": "CDU",
+    "category": "Politik",
+    "difficulty": "easy"
+  },
+  {
+    "id": "cbee19be-37d0-4d74-8bab-7695870b2eb4",
+    "type": "normal",
+    "question": "Welche Parteien sind an einer Jamaika-Koalition beteiligt?",
+    "answer": "CDU, Grüne, FDP",
+    "category": "Politik",
+    "difficulty": "easy"
+  },
+  {
+    "id": "2ae354ef-c87c-4d35-88f2-771465b5b1b9",
+    "type": "normal",
+    "question": "In welchem Zeitraum fand der erste Weltkrieg statt?",
+    "answer": "1914 bis 1918",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "1253811e-cdcf-42d2-915b-3cfffa07064e",
+    "type": "normal",
+    "question": "Wie groß ist die Summe der Winkel eines Dreiecks?",
+    "answer": "180 Grad",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "cd93e035-f5ad-435e-9ee9-9ed1d7e2545b",
+    "type": "normal",
+    "question": "Wie wird die Zahl unter dem Bruchstrich bezeichnet?",
+    "answer": "Nenner",
+    "category": "Mathematik",
+    "difficulty": "easy"
+  },
+  {
+    "id": "33af4bf1-61e5-4f69-969e-bb11875fc469",
+    "type": "normal",
+    "question": "Wie beginnt die Kreiszahl Pi (π)?",
+    "answer": "3.1415",
+    "category": "Mathematik",
+    "difficulty": "easy"
+  },
+  {
+    "id": "29b5bb11-9b96-4c62-beff-bc1cf7346720",
+    "type": "normal",
+    "question": "Welche Formel berechnet den Kreisumfang?",
+    "answer": "2 mal π mal r",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "f555c561-2d8b-458b-a727-8dc8c3517572",
+    "type": "normal",
+    "question": "Was ist eine Primzahl?",
+    "answer": "Eine Zahl, die nur durch 1 und sich selbst teilbar ist.",
+    "category": "Mathematik",
+    "difficulty": "easy"
+  },
+  {
+    "id": "3a4ca308-c976-479d-a4ad-843b0290cc2c",
+    "type": "normal",
+    "question": "Wer schrieb den „Erlkönig“?",
+    "answer": "Johann Wolfgang von Goethe",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "9ae8dc21-8f6e-472b-beba-35c1e08a62e7",
+    "type": "normal",
+    "question": "Wer schrieb die Harry Potter Bücher?",
+    "answer": "Joanne K. Rowling",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "41b1651e-4d70-441a-9343-48175b25333b",
+    "type": "normal",
+    "question": "Auf welcher Buchreihe basiert die Erfolgsserie „Game of Thrones“?",
+    "answer": "A Song of Ice and Fire",
+    "category": "Popkultur",
+    "difficulty": "easy"
+  },
+  {
+    "id": "fe7cd850-1ca2-42e3-a41d-09e2624e6799",
+    "type": "normal",
+    "question": "Wie heißt das bekannteste Werk von Patrick Süskind?",
+    "answer": "Das Parfum",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "af9d9fb3-4141-4f3d-9e89-ffe7bde41a57",
+    "type": "normal",
+    "question": "In wessen Büchern heißt die Hauptfigur Robert Langdon?",
+    "answer": "Dan Brown",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "52370ccf-71af-49dc-9811-2e9bd843f23c",
+    "type": "normal",
+    "question": "Mit wem geht Goethes „Faust“ einen Pakt ein?",
+    "answer": "Mit Mephisto",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "0a98333f-ca83-4021-9dde-16d98351daa0",
+    "type": "normal",
+    "question": "Auf welcher Straße ist noch keiner gefahren?",
+    "answer": "Auf der Milchstraße",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "0a8e9d9d-ab7f-4a3e-9303-59fcb14df64c",
+    "type": "normal",
+    "question": "Welcher Mann wird in der Sonne immer kleiner?",
+    "answer": "Der Schneemann",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "41d8f6b0-27b1-4675-8370-d9dfc1a49d97",
+    "type": "normal",
+    "question": "Wo führen Eltern nicht nur ihren Hund, sondern auch ihre Kinder an der Leine spazieren?",
+    "answer": "In Hannover",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "075e2df1-cc5f-404a-8578-a2df4b374324",
+    "type": "normal",
+    "question": "Was ist das Gegenteil von Reformhaus?",
+    "answer": "Reh hinterm Haus",
+    "category": "Spaß",
+    "difficulty": "easy"
+  },
+  {
+    "id": "e0fd56b5-d842-43b5-b29a-c6f020d533b0",
+    "type": "normal",
+    "question": "welches Gemüse ist unter auch unter Erdäpfel bekannt",
+    "answer": "Kartoffel",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "46353aac-13c1-48cc-9426-99ad3a206bd1",
+    "type": "normal",
+    "question": "warum ist die Flagge von Zypern leicht zu erkennen",
+    "answer": "Weil Die Form von Zypern drauf ist",
+    "category": "Spaß",
+    "difficulty": "easy"
+  },
+  {
+    "id": "03b2d515-ba51-4eba-a904-8049a4f5698e",
+    "type": "normal",
+    "question": "von wem ist der Song God is a woman",
+    "answer": "Ariana Grande",
+    "category": "Popkultur",
+    "difficulty": "easy"
+  },
+  {
+    "id": "cf7442ca-0279-4e21-ada3-f55518de5d22",
+    "type": "normal",
+    "question": "Wie heißt der freche Kobold vom Meister Eder",
+    "answer": "Pumuckel",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "d3c02e33-a339-48bb-b2dc-3419535c9ec4",
+    "type": "normal",
+    "question": "wenn man kurzsichtig ist sieht man nahe Dinge gut, richtig oder falsch",
+    "answer": "Ist richtig",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "70f63c13-cb78-4b7a-86d2-0f4db346973c",
+    "type": "normal",
+    "question": "Wie heißt das bekannte gelbe mausartige Pokémon",
+    "answer": "Pikachu",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "99adc159-d2ea-4395-b260-a3a49ad257c4",
+    "type": "normal",
+    "question": "Die Hauptstadt von China ist?",
+    "answer": "Peking",
+    "category": "Geografie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "5fa3855e-f44d-4652-a49f-a170c630ba7c",
+    "type": "normal",
+    "question": "wen suchen Nemo und sein Vater im Nachfolger von Findet Nemo",
+    "answer": "Dory",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "7a078127-c9c5-4e86-8f8e-cf31bddfb796",
+    "type": "normal",
+    "question": "viele Filme von Toy Story gibt es",
+    "answer": "4",
+    "category": "Popkultur",
+    "difficulty": "easy"
+  },
+  {
+    "id": "8a9c10b9-a91d-49a7-a019-a27e0a417c03",
+    "type": "normal",
+    "question": "An was glaubt Yugi in Yu-Gi-Oh",
+    "answer": "An das Herz der Karten",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "c283585c-daf9-4273-919b-090a3620e4f2",
+    "type": "normal",
+    "question": "Wie dick ist die Eisfläche beim Eishockey? Cm",
+    "answer": "6 bis 8 cm",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "c4ff15e6-eabf-4cac-aff0-2d90c259efb5",
+    "type": "normal",
+    "question": "welche Farben muss man mischen um die Farbe Lila zu bekommen",
+    "answer": "Rot und blau",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "4654d812-27ce-4c6b-adf8-3c73221769ad",
+    "type": "normal",
+    "question": "Pipi Langstrumpfs Affe heißt Herr Peterson, wahr oder Falsch?",
+    "answer": "Falsch, er heißt Herr Nielson",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "8dd03b47-2526-4a32-b974-5ffa62ac4af4",
+    "type": "normal",
+    "question": "In welchem Bundesland befindet sich die Stadt Stuttgart?",
+    "answer": "Baden Würtenberg",
+    "category": "Geografie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "8eb2b90d-82ad-483d-abb4-33fb5c28fe58",
+    "type": "normal",
+    "question": "Vervollständige \"Morgenstund hat ... \"",
+    "answer": "Gold im Mund",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "608e9fcc-9699-4b90-b7f2-66619169763b",
+    "type": "normal",
+    "question": "Du bist mein Sohn, aber ich nicht dein Vater, wer sagt das?",
+    "answer": "Meine Mutter",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "f986e992-1497-45d7-a660-278b61ac6966",
+    "type": "normal",
+    "question": "Was ist die Hauptstadt von Spanien?",
+    "answer": "Madrid",
+    "category": "Geografie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "b08619ff-d557-4691-b4fb-168275784398",
+    "type": "normal",
+    "question": "Wie nennt man einen jungen Hund?",
+    "answer": "Welpe",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "0ae0a9fc-6cb6-4529-9dfc-f996c244e9b8",
+    "type": "normal",
+    "question": "Was ist die Quadratwurzel aus 121?",
+    "answer": "11",
+    "category": "Mathematik",
+    "difficulty": "easy"
+  },
+  {
+    "id": "14f94782-cbb5-42fa-888c-3430e06532e1",
+    "type": "normal",
+    "question": "Welche Farben sind in der Niederländischen Flagge enthalten?",
+    "answer": "Blau, weiß, Rot / Orange",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "ccdb8b11-7287-4b73-bffb-a7bd99178da6",
+    "type": "normal",
+    "question": "Pluto wurde der Planetenstatus aberkannt, wahr oder falsch?",
+    "answer": "Wahr, wurde aberkannt",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "869d5d82-989a-4ffc-9bb6-2840a679a84a",
+    "type": "normal",
+    "question": "Wie werden britische Polizisten umganssprachlich auch genannt?",
+    "answer": "Bobbys",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "f8f8042b-41d7-4e06-8372-10c6e8068b46",
+    "type": "normal",
+    "question": "Woher wurde der Spruch Hakuna Matata bekannt?",
+    "answer": "König der Löwen",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "f77a0a39-cc4c-48b7-adc2-f4d83aac5b8c",
+    "type": "normal",
+    "question": "Wie heßt die Newcomerin die unter Anderem durch Wildberry Lillet bekannt wurde?",
+    "answer": "Nina Chuba",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "7fe27a3a-90bd-42dd-a14d-ea2f925e3b92",
+    "type": "normal",
+    "question": "Was ist das flächenmäßig kleinste Bundesland in DE?",
+    "answer": "Bremen",
+    "category": "Geografie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "c6f4b310-292d-4dca-975c-a7191370782e",
+    "type": "normal",
+    "question": "Oslo ist die Hauptstadt von Schweden, wahr oder Falsch?",
+    "answer": "Falsch, es ist Stockholm",
+    "category": "Geografie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "6d3bf988-a0b0-48d5-a868-4f05304681fa",
+    "type": "normal",
+    "question": "Welches Vitamin wird im Körper mit Hilfe von Sonnenlicht gebildet?",
+    "answer": "Vitamin D",
+    "category": "Biologie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "ed6999a6-ce7b-4739-afa7-b80d2d85ec40",
+    "type": "normal",
+    "question": "Die Simpsons leben in welcher Stadt?",
+    "answer": "Springfield",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "94bc784b-0147-464e-baa9-e648b445ea82",
+    "type": "normal",
+    "question": "Wie lang ist die chinesische Mauer?",
+    "answer": "21.000 km",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "42854041-a260-4524-bf52-56904baaba84",
+    "type": "normal",
+    "question": "Mit welcher Führerscheinklasse darf man in DE Auto fahren?",
+    "answer": "B",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "d1d254fa-ebeb-48de-8bd5-347337349459",
+    "type": "normal",
+    "question": "Wie heißt die Hauptstadt der Slovakei?",
+    "answer": "Bratislava",
+    "category": "Geografie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "f5c85340-61e7-487f-ad7e-9762167c67e7",
+    "type": "normal",
+    "question": "Was ist der längste Fluss der Welt?",
+    "answer": "Nil",
+    "category": "Geografie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "6dd95831-e7e4-4658-ad08-bd3df9d05467",
+    "type": "normal",
+    "question": "Auf welchen Pferden kann man nicht reiten?",
+    "answer": "Seepferdchen",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "9258d77d-e42f-443a-b043-0aa20882c2df",
+    "type": "normal",
+    "question": "In welchem Jahr wurde das World Trade Center zerstört?",
+    "answer": "2001",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "d44266b2-79af-4484-bf12-83be706d23c1",
+    "type": "normal",
+    "question": "Wann kam der 1. Pokemon Film ins Kino?",
+    "answer": "1998",
+    "category": "Popkultur",
+    "difficulty": "easy"
+  },
+  {
+    "id": "3a23c7de-e65c-4d87-b058-b29a0eabf8b6",
+    "type": "normal",
+    "question": "Deutschland hat unter 80 mio Einwohner, wahr oder falsch?",
+    "answer": "Falsch, sind mehr",
+    "category": "Geografie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "e9d9e510-77e7-41ff-96f5-ad1a68f0cfc7",
+    "type": "normal",
+    "question": "Wer ist der größte Feind von Batman?",
+    "answer": "Joker",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "47fd4df8-5b2f-497c-8203-536ba6e3cff5",
+    "type": "normal",
+    "question": "Welche Abkürzung hat die World Health Organisation?",
+    "answer": "WHO",
+    "category": "Biologie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "29c26ada-23dd-43c5-9627-26a5a88f3efa",
+    "type": "normal",
+    "question": "Welcher Bus kann nicht fahren?",
+    "answer": "Bambus, Globus",
+    "category": "Spaß",
+    "difficulty": "easy"
+  },
+  {
+    "id": "47c9184c-983c-48ef-9039-4fb067add32b",
+    "type": "normal",
+    "question": "Foglt man dem Äquator um die Welt, legt man wie viele KM zurück?",
+    "answer": "40",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "c28f9ebf-b447-4433-8ad2-db658d7cb0a2",
+    "type": "normal",
+    "question": "Auf welchem Kontinent liegt die Wüste Sahara?",
+    "answer": "Afrika",
+    "category": "Geografie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "6a6f6d7b-5edb-4fdf-b0bc-e2bf9d1ab467",
+    "type": "normal",
+    "question": "Was bedeutet die Abkürzung GaLiGrü?",
+    "answer": "Ganz liebe Grüße",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "215d8872-b929-4239-ad5e-cab304d5fe32",
+    "type": "normal",
+    "question": "Ist es wahr, dass eine Raupe etwa genauso viele Muskeln hat wie ein Mensch?",
+    "answer": "Nein, sie hat etwa 3 mal so viele",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "28485ed1-f49c-45ee-ac95-1bfdea0bec7e",
+    "type": "normal",
+    "question": "Wie oft ist Deutschland Fußballweltmeister geworden?",
+    "answer": "4 mal",
+    "category": "Geografie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "4c489a83-109a-4f17-9ff3-aebd65255b60",
+    "type": "normal",
+    "question": "Wofür steht AFK?",
+    "answer": "Away from Keyboard",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "288b2b8b-4338-4e62-ac6c-f6464f05c90a",
+    "type": "normal",
+    "question": "Buchstabiere Hokuspokus.",
+    "answer": "Hokuspokus",
+    "category": "Sprache",
+    "difficulty": "easy"
+  },
+  {
+    "id": "7697032a-02be-4ad8-bd21-fc8277c9c65d",
+    "type": "normal",
+    "question": "Die Mona Lisa hatte früher mal Augenbrauen, wahr oder falsch?",
+    "answer": "Wahr",
+    "category": "Biologie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "7c08e263-d259-4972-8879-7a9c55cd5289",
+    "type": "normal",
+    "question": "Rote Bohnen sind giftig, wahr oder falsch?",
+    "answer": "Wahr, nur gekocht",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "21517394-b2fd-45af-94a2-940a2673df9a",
+    "type": "normal",
+    "question": "Wieviele KM ist ein Halbmarathon?",
+    "answer": "21",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "6c4e7b78-5162-4da5-98b0-e32b1c43b569",
+    "type": "normal",
+    "question": "Welche ist die Amtssprache in Argentinien?",
+    "answer": "Spanisch",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "3a94aec3-1bef-44c8-9b10-33624ed3fdc6",
+    "type": "normal",
+    "question": "Wie heißt der rote Teletubby?",
+    "answer": "Po",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "569e28cd-a8ad-4ff6-96de-281c3ffbb74e",
+    "type": "normal",
+    "question": "Hamburg hat mehr Einwohner als das Saarland, richtig oder Falsch?",
+    "answer": "Wahr",
+    "category": "Geografie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "54a8a7ca-5369-4e39-ac68-1680486e79d6",
+    "type": "normal",
+    "question": "Wieviel ist 3 hoch 3?",
+    "answer": "27",
+    "category": "Mathematik",
+    "difficulty": "easy"
+  },
+  {
+    "id": "4c8b6b82-6cc2-4afd-9151-6c1e05211825",
+    "type": "normal",
+    "question": "Eine Billionen hat eine 1 mit wievielen Nullen?",
+    "answer": "12",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "3bcfd3da-be88-46a3-8eec-e15eb5f11c83",
+    "type": "normal",
+    "question": "Aus welchem chemischen Element bestehen Diamanten?",
+    "answer": "Kohlenstoff",
+    "category": "Physik",
+    "difficulty": "easy"
+  },
+  {
+    "id": "4dc468f9-b006-4bb5-9fbf-7c48e80ca48c",
+    "type": "normal",
+    "question": "Bei welchem Formel1 Team hat Sebastian Vettel all seine Titel gewonnen?",
+    "answer": "Redbull Racing",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "88a13429-c62d-4952-b678-09e2077fb87e",
+    "type": "normal",
+    "question": "Von wem ist der bekannte Weihnachtssong \"All i want for Christmas is you\"?",
+    "answer": "Mariah Carey",
+    "category": "Popkultur",
+    "difficulty": "easy"
+  },
+  {
+    "id": "a1ba579b-1b1f-4ce2-b8bc-3328a9b7f48a",
+    "type": "normal",
+    "question": "Birken sind gut anhand ihrer Rinde zu erkennen, die hat nämlich welche Farbe?",
+    "answer": "Weiß",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "3047cc79-59dd-413a-81a8-59090138f4aa",
+    "type": "normal",
+    "question": "Elektrische Spannung wird in welcher Einheit gemessen?",
+    "answer": "Volt",
+    "category": "Physik",
+    "difficulty": "easy"
+  },
+  {
+    "id": "f1397da6-980b-4bc9-90df-f8a72a09e0f9",
+    "type": "normal",
+    "question": "Ein Wassermolekül besteht aus wievielen Atomen?",
+    "answer": "3",
+    "category": "Physik",
+    "difficulty": "easy"
+  },
+  {
+    "id": "967168ea-f293-4288-8631-cb8fe6e8b921",
+    "type": "normal",
+    "question": "In welchem Meer liegt Nordernay?",
+    "answer": "Nordsee",
+    "category": "Geografie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "83529be7-9cb3-406d-8514-04742673ed9e",
+    "type": "normal",
+    "question": "Wasser hat bei 4 grad Zelsius die höchste Dichte, wahr oder falsch?",
+    "answer": "Das ist wahr",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "070f1787-b97b-41a5-ab6e-6b8022a0172f",
+    "type": "normal",
+    "question": "Leben Pinguine in der Arktis oder in der Antarktis?",
+    "answer": "Antarktis",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "30af0f80-69a1-437c-9f0b-afba33b6c35c",
+    "type": "normal",
+    "question": "In welchem Jahrhunder hat Da vinci die Mona Lisa gemalt?",
+    "answer": "16",
+    "category": "Kunst",
+    "difficulty": "easy"
+  },
+  {
+    "id": "31c96f0f-fde6-4adb-8927-47dd09826f18",
+    "type": "normal",
+    "question": "Was passiert zwischen der Sommer und der Winterzeit?",
+    "answer": "die Uhr wird umgestellt",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "e52b2deb-6594-4f6e-9162-5bdd6c47800b",
+    "type": "normal",
+    "question": "In welchem Jahrhundert wurde Picasso geboren?",
+    "answer": "19",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "7556c28d-62fe-433f-8fbd-e98cdfd25bdb",
+    "type": "normal",
+    "question": "Michael Schuhmacher wurde 7 mal Formel1 Weltmeister, wahr oder falsch?",
+    "answer": "Yes, ist wahr",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "d1f1e8ec-8c96-4c76-ab70-d3feaeb996a4",
+    "type": "normal",
+    "question": "Der Kern von Atomen besteht aus Protonen und ..?",
+    "answer": "Neutronen",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "cc2f2399-fd20-4111-a579-18b403a213a0",
+    "type": "normal",
+    "question": "Wie hieß der Gründer von Ferrari mit Vornamen?",
+    "answer": "Enzo",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "18ebd8aa-e922-4e42-8f14-831a62bcaeeb",
+    "type": "normal",
+    "question": "Welche Himmelsrichtung liegt gegenüber von Süden?",
+    "answer": "Norden",
+    "category": "Spaß",
+    "difficulty": "easy"
+  },
+  {
+    "id": "1ea02a4b-ff82-4c21-926b-a2644c712065",
+    "type": "normal",
+    "question": "Welcher ist der höchste Berg in DE?",
+    "answer": "Zugspitze",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "b4dba8cd-6e3e-49b8-851a-c10a0336a42c",
+    "type": "normal",
+    "question": "In welchem Ozean liegt Madagaskar?",
+    "answer": "Indischer Ozean",
+    "category": "Geografie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "39414f8c-415e-4e7c-8503-ee056db78bec",
+    "type": "normal",
+    "question": "Welchen Aggregatzustand hat Queksilver bei Raumtemperatur?",
+    "answer": "Flüßig",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "160e0982-fef9-43d3-93fb-5c5ebcce8df0",
+    "type": "normal",
+    "question": "Florian Silbereisen ist Weltrekordhalter im über heiße Herdplatten laufen, wahr oder falsch?",
+    "answer": "Ist wahr, 2011",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "98b398b5-b791-479c-bdd2-3ceef0483f0b",
+    "type": "normal",
+    "question": "Welches Land hat einen Dreizack auf der Flagge?",
+    "answer": "Babados",
+    "category": "Geografie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "f6d68ee4-c3ee-4826-a170-b128c1394d78",
+    "type": "normal",
+    "question": "Wieviele Milligramm sind 1 Gramm?",
+    "answer": "1000",
+    "category": "Mathematik",
+    "difficulty": "easy"
+  },
+  {
+    "id": "bfe89e8a-9fb9-4ac6-b887-1c74917b5d43",
+    "type": "normal",
+    "question": "Was ist schwerer eine Unze oder ein Gramm?",
+    "answer": "Eine Unze",
+    "category": "Mathematik",
+    "difficulty": "easy"
+  },
+  {
+    "id": "2da07558-8216-4347-a358-c0981f924900",
+    "type": "normal",
+    "question": "Wie ist die Richtgeschwindigkeit auf deutschen Autobahnen?",
+    "answer": "130kmh",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "0fda6685-c2b7-43b5-a6ae-7f60c3d6470e",
+    "type": "normal",
+    "question": "Wofür steht der lateinische Begriff Patella?",
+    "answer": "Kniescheibe",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "74d69bf7-d04f-49a5-881f-bb43d16e4886",
+    "type": "normal",
+    "question": "Welche ist die größte Wüste der Welt?",
+    "answer": "Antarktis",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "d3d0872e-076a-4616-a4dc-ade885cc49f9",
+    "type": "normal",
+    "question": "Auf einer Stange sitzen 10.000 Tauben, ein Jäger schießt 1 Taube, wieviele Tauben sitzen noch auf der Stange?",
+    "answer": "Keine",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "dd97f3ad-980a-485c-80df-bd90c078a54d",
+    "type": "normal",
+    "question": "Die Bahamas liegen näher an Florida als an Jamaika, wahr oder falsch?",
+    "answer": "Wahr",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "e2521c86-1c4e-4633-92dc-99b59ebc80ab",
+    "type": "normal",
+    "question": "Aus wievielen Hauptinseln besteht Japan?",
+    "answer": "4",
+    "category": "Geografie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "94a4b883-5a43-444e-b03b-df788d2c19bc",
+    "type": "normal",
+    "question": "Wofür steht die Abkürzung CD?",
+    "answer": "Compact Disk",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "29f448a0-db23-4a60-8173-8967029fdead",
+    "type": "normal",
+    "question": "Buchstabiere Archäologie.",
+    "answer": "Archäologie",
+    "category": "Sprache",
+    "difficulty": "easy"
+  },
+  {
+    "id": "3128a3d3-bb24-457a-a4ff-93c8ebbf0a9f",
+    "type": "normal",
+    "question": "Zu welchem Land gehört die Osterinsel?",
+    "answer": "Chile",
+    "category": "Geografie",
+    "difficulty": "easy"
+  },
+  {
+    "id": "eb4483e8-ec2c-4e38-8e50-7663e21e7063",
+    "type": "normal",
+    "question": "Welche Stadt hat das Kfz Kennzeichen A?",
+    "answer": "Augsburg",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "f6eb1533-7391-462b-b52e-2f47c0b4aed3",
+    "type": "normal",
+    "question": "Nenne Bestandteile einer R2G2 Koalition.",
+    "answer": "SPD, Linke, FDP, Grüne",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "f692c49f-8350-4e92-90df-bf034a6d91f9",
+    "type": "normal",
+    "question": "Wie heißt eine männliche Biene?",
+    "answer": "Drohne",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "72303890-573b-4b81-9f9a-dab85666a91b",
+    "type": "normal",
+    "question": "In welchem Monat feiern die meisten Menschen Neujahr",
+    "answer": "Januar",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "4b430884-91aa-4c07-99ba-f96160f3410c",
+    "type": "normal",
+    "question": "John Deere ist ein Hersteller für welche Produkte?",
+    "answer": "Traktoren",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "175590fb-9d35-4a58-b9cb-738683c915fd",
+    "type": "normal",
+    "question": "Warum heißt die Zahnbürste Zahnbürste?",
+    "answer": "Weil Sie Zähne bürstet",
+    "category": "Spaß",
+    "difficulty": "easy"
+  },
+  {
+    "id": "6050480a-2c12-4253-a6d5-00fc7a5d4939",
+    "type": "normal",
+    "question": "Woher hat der Satz die Arschkarte gezogen seinen Ursprung?",
+    "answer": "Fußball",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "897f9eda-c749-4e39-9d83-866f15522788",
+    "type": "normal",
+    "question": "Nenne einen Nadelbaum der nie Zapfen trägt.",
+    "answer": "Es gibt keinen, jeder trägt Zapfen",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "7fc48305-d74c-413b-a621-e3d6447c2c51",
+    "type": "normal",
+    "question": "Der normale Hauptanschluss an Frischwasser hat in der Regel welchen Wasserdruck?",
+    "answer": "3-4 Bar",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "7b2e65fe-1d3d-4d39-9c46-223fb6f9a3e3",
+    "type": "normal",
+    "question": "Um den großen Dynamikraum einer Orgel klingen zu lassen, werden in der Orgel oft bist zu 2000 Saiten verbaut, richtig oder falsch?",
+    "answer": "Falsch, die Orgel macht die Töne durch Luftströme",
+    "category": "Alltag",
+    "difficulty": "easy"
+  },
+  {
+    "id": "21b6c3a3-821f-4215-afb9-77b7229f88fe",
+    "type": "normal",
+    "question": "Ein Gabelstapler heißt Gabelstapler, weil er Ursprünglich dazu erfunden wurde Gabeln zu stapeln, richtig oder falsch?",
+    "answer": "Falsch",
+    "category": "Alltag",
+    "difficulty": "easy"
+  }
+]

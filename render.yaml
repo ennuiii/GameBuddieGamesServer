@@ -1,0 +1,39 @@
+services:
+  - type: web
+    name: unified-game-server
+    runtime: node
+    repo: https://github.com/YOUR_USERNAME/unified-game-server # TODO: Update with your repo URL
+    branch: main # or development
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    plan: free # or 'starter' for paid tier
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+      - key: GAMEBUDDIES_CENTRAL_URL
+        value: https://gamebuddies.io
+      - key: CORS_ORIGINS
+        value: http://localhost:5173,https://gamebuddies.io,https://ddf-client.onrender.com,https://bingobuddies.onrender.com,https://cluescale.onrender.com,https://susd-client.onrender.com
+      # Optional: Add API keys manually in Render dashboard for security
+      # These are used for GameBuddies platform integration (external game status API)
+      - key: DDF_API_KEY
+        sync: false # Set manually in Render dashboard
+      - key: BINGO_API_KEY
+        sync: false
+      - key: CLUE_API_KEY
+        sync: false
+      - key: SUSD_API_KEY
+        sync: false
+      - key: QUIZ_API_KEY
+        sync: false
+      # Optional: Supabase for persistent storage (leave blank for in-memory)
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+    autoDeploy: true # Auto-deploy on push to branch
