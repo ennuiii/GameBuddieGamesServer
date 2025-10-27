@@ -701,7 +701,7 @@ class SUSDPlugin implements GamePlugin {
         }
 
         // Send playerData only to the gamemaster (who controls the device)
-        socket.emit('pass-play-revealed', {
+        socket.emit('player-revealed', {
           room: result.room,
           playerData: result.playerData
         });
@@ -730,7 +730,7 @@ class SUSDPlugin implements GamePlugin {
 
         // If all players have been revealed, notify that word round is complete
         if (result.allPlayersRevealed) {
-          helpers.sendToRoom(coreRoom.code, 'pass-play-all-revealed', { room: result.room });
+          helpers.sendToRoom(coreRoom.code, 'next-player-ready', { room: result.room, allPlayersRevealed: true });
         }
 
         console.log(`[SUSD] Advanced to next player in room ${coreRoom.code}`);
