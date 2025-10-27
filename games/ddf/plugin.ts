@@ -342,12 +342,16 @@ class DDFGamePlugin implements GamePlugin {
         gameState.isFinale = false;
         gameState.usedQuestions = [];
 
-        // Reset player data
-        Array.from(room.players.values()).forEach((p) => {
-          const pd = p.gameData as DDFPlayerData;
-          pd.lives = 3;
-          pd.isEliminated = false;
-        });
+        // Reset player data (exclude host - host doesn't have gameData)
+        Array.from(room.players.values())
+          .filter((p) => !p.isHost) // Exclude host from player data reset
+          .forEach((p) => {
+            const pd = p.gameData as DDFPlayerData;
+            if (pd) {
+              pd.lives = 3;
+              pd.isEliminated = false;
+            }
+          });
 
         const serialized = serializeRoomToDDF(room, socket.id);
         helpers.sendToRoom(room.code, 'ddf:game-state-update', { room: serialized });
