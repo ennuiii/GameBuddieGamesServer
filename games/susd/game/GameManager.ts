@@ -152,7 +152,7 @@ export class GameManager {
   }
 
   leaveRoom(socketId: string): { room: Room | null; player: Player | null } {
-    const roomId = this.playerToRoom.get(socketId);
+    const roomId = this.getRoomIdBySocketId(socketId);
     if (!roomId) return { room: null, player: null };
 
     const room = this.rooms.get(roomId);
@@ -347,7 +347,7 @@ export class GameManager {
   }
 
   submitWord(socketId: string, word: string): { success: boolean; error?: string; room?: Room } {
-    const roomId = this.playerToRoom.get(socketId);
+    const roomId = this.getRoomIdBySocketId(socketId);
     if (!roomId) return { success: false, error: 'Not in a room' };
 
     const room = this.rooms.get(roomId);
@@ -428,7 +428,7 @@ export class GameManager {
   }
 
   submitVote(socketId: string, votedForId: string): { success: boolean; error?: string; room?: Room } {
-    const roomId = this.playerToRoom.get(socketId);
+    const roomId = this.getRoomIdBySocketId(socketId);
     if (!roomId) return { success: false, error: 'Not in a room' };
 
     const room = this.rooms.get(roomId);
@@ -486,7 +486,7 @@ export class GameManager {
   }
 
   submitAnswer(socketId: string, answer: string): { success: boolean; error?: string; room?: Room } {
-    const roomId = this.playerToRoom.get(socketId);
+    const roomId = this.getRoomIdBySocketId(socketId);
     if (!roomId) return { success: false, error: 'Not in a room' };
 
     const room = this.rooms.get(roomId);
@@ -597,7 +597,7 @@ export class GameManager {
   }
 
   submitImposterGuess(socketId: string, guess: string): { success: boolean; error?: string; room?: Room; correct?: boolean } {
-    const roomId = this.playerToRoom.get(socketId);
+    const roomId = this.getRoomIdBySocketId(socketId);
     if (!roomId) return { success: false, error: 'Not in a room' };
 
     const room = this.rooms.get(roomId);
@@ -750,7 +750,7 @@ export class GameManager {
 
   // Voice mode method for GM to advance to next player
   nextPlayerVoiceMode(gamemasterSocketId: string): { success: boolean; error?: string; room?: Room } {
-    const roomId = this.playerToRoom.get(gamemasterSocketId);
+    const roomId = this.getRoomIdBySocketId(gamemasterSocketId);
     if (!roomId) return { success: false, error: 'Not in a room' };
 
     const room = this.rooms.get(roomId);
@@ -806,7 +806,7 @@ export class GameManager {
 
   // Voice mode method for GM to force start voting
   forceStartVotingVoiceMode(gamemasterSocketId: string): { success: boolean; error?: string; room?: Room } {
-    const roomId = this.playerToRoom.get(gamemasterSocketId);
+    const roomId = this.getRoomIdBySocketId(gamemasterSocketId);
     if (!roomId) return { success: false, error: 'Not in a room' };
 
     const room = this.rooms.get(roomId);
@@ -919,8 +919,32 @@ export class GameManager {
     return this.getRoomByCode(roomCode);
   }
 
+  /**
+   * Get room ID for a socket, with fallback to searching all rooms.
+   * This handles race conditions during reconnections where the mapping might be stale.
+   */
+  private getRoomIdBySocketId(socketId: string): string | undefined {
+    // Try to get room from mapping first
+    let roomId = this.playerToRoom.get(socketId);
+
+    // Fallback: If not in mapping (e.g., during reconnection), search all rooms for this socket
+    if (!roomId) {
+      for (const [id, room] of this.rooms.entries()) {
+        if (room.players.some(p => p.socketId === socketId)) {
+          roomId = id;
+          // Update the mapping to fix it for future calls
+          this.playerToRoom.set(socketId, roomId);
+          console.log(`[GameManager] Found player ${socketId} in room ${room.code}, updated mapping`);
+          break;
+        }
+      }
+    }
+
+    return roomId;
+  }
+
   getRoomBySocketId(socketId: string): Room | undefined {
-    const roomId = this.playerToRoom.get(socketId);
+    const roomId = this.getRoomIdBySocketId(socketId);
     return roomId ? this.rooms.get(roomId) : undefined;
   }
 
@@ -936,8 +960,24 @@ export class GameManager {
   updatePlayerSocketId(oldSocketId: string | undefined, newSocketId: string): void {
     if (!oldSocketId) return;
 
-    const roomId = this.playerToRoom.get(oldSocketId);
-    if (!roomId) return;
+    // Try to get room from mapping first
+    let roomId = this.playerToRoom.get(oldSocketId);
+
+    // Fallback: Search all rooms for old socket ID
+    if (!roomId) {
+      for (const [id, room] of this.rooms.entries()) {
+        if (room.players.some(p => p.socketId === oldSocketId)) {
+          roomId = id;
+          console.log(`[GameManager] Found old socket ${oldSocketId} in room ${room.code} during update`);
+          break;
+        }
+      }
+    }
+
+    if (!roomId) {
+      console.warn(`[GameManager] Could not find room for old socket ${oldSocketId} during socket ID update`);
+      return;
+    }
 
     // Update the playerToRoom mapping
     this.playerToRoom.delete(oldSocketId);
@@ -956,7 +996,7 @@ export class GameManager {
 
   // Gamemaster skip controls
   skipCurrentPlayer(gamemasterSocketId: string): { success: boolean; error?: string; room?: Room } {
-    const roomId = this.playerToRoom.get(gamemasterSocketId);
+    const roomId = this.getRoomIdBySocketId(gamemasterSocketId);
     if (!roomId) return { success: false, error: 'Not in a room' };
 
     const room = this.rooms.get(roomId);
@@ -1009,7 +1049,7 @@ export class GameManager {
   }
 
   skipCurrentPlayerTruth(gamemasterSocketId: string): { success: boolean; error?: string; room?: Room; playerId?: string; playerName?: string; action?: 'next-round' | 'start-voting' } {
-    const roomId = this.playerToRoom.get(gamemasterSocketId);
+    const roomId = this.getRoomIdBySocketId(gamemasterSocketId);
     if (!roomId) return { success: false, error: 'Not in a room' };
 
     const room = this.rooms.get(roomId);
@@ -1086,7 +1126,7 @@ export class GameManager {
   }
 
   forceStartVoting(gamemasterSocketId: string): { success: boolean; error?: string; room?: Room } {
-    const roomId = this.playerToRoom.get(gamemasterSocketId);
+    const roomId = this.getRoomIdBySocketId(gamemasterSocketId);
     if (!roomId) return { success: false, error: 'Not in a room' };
 
     const room = this.rooms.get(roomId);
@@ -1113,7 +1153,7 @@ export class GameManager {
   }
 
   forceEndVoting(gamemasterSocketId: string): { success: boolean; error?: string; room?: Room } {
-    const roomId = this.playerToRoom.get(gamemasterSocketId);
+    const roomId = this.getRoomIdBySocketId(gamemasterSocketId);
     if (!roomId) return { success: false, error: 'Not in a room' };
 
     const room = this.rooms.get(roomId);
@@ -1136,7 +1176,7 @@ export class GameManager {
 
   // Pass & Play Player Management
   addPassPlayPlayer(gamemasterSocketId: string, playerName: string): { success: boolean; error?: string; room?: Room; player?: Player } {
-    const roomId = this.playerToRoom.get(gamemasterSocketId);
+    const roomId = this.getRoomIdBySocketId(gamemasterSocketId);
     if (!roomId) return { success: false, error: 'Not in a room' };
 
     const room = this.rooms.get(roomId);
@@ -1185,7 +1225,7 @@ export class GameManager {
   }
 
   removePassPlayPlayer(gamemasterSocketId: string, playerId: string): { success: boolean; error?: string; room?: Room } {
-    const roomId = this.playerToRoom.get(gamemasterSocketId);
+    const roomId = this.getRoomIdBySocketId(gamemasterSocketId);
     if (!roomId) return { success: false, error: 'Not in a room' };
 
     const room = this.rooms.get(roomId);
@@ -1224,7 +1264,7 @@ export class GameManager {
 
   // Start next round
   nextRound(gamemasterSocketId: string): { success: boolean; error?: string; room?: Room } {
-    const roomId = this.playerToRoom.get(gamemasterSocketId);
+    const roomId = this.getRoomIdBySocketId(gamemasterSocketId);
     if (!roomId) return { success: false, error: 'Not in a room' };
 
     const room = this.rooms.get(roomId);
@@ -1260,7 +1300,7 @@ export class GameManager {
 
   // Game Mode Management
   changeGameMode(gamemasterSocketId: string, gameMode: string, gameType?: string): { success: boolean; error?: string; room?: Room } {
-    const roomId = this.playerToRoom.get(gamemasterSocketId);
+    const roomId = this.getRoomIdBySocketId(gamemasterSocketId);
     if (!roomId) return { success: false, error: 'Not in a room' };
 
     const room = this.rooms.get(roomId);
@@ -1320,7 +1360,7 @@ export class GameManager {
 
   // Update Room Settings
   updateRoomSettings(gamemasterSocketId: string, settings: Partial<GameSettings>): { success: boolean; error?: string; room?: Room } {
-    const roomId = this.playerToRoom.get(gamemasterSocketId);
+    const roomId = this.getRoomIdBySocketId(gamemasterSocketId);
     if (!roomId) return { success: false, error: 'Not in a room' };
 
     const room = this.rooms.get(roomId);
@@ -1399,7 +1439,7 @@ export class GameManager {
 
   // End Game and Return to Lobby
   endGame(gamemasterSocketId: string): { success: boolean; error?: string; room?: Room } {
-    const roomId = this.playerToRoom.get(gamemasterSocketId);
+    const roomId = this.getRoomIdBySocketId(gamemasterSocketId);
     if (!roomId) return { success: false, error: 'Not in a room' };
 
     const room = this.rooms.get(roomId);
