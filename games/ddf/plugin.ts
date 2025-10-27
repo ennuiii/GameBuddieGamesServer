@@ -237,8 +237,8 @@ class DDFGamePlugin implements GamePlugin {
 
         console.log(`[DDF] 📝 Assigned question: "${question.question.substring(0, 60)}..."`);
 
-        // Assign to first player
-        const activePlayers = Array.from(room.players.values()).filter((p) => !(p.gameData as DDFPlayerData)?.isEliminated);
+        // Assign to first player (exclude host - host is gamemaster, not a player)
+        const activePlayers = Array.from(room.players.values()).filter((p) => !p.isHost && !(p.gameData as DDFPlayerData)?.isEliminated);
         console.log(`[DDF] 👥 Active players: ${activePlayers.length}`);
 
         if (activePlayers.length > 0) {
@@ -290,9 +290,9 @@ class DDFGamePlugin implements GamePlugin {
             gameState.currentQuestion = question;
             gameState.usedQuestions.push(question.id);
 
-            // Reset player indexes for the new round
+            // Reset player indexes for the new round (exclude host)
             const activePlayers = Array.from(room.players.values()).filter(
-              (p) => !(p.gameData as DDFPlayerData).isEliminated,
+              (p) => !p.isHost && !(p.gameData as DDFPlayerData).isEliminated,
             );
             if (activePlayers.length > 0) {
               gameState.currentPlayerIndex = 0;
@@ -396,10 +396,10 @@ class DDFGamePlugin implements GamePlugin {
           // It determines which players appear as voting targets
         }
 
-        // Clear current question and move to next player
+        // Clear current question and move to next player (exclude host)
         gameState.currentQuestion = null;
         const activePlayers = Array.from(room.players.values()).filter(
-          (p) => !(p.gameData as DDFPlayerData).isEliminated,
+          (p) => !p.isHost && !(p.gameData as DDFPlayerData).isEliminated,
         );
         if (activePlayers.length > 0) {
           gameState.currentPlayerIndex = (gameState.currentPlayerIndex + 1) % activePlayers.length;
@@ -433,9 +433,9 @@ class DDFGamePlugin implements GamePlugin {
       try {
         const gameState = room.gameState.data as DDFGameState;
 
-        // Move to next player
+        // Move to next player (exclude host)
         const activePlayers = Array.from(room.players.values()).filter(
-          (p) => !(p.gameData as DDFPlayerData).isEliminated,
+          (p) => !p.isHost && !(p.gameData as DDFPlayerData).isEliminated,
         );
         if (activePlayers.length > 0) {
           gameState.currentPlayerIndex = (gameState.currentPlayerIndex + 1) % activePlayers.length;
@@ -570,8 +570,8 @@ class DDFGamePlugin implements GamePlugin {
             gameState.votes = {}; // Clear old votes
             gameState.votingStatus = {}; // Reset voting status
 
-            // Initialize voting status for all active players
-            const activePlayers = Array.from(room.players.values()).filter(p => !(p.gameData as DDFPlayerData)?.isEliminated);
+            // Initialize voting status for all active players (exclude host)
+            const activePlayers = Array.from(room.players.values()).filter(p => !p.isHost && !(p.gameData as DDFPlayerData)?.isEliminated);
             activePlayers.forEach(player => {
               if (gameState.votingStatus) {
                 gameState.votingStatus[player.id] = {
@@ -786,9 +786,9 @@ class DDFGamePlugin implements GamePlugin {
           console.log(`[DDF] Voting tie in room ${room.code}: Players ${tiedPlayers.join(', ')} all tied`);
         }
 
-        // ✅ CHECK: If exactly 2 players remain, trigger finale mode
+        // ✅ CHECK: If exactly 2 players remain, trigger finale mode (exclude host)
         const activePlayers = Array.from(room.players.values()).filter(
-          (p) => !(p.gameData as DDFPlayerData).isEliminated,
+          (p) => !p.isHost && !(p.gameData as DDFPlayerData).isEliminated,
         );
 
         console.log(`[DDF] 📊 Voting ended - Active players: ${activePlayers.length}`);
@@ -858,9 +858,9 @@ class DDFGamePlugin implements GamePlugin {
       try {
         const gameState = room.gameState.data as DDFGameState;
 
-        // Mark all non-voted players as skipped (by GM)
+        // Mark all non-voted players as skipped (by GM) (exclude host)
         const activePlayers = Array.from(room.players.values()).filter(
-          (p) => !(p.gameData as DDFPlayerData).isEliminated,
+          (p) => !p.isHost && !(p.gameData as DDFPlayerData).isEliminated,
         );
 
         activePlayers.forEach((p) => {
@@ -1051,9 +1051,9 @@ class DDFGamePlugin implements GamePlugin {
         const serialized = serializeRoomToDDF(room, socket.id);
         helpers.sendToRoom(room.code, 'ddf:game-state-update', { room: serialized });
 
-        // Check if both players have answered THIS question
+        // Check if both players have answered THIS question (exclude host)
         const activePlayers = Array.from(room.players.values()).filter(
-          (p) => !(p.gameData as DDFPlayerData).isEliminated,
+          (p) => !p.isHost && !(p.gameData as DDFPlayerData).isEliminated,
         );
 
         // Count how many players answered this specific question (by questionId)
@@ -1518,9 +1518,9 @@ class DDFGamePlugin implements GamePlugin {
     if (gameState.targetPlayerId === player.id) {
       console.log(`[DDF] Removed player was the active player, advancing to next player`);
 
-      // Get remaining active players (excluding eliminated and the just-removed player)
+      // Get remaining active players (excluding host, eliminated, and the just-removed player)
       const activePlayers = Array.from(room.players.values()).filter(
-        (p) => !(p.gameData as DDFPlayerData)?.isEliminated
+        (p) => !p.isHost && !(p.gameData as DDFPlayerData)?.isEliminated
       );
 
       if (activePlayers.length > 0) {
