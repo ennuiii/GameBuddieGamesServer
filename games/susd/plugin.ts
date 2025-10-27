@@ -173,7 +173,7 @@ class SUSDPlugin implements GamePlugin {
         }
 
         socket.emit('word-submitted', { success: true });
-        helpers.sendToRoom(coreRoom.code, 'room-updated', { room: result.room });
+        helpers.sendToRoom(coreRoom.code, 'room:updated', { room: result.room });
       } catch (error: any) {
         console.error('[SUSD] Error submitting word:', error);
         socket.emit('error', { message: 'Failed to submit word' });
@@ -204,7 +204,7 @@ class SUSDPlugin implements GamePlugin {
           console.log(`[SUSD] Answer submitted: ${answerCount}/${playerCount} answers in room ${coreRoom.code}`);
         }
 
-        helpers.sendToRoom(coreRoom.code, 'room-updated', { room: result.room });
+        helpers.sendToRoom(coreRoom.code, 'room:updated', { room: result.room });
       } catch (error: any) {
         console.error('[SUSD] Error submitting answer:', error);
         socket.emit('error', { message: 'Failed to submit answer' });
