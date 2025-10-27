@@ -80,6 +80,12 @@ class UnifiedGameServer {
         methods: ['GET', 'POST'],
         credentials: true,
       },
+      // Connection State Recovery: Automatically restores socket state after temporary disconnects
+      // https://socket.io/docs/v4/connection-state-recovery
+      connectionStateRecovery: {
+        maxDisconnectionDuration: 2 * 60 * 1000, // 2 minutes - longer than typical network blips
+        skipMiddlewares: true, // Skip auth middleware on recovery (state already validated)
+      },
       pingTimeout: 60000,
       pingInterval: 25000,
       transports: ['websocket', 'polling'],
