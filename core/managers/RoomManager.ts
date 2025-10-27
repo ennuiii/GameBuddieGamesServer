@@ -18,11 +18,13 @@ import { validationService } from '../services/ValidationService.js';
 export class RoomManager {
   private rooms: Map<string, Room>;
   private playerRoomMap: Map<string, string>; // socketId -> roomCode
+  private oldSocketCleanupTimers: Map<string, NodeJS.Timeout>; // Track cleanup timers for old socket IDs
   private cleanupInterval: NodeJS.Timeout;
 
   constructor() {
     this.rooms = new Map();
     this.playerRoomMap = new Map();
+    this.oldSocketCleanupTimers = new Map();
 
     // Auto-cleanup inactive rooms every 5 minutes
     this.cleanupInterval = setInterval(() => {
@@ -118,6 +120,13 @@ export class RoomManager {
     room.players.delete(socketId);
     this.playerRoomMap.delete(socketId);
     room.lastActivity = Date.now();
+
+    // Clean up any pending old socket cleanup timers
+    const cleanupTimer = this.oldSocketCleanupTimers.get(socketId);
+    if (cleanupTimer) {
+      clearTimeout(cleanupTimer);
+      this.oldSocketCleanupTimers.delete(socketId);
+    }
 
     console.log(`[RoomManager] Removed player from room ${roomCode} (${room.players.size} remaining)`);
 
@@ -266,10 +275,27 @@ export class RoomManager {
     // Update mappings
     room.players.delete(oldSocketId);
     room.players.set(newSocketId, player);
-    this.playerRoomMap.delete(oldSocketId);
+
+    // Keep old socket ID mapping for 2 seconds to handle in-flight events
+    // Don't delete immediately - this prevents "Not in a room" errors for pending events
     this.playerRoomMap.set(newSocketId, roomCode);
 
-    console.log(`[RoomManager] Reconnected player ${player.name} in room ${roomCode}`);
+    // Cancel any existing cleanup timer for this old socket
+    const existingTimer = this.oldSocketCleanupTimers.get(oldSocketId);
+    if (existingTimer) {
+      clearTimeout(existingTimer);
+    }
+
+    // Schedule deletion of old socket ID after 2 seconds
+    const cleanupTimer = setTimeout(() => {
+      this.playerRoomMap.delete(oldSocketId);
+      this.oldSocketCleanupTimers.delete(oldSocketId);
+      console.log(`[RoomManager] Cleaned up old socket ID ${oldSocketId} after grace period`);
+    }, 2000);
+
+    this.oldSocketCleanupTimers.set(oldSocketId, cleanupTimer);
+
+    console.log(`[RoomManager] Reconnected player ${player.name} in room ${roomCode} (keeping old socket ${oldSocketId} for 2s)`);
 
     return { room, player };
   }
@@ -347,6 +373,13 @@ export class RoomManager {
    */
   destroy(): void {
     clearInterval(this.cleanupInterval);
+
+    // Clear all old socket cleanup timers
+    for (const timer of this.oldSocketCleanupTimers.values()) {
+      clearTimeout(timer);
+    }
+    this.oldSocketCleanupTimers.clear();
+
     this.rooms.clear();
     this.playerRoomMap.clear();
     console.log('[RoomManager] Destroyed');
