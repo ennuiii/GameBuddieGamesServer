@@ -11,6 +11,7 @@ export interface Player {
   isHost: boolean;
   connected: boolean;
   disconnectedAt?: number; // Timestamp when player disconnected (for grace period countdown)
+  oldSocketId?: string; // Temporary property set during reconnection for plugin use
   sessionToken?: string;
   joinedAt: number;
   lastActivity: number;
