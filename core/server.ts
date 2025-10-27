@@ -624,6 +624,14 @@ class UnifiedGameServer {
           }
 
           if (!room) {
+            // WebRTC events are just cleanup - silently ignore if room doesn't exist
+            // This is common when rooms are deleted or during reconnection
+            if (event.startsWith('webrtc:')) {
+              console.log(`[${plugin.id.toUpperCase()}] 🔇 Ignoring WebRTC event for non-existent room (cleanup event)`);
+              return;
+            }
+
+            // For non-WebRTC events, this is a real error
             console.error(`[${plugin.id.toUpperCase()}] ❌ NOT IN A ROOM ERROR`);
             console.error(`[${plugin.id.toUpperCase()}] 📋 Error context:`);
             console.error(`[${plugin.id.toUpperCase()}]    - Event: ${event}`);
