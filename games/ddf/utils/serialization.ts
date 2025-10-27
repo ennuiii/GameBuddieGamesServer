@@ -76,7 +76,10 @@ export function serializeRoomToDDF(room: Room, socketId: string): any {
   // =========================================================================
   // 1. Convert players Map to Array with client-expected format
   // =========================================================================
-  const players = Array.from(room.players.values()).map((p) => {
+  // Exclude host from players list - host is represented as gamemaster
+  const players = Array.from(room.players.values())
+    .filter((p) => !p.isHost)
+    .map((p) => {
     const playerData = p.gameData as DDFPlayerData | undefined;
 
     return {
