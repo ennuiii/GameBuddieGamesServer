@@ -196,6 +196,14 @@ class SUSDPlugin implements GamePlugin {
         }
 
         socket.emit('answer-submitted', { success: true });
+
+        // Log answer count for debugging
+        if (result.room) {
+          const answerCount = result.room.answersThisRound.length;
+          const playerCount = result.room.players.length;
+          console.log(`[SUSD] Answer submitted: ${answerCount}/${playerCount} answers in room ${coreRoom.code}`);
+        }
+
         helpers.sendToRoom(coreRoom.code, 'room-updated', { room: result.room });
       } catch (error: any) {
         console.error('[SUSD] Error submitting answer:', error);
