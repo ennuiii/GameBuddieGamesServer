@@ -86,8 +86,11 @@ class UnifiedGameServer {
         maxDisconnectionDuration: 2 * 60 * 1000, // 2 minutes - longer than typical network blips
         skipMiddlewares: true, // Skip auth middleware on recovery (state already validated)
       },
-      pingTimeout: 60000,
-      pingInterval: 25000,
+      // Increased ping timeout to prevent disconnects when tabs are backgrounded
+      // Browsers suspend JavaScript in background tabs, preventing ping responses
+      // 5 minutes allows players to switch tabs, think, and come back without disconnecting
+      pingTimeout: 300000, // 5 minutes (was 60s - too short for backgrounded tabs)
+      pingInterval: 25000, // Keep ping interval at 25s to detect actual disconnects quickly
       transports: ['websocket', 'polling'],
     });
 
