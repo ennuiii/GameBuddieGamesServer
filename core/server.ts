@@ -596,21 +596,53 @@ class UnifiedGameServer {
       // Register game-specific socket handlers
       for (const [event, handler] of Object.entries(plugin.socketHandlers)) {
         socket.on(event, async (data: any) => {
-          console.log(`[${plugin.id.toUpperCase()}] Received event: ${event} from socket ${socket.id}`);
+          console.log(`[${plugin.id.toUpperCase()}] 📥 Received event: ${event} from socket ${socket.id}`);
+          console.log(`[${plugin.id.toUpperCase()}] 📦 Event data:`, JSON.stringify(data, null, 2));
 
           // First try to get room by socket ID (normal case)
           let room = this.roomManager.getRoomBySocket(socket.id);
 
+          if (!room) {
+            console.log(`[${plugin.id.toUpperCase()}] ⚠️ Room lookup by socket ID failed`);
+            console.log(`[${plugin.id.toUpperCase()}] 🔍 Socket ID: ${socket.id}`);
+            console.log(`[${plugin.id.toUpperCase()}] 🔍 Socket connected: ${socket.connected}`);
+            console.log(`[${plugin.id.toUpperCase()}] 🔍 Data has roomCode: ${!!data?.roomCode}`);
+          }
+
           // If not found and roomCode is provided in data, use that (reconnection/new socket case)
           if (!room && data?.roomCode) {
+            console.log(`[${plugin.id.toUpperCase()}] 🔄 Trying fallback lookup with roomCode: ${data.roomCode}`);
             room = this.roomManager.getRoomByCode(data.roomCode);
             if (room) {
-              console.log(`[${plugin.id.toUpperCase()}] Found room ${data.roomCode} via roomCode parameter (socket ${socket.id} not in playerRoomMap)`);
+              console.log(`[${plugin.id.toUpperCase()}] ✅ Found room ${data.roomCode} via roomCode parameter (socket ${socket.id} not in playerRoomMap)`);
+              console.log(`[${plugin.id.toUpperCase()}] 👥 Room has ${room.players.size} players`);
+              const playerIds = Array.from(room.players.keys());
+              console.log(`[${plugin.id.toUpperCase()}] 🔑 Player socket IDs in room:`, playerIds);
+            } else {
+              console.log(`[${plugin.id.toUpperCase()}] ❌ Room ${data.roomCode} not found in roomManager`);
             }
           }
 
           if (!room) {
-            console.log(`[${plugin.id.toUpperCase()}] Socket ${socket.id} not in a room for event ${event}`);
+            console.error(`[${plugin.id.toUpperCase()}] ❌ NOT IN A ROOM ERROR`);
+            console.error(`[${plugin.id.toUpperCase()}] 📋 Error context:`);
+            console.error(`[${plugin.id.toUpperCase()}]    - Event: ${event}`);
+            console.error(`[${plugin.id.toUpperCase()}]    - Socket ID: ${socket.id}`);
+            console.error(`[${plugin.id.toUpperCase()}]    - Socket connected: ${socket.connected}`);
+            console.error(`[${plugin.id.toUpperCase()}]    - Data roomCode: ${data?.roomCode || 'NOT PROVIDED'}`);
+            console.error(`[${plugin.id.toUpperCase()}]    - Timestamp: ${new Date().toISOString()}`);
+
+            // Get all rooms for this game to help debug
+            const allRooms = this.roomManager.getRoomsByGame(plugin.id);
+            console.error(`[${plugin.id.toUpperCase()}]    - Total ${plugin.id} rooms: ${allRooms.length}`);
+            if (allRooms.length > 0) {
+              console.error(`[${plugin.id.toUpperCase()}]    - Room codes: ${allRooms.map(r => r.code).join(', ')}`);
+              allRooms.forEach(r => {
+                const playerSockets = Array.from(r.players.keys());
+                console.error(`[${plugin.id.toUpperCase()}]       - Room ${r.code}: ${r.players.size} players, sockets: ${playerSockets.join(', ')}`);
+              });
+            }
+
             socket.emit('error', { message: 'Not in a room' });
             return;
           }
