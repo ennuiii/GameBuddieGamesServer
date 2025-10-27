@@ -324,9 +324,13 @@ class UnifiedGameServer {
             );
 
             if (existingPlayer) {
-              // Update socket ID
-              this.roomManager.reconnectPlayer(existingPlayer.socketId, socket.id);
+              // Capture old socketId BEFORE updating (plugins need this for their own mappings)
+              const oldSocketId = existingPlayer.socketId;
+
+              // Update socket ID in core room
+              this.roomManager.reconnectPlayer(oldSocketId, socket.id);
               player = existingPlayer;
+              player.oldSocketId = oldSocketId; // Store for plugin use
               sessionToken = data.sessionToken;
               isReconnecting = true;
               console.log(`[${plugin.id.toUpperCase()}] Player reconnected: ${player.name}`);

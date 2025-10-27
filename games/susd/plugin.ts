@@ -846,7 +846,8 @@ class SUSDPlugin implements GamePlugin {
       // Player is reconnecting - update their socketId in SUSD room
       const susdPlayer = susdRoom.players.find(p => p.id === player.id);
       if (susdPlayer) {
-        const oldSocketId = susdPlayer.socketId;
+        // Use oldSocketId from core (captured before update) for accurate mapping update
+        const oldSocketId = (player as any).oldSocketId || susdPlayer.socketId;
         susdPlayer.socketId = player.socketId;
 
         // Update the GameManager's playerToRoom mapping
