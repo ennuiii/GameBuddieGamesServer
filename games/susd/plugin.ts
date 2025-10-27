@@ -843,7 +843,19 @@ class SUSDPlugin implements GamePlugin {
       // Note: Core server will emit 'player:joined' with serializeRoom() result
       // No need to emit 'room:updated' here to avoid duplicate emissions
     } else {
-      // Player is reconnecting - send SUSD room only to them (not broadcast)
+      // Player is reconnecting - update their socketId in SUSD room
+      const susdPlayer = susdRoom.players.find(p => p.id === player.id);
+      if (susdPlayer) {
+        const oldSocketId = susdPlayer.socketId;
+        susdPlayer.socketId = player.socketId;
+
+        // Update the GameManager's playerToRoom mapping
+        this.gameManager.updatePlayerSocketId(oldSocketId, player.socketId);
+
+        console.log(`[SUSD] Updated socketId for reconnecting player ${player.name}: ${oldSocketId} → ${player.socketId}`);
+      }
+
+      // Send SUSD room to reconnected player
       namespace.to(player.socketId).emit('room:updated', { room: susdRoom });
       console.log(`[SUSD] Sent SUSD room to reconnecting player ${player.name} in ${room.code}`);
     }

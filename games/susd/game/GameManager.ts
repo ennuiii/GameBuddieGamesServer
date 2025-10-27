@@ -929,6 +929,23 @@ export class GameManager {
     return room?.players.find(p => p.socketId === socketId);
   }
 
+  /**
+   * Update a player's socketId when they reconnect
+   * This is critical for maintaining game state across reconnections
+   */
+  updatePlayerSocketId(oldSocketId: string | undefined, newSocketId: string): void {
+    if (!oldSocketId) return;
+
+    const roomId = this.playerToRoom.get(oldSocketId);
+    if (!roomId) return;
+
+    // Update the playerToRoom mapping
+    this.playerToRoom.delete(oldSocketId);
+    this.playerToRoom.set(newSocketId, roomId);
+
+    console.log(`[GameManager] Updated playerToRoom mapping: ${oldSocketId} → ${newSocketId}`);
+  }
+
   getActiveRoomsCount(): number {
     return this.rooms.size;
   }
