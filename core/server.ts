@@ -607,7 +607,7 @@ class UnifiedGameServer {
           }
 
           // Get the plugin for this game
-          const plugin = this.gameRegistry.getPlugin(room.gameId);
+          const plugin = this.gameRegistry.getGame(room.gameId);
           if (!plugin) {
             console.log(`[CORE] ❌ Plugin not found for game: ${room.gameId}`);
             callback({ success: false, message: 'Game plugin not found' });
