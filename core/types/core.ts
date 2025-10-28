@@ -97,8 +97,9 @@ export interface GamePlugin {
   onGameEnd?(room: Room): void;
   onCleanup?(): Promise<void>;
 
-  // Serialization hook (optional) - converts server Room to client-expected format
-  serializeRoom?(room: Room, socketId: string): any;
+  // Serialization hook - converts server Room to client-expected format
+  // Required for proper client-server communication
+  serializeRoom(room: Room, socketId: string): any;
 
   // Socket event handlers (game-specific only)
   socketHandlers: Record<string, SocketEventHandler>;
