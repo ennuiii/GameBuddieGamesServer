@@ -49,6 +49,7 @@ function serializeRoomToLobby(room: Room, socketId: string) {
     score: (p.gameData as CluePlayerData)?.score || 0,
     connected: p.connected,
     isHost: p.isHost,
+    disconnectedAt: p.disconnectedAt,
   }));
 
   // Find current player's ID by socketId
