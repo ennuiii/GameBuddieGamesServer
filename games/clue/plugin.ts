@@ -724,10 +724,14 @@ class CluePlugin implements GamePlugin {
 
         // Notify room
         helpers.sendToRoom(room.code, 'player:left', {
-          playerId: targetPlayer.id,
+          playerId: targetPlayer.socketId,  // Send socketId for client filtering
           playerName: targetPlayer.name,
           reason: 'kicked',
         });
+
+        // ✅ Broadcast updated state to all remaining players (like onPlayerLeave does)
+        this.sendLobbyUpdate(room);
+        console.log(`[ClueScale] Broadcast player kick for ${targetPlayer.name} to room ${room.code}`);
       } catch (error: any) {
         console.error('[ClueScale] player:kick error:', error);
         socket.emit('error', { message: 'Failed to kick player' });
