@@ -194,7 +194,7 @@ class CluePlugin implements GamePlugin {
   }
 
   /**
-   * Called when a player disconnects (before 30-second grace period)
+   * Called when a player disconnects (before 60-second grace period)
    * Broadcasts updated game state with disconnectedAt timestamp for countdown timer
    */
   onPlayerDisconnected(room: Room, player: Player): void {

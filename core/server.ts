@@ -722,16 +722,23 @@ class UnifiedGameServer {
               plugin.onPlayerDisconnected(room, player);
             }
 
-            // Remove after grace period (30 seconds)
+            // Remove after grace period (60 seconds)
             setTimeout(() => {
               const stillDisconnected = !player.connected;
               if (stillDisconnected) {
                 const { room: currentRoom } = this.roomManager.removePlayerFromRoom(socket.id);
+
+                // Invalidate session token - player loses their score/progress if they rejoin
+                if (player.sessionToken) {
+                  this.sessionManager.deleteSession(player.sessionToken);
+                  console.log(`[${plugin.id.toUpperCase()}] Session invalidated for removed player: ${player.name}`);
+                }
+
                 if (currentRoom && plugin.onPlayerLeave) {
                   plugin.onPlayerLeave(currentRoom, player);
                 }
               }
-            }, 30000);
+            }, 60000);
 
             console.log(`[${plugin.id.toUpperCase()}] Player disconnected: ${player.name}`);
           }
