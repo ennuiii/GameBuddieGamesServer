@@ -202,9 +202,15 @@ class SUSDPlugin implements GamePlugin {
           const answerCount = result.room.answersThisRound.length;
           const playerCount = result.room.players.length;
           console.log(`[SUSD] Answer submitted: ${answerCount}/${playerCount} answers in room ${coreRoom.code}`);
-        }
 
-        helpers.sendToRoom(coreRoom.code, 'room:updated', { room: result.room });
+          // If all answers are in and we've transitioned to voting, emit transition event
+          if (result.room.gamePhase === 'voting') {
+            console.log(`[SUSD] ✅ All answers submitted, transitioning to voting phase in room ${coreRoom.code}`);
+            helpers.sendToRoom(coreRoom.code, 'voting-started', { room: result.room });
+          } else {
+            helpers.sendToRoom(coreRoom.code, 'room:updated', { room: result.room });
+          }
+        }
       } catch (error: any) {
         console.error('[SUSD] Error submitting answer:', error);
         socket.emit('error', { message: 'Failed to submit answer' });

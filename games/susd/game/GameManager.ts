@@ -522,14 +522,14 @@ export class GameManager {
     room.answersThisRound.push(answerData);
 
     // Check if all players have answered
-    const allAnswered = room.players.every(p => 
+    const allAnswered = room.players.every(p =>
       room.answersThisRound.some(a => a.playerId === p.id)
     );
-    
+
     if (allAnswered) {
-      // All players answered for this round - DON'T auto-progress
-      // The socket handler will handle the delayed progression
-      console.log(`[GameManager] All players answered in room ${room.code}`);
+      // All players answered - auto-transition to voting phase
+      console.log(`[GameManager] All players answered in room ${room.code} - starting voting phase`);
+      this.startVotingPhase(room);
     }
 
     room.lastActivity = Date.now();
