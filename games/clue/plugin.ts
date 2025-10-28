@@ -44,6 +44,7 @@ function serializeRoomToLobby(room: Room, socketId: string) {
 
   // Convert players Map to Array with client-expected format
   const players = Array.from(room.players.values()).map((p) => ({
+    id: p.id,               // UUID for stable player identification (used for kick, etc.)
     socketId: p.socketId,
     name: p.name,
     score: (p.gameData as CluePlayerData)?.score || 0,
