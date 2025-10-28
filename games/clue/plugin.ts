@@ -249,6 +249,14 @@ class CluePlugin implements GamePlugin {
   }
 
   /**
+   * Serialize room to client-expected format
+   * Required for proper client-server communication
+   */
+  serializeRoom(room: Room, socketId: string): any {
+    return serializeRoomToLobby(room, socketId);
+  }
+
+  /**
    * Socket event handlers (game-specific events only)
    */
   socketHandlers = {
