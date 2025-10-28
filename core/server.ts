@@ -376,14 +376,21 @@ class UnifiedGameServer {
         // Only broadcast to others if new player (not reconnecting)
         if (!isReconnecting) {
           // Broadcast updated room to all players so they see the new player
-          const serializedRoom = plugin.serializeRoom
-            ? plugin.serializeRoom(room, socket.id)
-            : this.sanitizeRoom(room, socket.id);
+          // ⚠️ CRITICAL: Serialize for EACH player with THEIR socketId (not the joining player's)
+          // This ensures each player gets correct personalized fields like mySocketId
+          // This fixes the issue where existing players wouldn't see new joiners correctly
+          const players = Array.from(room.players.values());
 
-          namespace.to(room.code).emit('player:joined', {
-            player: this.sanitizePlayer(player),
-            room: serializedRoom, // Include full room so all players see the update
-          });
+          for (const p of players) {
+            const serializedRoom = plugin.serializeRoom
+              ? plugin.serializeRoom(room, p.socketId)
+              : this.sanitizeRoom(room, p.socketId);
+
+            namespace.to(p.socketId).emit('player:joined', {
+              player: this.sanitizePlayer(player),
+              room: serializedRoom, // Each player gets room serialized for their perspective
+            });
+          }
         }
 
         const action = isReconnecting ? 'reconnected to' : 'joined';
