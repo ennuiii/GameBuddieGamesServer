@@ -206,6 +206,7 @@ class CluePlugin implements GamePlugin {
 
   /**
    * Called when a player leaves
+   * Broadcasts updated game state to all remaining players so UI reflects removal
    */
   onPlayerLeave(room: Room, player: Player): void {
     const gameState = room.gameState.data as ClueGameState;
@@ -228,6 +229,10 @@ class CluePlugin implements GamePlugin {
     } else {
       console.log(`[ClueScale] Player ${player.name} left room ${room.code}`);
     }
+
+    // ✅ Broadcast updated state to all clients so they update their player lists
+    this.sendLobbyUpdate(room);
+    console.log(`[ClueScale] Broadcast player removal for ${player.name} to room ${room.code}`);
   }
 
   /**
