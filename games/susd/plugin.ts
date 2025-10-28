@@ -877,7 +877,30 @@ class SUSDPlugin implements GamePlugin {
   }
 
   /**
-   * Called when player leaves
+   * Called when player disconnects (during grace period)
+   * Broadcast state update so other players see the disconnected status
+   */
+  onPlayerDisconnected(room: CoreRoom, player: CorePlayer) {
+    console.log(`[SUSD] Player ${player.name} disconnected from room ${room.code} - broadcasting state update`);
+
+    // Get SUSD room
+    const susdRoomId = this.roomMapping.get(room.code);
+    if (!susdRoomId) return;
+
+    const susdRoom = this.gameManager.getRoomByCode(room.code);
+    if (!susdRoom) return;
+
+    // Broadcast updated room state so other players see disconnected status
+    if (this.io) {
+      const namespace = this.io.of('/susd');
+      namespace.to(room.code).emit('room:updated', { room: susdRoom });
+      console.log(`[SUSD] Broadcast disconnect status for ${player.name} to room ${room.code}`);
+    }
+  }
+
+  /**
+   * Called when player leaves after grace period
+   * Broadcasts state update so other players see the removal
    */
   onPlayerLeave(room: CoreRoom, player: CorePlayer) {
     const susdRoomId = this.roomMapping.get(room.code);
@@ -885,6 +908,17 @@ class SUSDPlugin implements GamePlugin {
 
     this.gameManager.leaveRoom(player.socketId);
     console.log(`[SUSD] Player ${player.name} left SUSD room ${room.code}`);
+
+    // Get updated room to broadcast
+    const susdRoom = this.gameManager.getRoomByCode(room.code);
+    if (!susdRoom) return;
+
+    // Broadcast updated room state so other players see removal
+    if (this.io) {
+      const namespace = this.io.of('/susd');
+      namespace.to(room.code).emit('room:updated', { room: susdRoom });
+      console.log(`[SUSD] Broadcast player removal for ${player.name} to room ${room.code}`);
+    }
   }
 
   /**
