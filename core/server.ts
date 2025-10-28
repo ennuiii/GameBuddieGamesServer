@@ -602,14 +602,16 @@ class UnifiedGameServer {
 
       // 🆕 GENERIC STATE SYNC - Works for all games!
       // Used by clients for reconnection/route restoration
-      socket.on('game:sync-state', async (data: { roomCode: string }, callback: (response: any) => void) => {
+      socket.on('game:sync-state', async (data: { roomCode: string }, callback?: (response: any) => void) => {
         try {
           console.log(`[CORE] 🔄 State sync requested by ${socket.id} for room ${data.roomCode}`);
 
           const room = this.roomManager.getRoomByCode(data.roomCode);
           if (!room) {
             console.log(`[CORE] ❌ Room not found: ${data.roomCode}`);
-            callback({ success: false, message: 'Room not found' });
+            if (callback && typeof callback === 'function') {
+              callback({ success: false, message: 'Room not found' });
+            }
             return;
           }
 
@@ -617,7 +619,9 @@ class UnifiedGameServer {
           const plugin = this.gameRegistry.getGame(room.gameId);
           if (!plugin) {
             console.log(`[CORE] ❌ Plugin not found for game: ${room.gameId}`);
-            callback({ success: false, message: 'Game plugin not found' });
+            if (callback && typeof callback === 'function') {
+              callback({ success: false, message: 'Game plugin not found' });
+            }
             return;
           }
 
@@ -625,10 +629,14 @@ class UnifiedGameServer {
           const serialized = plugin.serializeRoom(room, socket.id);
 
           console.log(`[CORE] ✅ State sync successful for room ${data.roomCode}`);
-          callback({ success: true, room: serialized });
+          if (callback && typeof callback === 'function') {
+            callback({ success: true, room: serialized });
+          }
         } catch (error: any) {
           console.error(`[CORE] ❌ Error in game:sync-state:`, error);
-          callback({ success: false, message: 'Failed to sync state' });
+          if (callback && typeof callback === 'function') {
+            callback({ success: false, message: 'Failed to sync state' });
+          }
         }
       });
 
