@@ -881,6 +881,7 @@ class UnifiedGameServer {
       name: player.name,
       isHost: player.isHost,
       connected: player.connected,
+      disconnectedAt: player.disconnectedAt,
       gameData: player.gameData,
     };
   }

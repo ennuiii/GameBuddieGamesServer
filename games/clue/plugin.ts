@@ -193,6 +193,17 @@ class CluePlugin implements GamePlugin {
   }
 
   /**
+   * Called when a player disconnects (before 30-second grace period)
+   * Broadcasts updated game state with disconnectedAt timestamp for countdown timer
+   */
+  onPlayerDisconnected(room: Room, player: Player): void {
+    console.log(`[ClueScale] Player ${player.name} disconnected from room ${room.code} - broadcasting state update`);
+
+    // Send lobby update to all players so they see the disconnected status with countdown
+    this.sendLobbyUpdate(room);
+  }
+
+  /**
    * Called when a player leaves
    */
   onPlayerLeave(room: Room, player: Player): void {
