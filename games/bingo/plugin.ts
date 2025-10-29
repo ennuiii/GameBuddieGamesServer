@@ -52,6 +52,8 @@ function serializeRoomToClient(room: Room, socketId: string) {
       name: p.name,
       isHost: p.isHost,
       isConnected: p.connected,
+      connected: p.connected,
+      disconnectedAt: p.disconnectedAt ?? null,
       joinedAt: Date.now(), // Could store this in playerData if needed
       sessionToken: undefined, // Client manages this separately
     };
