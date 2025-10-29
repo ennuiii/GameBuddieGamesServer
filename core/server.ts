@@ -373,6 +373,18 @@ class UnifiedGameServer {
           sessionToken,
         });
 
+        if (isReconnecting) {
+          const players = Array.from(room.players.values());
+
+          for (const p of players) {
+            const serializedRoom = plugin.serializeRoom
+              ? plugin.serializeRoom(room, p.socketId)
+              : this.sanitizeRoom(room, p.socketId);
+
+            namespace.to(p.socketId).emit('server:game-state-update', serializedRoom);
+          }
+        }
+
         // Only broadcast to others if new player (not reconnecting)
         if (!isReconnecting) {
           // Broadcast updated room to all players so they see the new player
