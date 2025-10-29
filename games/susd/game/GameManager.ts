@@ -234,6 +234,7 @@ export class GameManager {
       player.hasVoted = false;
       player.votedFor = undefined;
       player.isEliminated = false;
+      player.lastSubmittedRound = 0;
     });
 
     // Choose random imposter with better logging
@@ -332,6 +333,7 @@ export class GameManager {
     // Reset player submission status
     room.players.forEach(player => {
       player.hasSubmittedWord = false;
+      player.lastSubmittedRound = 0;
     });
     
     // Start the next round
@@ -378,6 +380,7 @@ export class GameManager {
 
     room.wordsThisRound.push(turnData);
     player.hasSubmittedWord = true;
+    player.lastSubmittedRound = room.currentRound;
 
     // Move to next turn or check if round is complete
     room.turnIndex++;
@@ -773,6 +776,7 @@ export class GameManager {
     if (currentPlayer) {
       // Mark current player as having "submitted" for voice mode
       currentPlayer.hasSubmittedWord = true;
+      currentPlayer.lastSubmittedRound = room.currentRound;
       room.wordsThisRound.push({
         playerId: currentPlayer.id,
         playerName: currentPlayer.name,
@@ -1018,6 +1022,7 @@ export class GameManager {
 
     // Mark player as submitted and add skip word
     currentPlayer.hasSubmittedWord = true;
+    currentPlayer.lastSubmittedRound = room.currentRound;
     room.wordsThisRound.push({
       playerId: currentPlayer.id,
       playerName: currentPlayer.name,
@@ -1214,7 +1219,8 @@ export class GameManager {
       isImposter: false,
       hasSubmittedWord: false,
       hasVoted: false,
-      isEliminated: false
+      isEliminated: false,
+      lastSubmittedRound: 0
     };
 
     room.players.push(newPlayer);

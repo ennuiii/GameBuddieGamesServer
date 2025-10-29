@@ -84,6 +84,7 @@ class SUSDPlugin implements GamePlugin {
           hasSubmittedWord: false,
           hasVoted: false,
           isEliminated: false,
+          lastSubmittedRound: 0,
           gameBuddiesPlayerId: hostPlayer.id,
         };
 
@@ -847,6 +848,7 @@ class SUSDPlugin implements GamePlugin {
         hasSubmittedWord: false,
         hasVoted: false,
         isEliminated: false,
+        lastSubmittedRound: 0,
         gameBuddiesPlayerId: player.id,
       };
 

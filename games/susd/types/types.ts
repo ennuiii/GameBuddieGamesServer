@@ -20,6 +20,7 @@ export interface Player {
   hasVoted: boolean;
   votedFor?: string;
   isEliminated: boolean;
+  lastSubmittedRound: number;
   // GameBuddies integration
   gameBuddiesPlayerId?: string;
 }
