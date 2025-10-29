@@ -854,7 +854,9 @@ class SUSDPlugin implements GamePlugin {
 
       // Add to SUSD room
       susdRoom.players.push(susdPlayer);
-      console.log(`[SUSD] Player ${player.name} added to SUSD room ${room.code}`);
+      console.log(`[SUSD] Player ${player.name} added to SUSD room ${room.code}`, {
+        totalPlayers: susdRoom.players.length,
+      });
 
       // Note: Core server will emit 'player:joined' with serializeRoom() result
       // No need to emit 'room:updated' here to avoid duplicate emissions

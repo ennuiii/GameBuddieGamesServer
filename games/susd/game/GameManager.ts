@@ -335,6 +335,15 @@ export class GameManager {
       player.hasSubmittedWord = false;
       player.lastSubmittedRound = 0;
     });
+
+    console.log(
+      `[SUSD][Round] Preparing round ${room.currentRound}`,
+      room.players.map(p => ({
+        name: p.name,
+        lastSubmittedRound: p.lastSubmittedRound,
+        isImposter: p.isImposter,
+      }))
+    );
     
     // Start the next round
     room.currentTurn = room.turnOrder[room.turnIndex];
@@ -366,7 +375,22 @@ export class GameManager {
       return { success: false, error: 'Not your turn' };
     }
 
-    if (player.hasSubmittedWord) {
+    console.log('[SUSD][submitWord] Attempt', {
+      player: player.name,
+      round: room.currentRound,
+      word: word.trim(),
+      hasSubmittedWord: player.hasSubmittedWord,
+      lastSubmittedRound: player.lastSubmittedRound,
+      turnIndex: room.turnIndex,
+      currentTurn: room.currentTurn,
+    });
+
+    if (player.hasSubmittedWord && player.lastSubmittedRound === room.currentRound) {
+      console.warn('[SUSD][submitWord] Duplicate blocked', {
+        player: player.name,
+        round: room.currentRound,
+        lastSubmittedRound: player.lastSubmittedRound,
+      });
       return { success: false, error: 'Already submitted word' };
     }
 
@@ -381,6 +405,13 @@ export class GameManager {
     room.wordsThisRound.push(turnData);
     player.hasSubmittedWord = true;
     player.lastSubmittedRound = room.currentRound;
+
+    console.log('[SUSD][submitWord] Accepted', {
+      player: player.name,
+      round: room.currentRound,
+      totalWordsThisRound: room.wordsThisRound.length,
+      nextTurnIndex: room.turnIndex + 1,
+    });
 
     // Move to next turn or check if round is complete
     room.turnIndex++;
@@ -783,6 +814,11 @@ export class GameManager {
         word: '[Spoken]',
         timestamp: Date.now()
       });
+
+      console.log('[SUSD][voiceNextPlayer] Marked spoken submission', {
+        player: currentPlayer.name,
+        round: room.currentRound,
+      });
     }
 
     // Move to next turn, check rounds, or voting
@@ -1028,6 +1064,11 @@ export class GameManager {
       playerName: currentPlayer.name,
       word: '[Skipped by GM]',
       timestamp: Date.now()
+    });
+
+    console.log('[SUSD][skipCurrentPlayer] Player skipped', {
+      player: currentPlayer.name,
+      round: room.currentRound,
     });
 
     // Move to next turn, check rounds, or voting
