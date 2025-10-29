@@ -1355,7 +1355,10 @@ class GameManager {
     room.votes.clear();
     room.currentQuestion = null;
     room.targetPlayerId = null;
-    room.timer.time = room.timer.duration;
+
+    const roundDuration = room.settings?.roundDuration || room.timer.duration || 120;
+    room.timer.duration = roundDuration;
+    room.timer.time = roundDuration;
     room.timer.isActive = false;
     
     // CRITICAL FIX: Reset currentPlayerIndex when starting new round after eliminations
@@ -1369,7 +1372,20 @@ class GameManager {
     room.isSecondVotingRound = false;
     room.tiedPlayerIds = [];
 
-    console.log(`[GameManager] ✅ Started new round ${room.roundNumber}. Used questions preserved: ${room.usedQuestions?.size || 0} questions`);
+    const gameState = room.gameState?.data;
+    if (gameState) {
+      gameState.roundStarted = false;
+    }
+
+    console.log(`[GameManager] Started new round ${room.roundNumber}. Used questions preserved: ${room.usedQuestions?.size || 0} questions`);
+
+    if (this.io) {
+      this.io.to(roomCode).emit('ddf:timer-update', {
+        time: room.timer.time,
+        isActive: room.timer.isActive,
+        gameState: room.gameState
+      });
+    }
 
     return this.cleanRoomForSerialization(room);
   }

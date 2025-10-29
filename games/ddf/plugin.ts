@@ -565,6 +565,10 @@ class DDFGamePlugin implements GamePlugin {
             gameState.phase = 'voting';
             gameState.targetPlayerId = null; // Clear target player
             gameState.currentQuestion = null; // Clear current question
+            gameState.roundStarted = false; // Allow next round to be started manually
+            gameState.timer.isActive = false;
+            gameState.timer.duration = gameState.settings.roundDuration || gameState.timer.duration || 120;
+            gameState.timer.time = gameState.timer.duration;
 
             // Reset voting data for fresh voting phase
             gameState.votes = {}; // Clear old votes
@@ -584,6 +588,11 @@ class DDFGamePlugin implements GamePlugin {
             });
 
             console.log(`[DDF] Voting initialized for ${activePlayers.length} players`);
+
+            helpers.sendToRoom(room.code, 'ddf:timer-update', {
+              time: gameState.timer.time,
+              isActive: gameState.timer.isActive,
+            });
             break;
         }
 
