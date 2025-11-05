@@ -1098,41 +1098,21 @@ export class GameManager {
       return { success: false, error: 'No current player to skip' };
     }
 
-    // Mark player as submitted and add skip word
-    currentPlayer.hasSubmittedWord = true;
-    currentPlayer.lastSubmittedRound = room.currentRound;
-    room.wordsThisRound.push({
-      playerId: currentPlayer.id,
-      playerName: currentPlayer.name,
-      word: '[Skipped by GM]',
-      timestamp: Date.now()
+    // Online mode: Generate new word and restart round for all players
+    this.assignWords(room);
+
+    // Reset round state
+    room.wordsThisRound = [];
+    room.turnIndex = 0;
+    room.currentTurn = room.turnOrder[0];
+
+    // Reset all players' submission status
+    room.players.forEach(player => {
+      player.hasSubmittedWord = false;
     });
-
-    console.log('[SUSD][skipCurrentPlayer] Player skipped', {
-      player: currentPlayer.name,
-      round: room.currentRound,
-    });
-
-    // Move to next turn, check rounds, or voting
-    room.turnIndex++;
-    if (room.turnIndex < room.turnOrder.length) {
-      room.currentTurn = room.turnOrder[room.turnIndex];
-    } else {
-      // All players have submitted for this round
-      room.allWordsAllRounds.push([...room.wordsThisRound]);
-
-      // Check if we should start another round or go to voting
-      if (room.currentRound < room.settings.roundsBeforeVoting) {
-        // Start next round
-        this.startNextRound(room);
-      } else {
-        // All rounds complete, start voting
-        this.startVotingPhase(room);
-      }
-    }
 
     room.lastActivity = Date.now();
-    console.log(`[GameManager] Gamemaster skipped ${currentPlayer.name} in room ${room.code}`);
+    console.log(`[GameManager] Gamemaster skipped, generated new word and restarted round in room ${room.code}`);
     return { success: true, room };
   }
 
@@ -1195,60 +1175,18 @@ export class GameManager {
       };
     }
 
-    // Online mode: Find a player who hasn't answered yet
-    const playersWhoHaventAnswered = room.players.filter(p =>
-      !room.answersThisRound.some(a => a.playerId === p.id)
-    );
+    // Online mode: Generate new question and restart round for all players
+    this.assignQuestion(room);
 
-    if (playersWhoHaventAnswered.length === 0) {
-      return { success: false, error: 'All players have already answered' };
-    }
-
-    // Skip the first player who hasn't answered (or we could make this more sophisticated)
-    const playerToSkip = playersWhoHaventAnswered[0];
-
-    // Add a placeholder answer for the skipped player
-    room.answersThisRound.push({
-      playerId: playerToSkip.id,
-      playerName: playerToSkip.name,
-      answer: '[Skipped by GM]',
-      questionId: room.currentQuestion?.id || '',
-      questionText: room.currentQuestion?.text || '',
-      timestamp: Date.now()
-    });
-
-    // Check if all players have now answered (including the skip)
-    const allAnswered = room.players.every(p =>
-      room.answersThisRound.some(a => a.playerId === p.id)
-    );
-
-    let action: 'next-round' | 'start-voting' = 'start-voting';
-
-    if (allAnswered) {
-      // In truth mode, always go to voting after first round (multiple question rounds don't make sense)
-      const maxRounds = room.gameMode === 'truth' ? 1 : room.settings.roundsBeforeVoting;
-
-      // All players have answered, check if we should continue to next round or voting
-      if (room.currentRound < maxRounds) {
-        // Start next round
-        this.startNextQuestionRound(room);
-        action = 'next-round';
-      } else {
-        // All rounds complete, start voting
-        this.startVotingPhase(room);
-        action = 'start-voting';
-      }
-    }
+    // Reset round state
+    room.answersThisRound = [];
 
     room.lastActivity = Date.now();
-    console.log(`[GameManager] Gamemaster skipped ${playerToSkip.name} in truth mode in room ${room.code}`);
+    console.log(`[GameManager] Gamemaster skipped, generated new question and restarted round in room ${room.code}`);
 
     return {
       success: true,
-      room,
-      playerId: playerToSkip.id,
-      playerName: playerToSkip.name,
-      action
+      room
     };
   }
 
@@ -1300,67 +1238,35 @@ export class GameManager {
 
     // Process the skip based on game phase
     if (room.pendingSkipRequest.gamePhase === 'word-round') {
-      // Add skipped word
-      room.wordsThisRound.push({
-        playerId: room.pendingSkipRequest.playerId,
-        playerName: room.pendingSkipRequest.playerName,
-        word: '[Skipped]',
-        timestamp: Date.now()
-      });
-
-      const skippedPlayer = room.players.find(p => p.id === room.pendingSkipRequest!.playerId);
-      if (skippedPlayer) {
-        skippedPlayer.hasSubmittedWord = true;
-      }
-
       // Check if all submitted in Pass & Play mode
       if (room.settings.gameType === 'pass-play') {
         room.passPlayCurrentPlayer++;
         room.passPlayRevealed = false;
       } else {
-        // Online mode: advance turn
-        room.turnIndex++;
-        if (room.turnIndex < room.turnOrder.length) {
-          room.currentTurn = room.turnOrder[room.turnIndex];
-        } else {
-          // All submitted, move to next round or voting
-          room.allWordsAllRounds.push([...room.wordsThisRound]);
-          if (room.currentRound < room.settings.roundsBeforeVoting) {
-            this.startNextRound(room);
-          } else {
-            this.startVotingPhase(room);
-          }
-        }
+        // Online mode: Generate new word and restart round for all players
+        this.assignWords(room);
+
+        // Reset round state
+        room.wordsThisRound = [];
+        room.turnIndex = 0;
+        room.currentTurn = room.turnOrder[0];
+
+        // Reset all players' submission status
+        room.players.forEach(player => {
+          player.hasSubmittedWord = false;
+        });
       }
     } else if (room.pendingSkipRequest.gamePhase === 'question-round') {
-      // Add skipped answer
-      room.answersThisRound.push({
-        playerId: room.pendingSkipRequest.playerId,
-        playerName: room.pendingSkipRequest.playerName,
-        answer: '[Skipped]',
-        questionId: room.currentQuestion?.id || '',
-        questionText: room.currentQuestion?.text || '',
-        timestamp: Date.now()
-      });
-
       // Check if all answered in Pass & Play mode
       if (room.settings.gameType === 'pass-play') {
         room.passPlayCurrentPlayer++;
         room.passPlayRevealed = false;
       } else {
-        // Online mode: check if all answered
-        const allAnswered = room.players.every(p =>
-          room.answersThisRound.some(a => a.playerId === p.id)
-        );
+        // Online mode: Generate new question and restart round for all players
+        this.assignQuestion(room);
 
-        if (allAnswered) {
-          const maxRounds = room.gameMode === 'truth' ? 1 : room.settings.roundsBeforeVoting;
-          if (room.currentRound < maxRounds) {
-            this.startNextQuestionRound(room);
-          } else {
-            this.startVotingPhase(room);
-          }
-        }
+        // Reset round state
+        room.answersThisRound = [];
       }
     }
 
