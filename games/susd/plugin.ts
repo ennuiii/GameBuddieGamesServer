@@ -445,6 +445,8 @@ class SUSDPlugin implements GamePlugin {
 
         // Broadcast room update to all players
         helpers.sendToRoom(coreRoom.code, 'skip-approved', { room: result.room });
+        // Broadcast room state so client receives new word/question
+        helpers.sendToRoom(coreRoom.code, 'room:updated', { room: result.room });
         console.log(`[SUSD] Skip request approved in room ${coreRoom.code}`);
       } catch (error: any) {
         console.error('[SUSD] Error approving skip:', error);
