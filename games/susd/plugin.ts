@@ -485,6 +485,66 @@ class SUSDPlugin implements GamePlugin {
     },
 
     /**
+     * Skip current word - generate new word for all players (gamemaster only)
+     */
+    'skip-word': async (socket: Socket, data: any, coreRoom: CoreRoom, helpers: GameHelpers) => {
+      try {
+        const susdRoomId = this.roomMapping.get(coreRoom.code);
+        if (!susdRoomId) return;
+
+        const player = this.gameManager.getPlayerBySocketId(socket.id);
+        if (!player || !player.isGamemaster) {
+          socket.emit('error', { message: 'Only gamemaster can skip word' });
+          return;
+        }
+
+        const result = this.gameManager.skipWord(socket.id);
+
+        if (!result.success) {
+          socket.emit('error', { message: result.error });
+          return;
+        }
+
+        // Broadcast room update to all players
+        helpers.sendToRoom(coreRoom.code, 'room:updated', { room: result.room });
+        console.log(`[SUSD] Skip word submitted in room ${coreRoom.code}`);
+      } catch (error: any) {
+        console.error('[SUSD] Error skipping word:', error);
+        socket.emit('error', { message: 'Failed to skip word' });
+      }
+    },
+
+    /**
+     * Skip current question - generate new question for all players (gamemaster only)
+     */
+    'skip-question': async (socket: Socket, data: any, coreRoom: CoreRoom, helpers: GameHelpers) => {
+      try {
+        const susdRoomId = this.roomMapping.get(coreRoom.code);
+        if (!susdRoomId) return;
+
+        const player = this.gameManager.getPlayerBySocketId(socket.id);
+        if (!player || !player.isGamemaster) {
+          socket.emit('error', { message: 'Only gamemaster can skip question' });
+          return;
+        }
+
+        const result = this.gameManager.skipQuestion(socket.id);
+
+        if (!result.success) {
+          socket.emit('error', { message: result.error });
+          return;
+        }
+
+        // Broadcast room update to all players
+        helpers.sendToRoom(coreRoom.code, 'room:updated', { room: result.room });
+        console.log(`[SUSD] Skip question submitted in room ${coreRoom.code}`);
+      } catch (error: any) {
+        console.error('[SUSD] Error skipping question:', error);
+        socket.emit('error', { message: 'Failed to skip question' });
+      }
+    },
+
+    /**
      * Force end voting (gamemaster only)
      */
     'end-voting': async (socket: Socket, data: any, coreRoom: CoreRoom, helpers: GameHelpers) => {

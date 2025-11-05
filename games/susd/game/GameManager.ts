@@ -1098,21 +1098,41 @@ export class GameManager {
       return { success: false, error: 'No current player to skip' };
     }
 
-    // Online mode: Generate new word and restart round for all players
-    this.assignWords(room);
-
-    // Reset round state
-    room.wordsThisRound = [];
-    room.turnIndex = 0;
-    room.currentTurn = room.turnOrder[0];
-
-    // Reset all players' submission status
-    room.players.forEach(player => {
-      player.hasSubmittedWord = false;
+    // Mark player as submitted and add skip word
+    currentPlayer.hasSubmittedWord = true;
+    currentPlayer.lastSubmittedRound = room.currentRound;
+    room.wordsThisRound.push({
+      playerId: currentPlayer.id,
+      playerName: currentPlayer.name,
+      word: '[Skipped by GM]',
+      timestamp: Date.now()
     });
 
+    console.log('[SUSD][skipCurrentPlayer] Player skipped', {
+      player: currentPlayer.name,
+      round: room.currentRound,
+    });
+
+    // Move to next turn, check rounds, or voting
+    room.turnIndex++;
+    if (room.turnIndex < room.turnOrder.length) {
+      room.currentTurn = room.turnOrder[room.turnIndex];
+    } else {
+      // All players have submitted for this round
+      room.allWordsAllRounds.push([...room.wordsThisRound]);
+
+      // Check if we should start another round or go to voting
+      if (room.currentRound < room.settings.roundsBeforeVoting) {
+        // Start next round
+        this.startNextRound(room);
+      } else {
+        // All rounds complete, start voting
+        this.startVotingPhase(room);
+      }
+    }
+
     room.lastActivity = Date.now();
-    console.log(`[GameManager] Gamemaster skipped, generated new word and restarted round in room ${room.code}`);
+    console.log(`[GameManager] Gamemaster skipped ${currentPlayer.name} in room ${room.code}`);
     return { success: true, room };
   }
 
@@ -1175,19 +1195,136 @@ export class GameManager {
       };
     }
 
-    // Online mode: Generate new question and restart round for all players
+    // Online mode: Find a player who hasn't answered yet
+    const playersWhoHaventAnswered = room.players.filter(p =>
+      !room.answersThisRound.some(a => a.playerId === p.id)
+    );
+
+    if (playersWhoHaventAnswered.length === 0) {
+      return { success: false, error: 'All players have already answered' };
+    }
+
+    // Skip the first player who hasn't answered (or we could make this more sophisticated)
+    const playerToSkip = playersWhoHaventAnswered[0];
+
+    // Add a placeholder answer for the skipped player
+    room.answersThisRound.push({
+      playerId: playerToSkip.id,
+      playerName: playerToSkip.name,
+      answer: '[Skipped by GM]',
+      questionId: room.currentQuestion?.id || '',
+      questionText: room.currentQuestion?.text || '',
+      timestamp: Date.now()
+    });
+
+    // Check if all players have now answered (including the skip)
+    const allAnswered = room.players.every(p =>
+      room.answersThisRound.some(a => a.playerId === p.id)
+    );
+
+    let action: 'next-round' | 'start-voting' = 'start-voting';
+
+    if (allAnswered) {
+      // In truth mode, always go to voting after first round (multiple question rounds don't make sense)
+      const maxRounds = room.gameMode === 'truth' ? 1 : room.settings.roundsBeforeVoting;
+
+      // All players have answered, check if we should continue to next round or voting
+      if (room.currentRound < maxRounds) {
+        // Start next round
+        this.startNextQuestionRound(room);
+        action = 'next-round';
+      } else {
+        // All rounds complete, start voting
+        this.startVotingPhase(room);
+        action = 'start-voting';
+      }
+    }
+
+    room.lastActivity = Date.now();
+    console.log(`[GameManager] Gamemaster skipped ${playerToSkip.name} in truth mode in room ${room.code}`);
+
+    return {
+      success: true,
+      room,
+      playerId: playerToSkip.id,
+      playerName: playerToSkip.name,
+      action
+    };
+  }
+
+  /**
+   * Skip current word in online mode (generate new word for all players)
+   */
+  skipWord(gamemasterSocketId: string): { success: boolean; error?: string; room?: Room } {
+    const roomId = this.getRoomIdBySocketId(gamemasterSocketId);
+    if (!roomId) return { success: false, error: 'Not in a room' };
+
+    const room = this.rooms.get(roomId);
+    if (!room) return { success: false, error: 'Room not found' };
+
+    // Only for online mode
+    if (room.settings.gameType !== 'online') {
+      return { success: false, error: 'Skip word only available in online mode' };
+    }
+
+    if (room.gamePhase !== 'word-round') {
+      return { success: false, error: 'Can only skip word during word round' };
+    }
+
+    if (room.gameMode === 'truth') {
+      return { success: false, error: 'Use skip question in truth mode' };
+    }
+
+    // Generate new word for all players
+    this.assignWords(room);
+
+    // Reset round state
+    room.wordsThisRound = [];
+    room.turnIndex = 0;
+    room.currentTurn = room.turnOrder[0];
+
+    // Reset all players' submission status
+    room.players.forEach(player => {
+      player.hasSubmittedWord = false;
+    });
+
+    room.lastActivity = Date.now();
+    console.log(`[GameManager] Gamemaster skipped word, generated new word for room ${room.code}`);
+    return { success: true, room };
+  }
+
+  /**
+   * Skip current question in online mode (generate new question for all players)
+   */
+  skipQuestion(gamemasterSocketId: string): { success: boolean; error?: string; room?: Room } {
+    const roomId = this.getRoomIdBySocketId(gamemasterSocketId);
+    if (!roomId) return { success: false, error: 'Not in a room' };
+
+    const room = this.rooms.get(roomId);
+    if (!room) return { success: false, error: 'Room not found' };
+
+    // Only for online mode
+    if (room.settings.gameType !== 'online') {
+      return { success: false, error: 'Skip question only available in online mode' };
+    }
+
+    if (room.gamePhase !== 'question-round') {
+      return { success: false, error: 'Can only skip question during question round' };
+    }
+
+    if (room.gameMode !== 'truth') {
+      return { success: false, error: 'Skip question only available in truth mode' };
+    }
+
+    // Generate new question for all players
     this.assignQuestion(room);
 
     // Reset round state
     room.answersThisRound = [];
 
     room.lastActivity = Date.now();
-    console.log(`[GameManager] Gamemaster skipped, generated new question and restarted round in room ${room.code}`);
-
-    return {
-      success: true,
-      room
-    };
+    console.log(`[GameManager] Gamemaster skipped question, generated new question for room ${room.code}`);
+    return { success: true, room };
   }
 
   // Skip request/approval flow methods
