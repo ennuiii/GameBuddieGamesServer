@@ -1087,12 +1087,17 @@ export class GameManager {
       firstPlayer.hasSubmittedWord = true;
       firstPlayer.lastSubmittedRound = room.currentRound;
 
-      // Advance to the next player in Pass & Play
-      room.passPlayCurrentPlayer++;
-      room.passPlayRevealed = false; // Reset revealed flag for next player
+      // Generate new word and restart cycle
+      if (room.gameMode === 'classic' || room.gameMode === 'hidden') {
+        this.assignWords(room);  // Calls wordManager to get new word
+      }
+
+      // Reset to player 0 (first player)
+      room.passPlayCurrentPlayer = 0;
+      room.passPlayRevealed = false;
 
       room.lastActivity = Date.now();
-      console.log(`[GameManager] First player skipped word in Pass & Play mode in room ${room.code}`);
+      console.log(`[GameManager] Player skipped word in Pass & Play mode, generated new word and restarted cycle in room ${room.code}`);
 
       return { success: true, room };
     }
@@ -1189,12 +1194,15 @@ export class GameManager {
         timestamp: Date.now()
       });
 
-      // Advance to the next player in Pass & Play
-      room.passPlayCurrentPlayer++;
-      room.passPlayRevealed = false; // Reset revealed flag for next player
+      // Generate new question and restart cycle
+      this.assignQuestion(room);  // Calls questionManager to get new question
+
+      // Reset to player 0 (first player)
+      room.passPlayCurrentPlayer = 0;
+      room.passPlayRevealed = false;
 
       room.lastActivity = Date.now();
-      console.log(`[GameManager] First player skipped question in Pass & Play mode in room ${room.code}`);
+      console.log(`[GameManager] Player skipped question in Pass & Play mode, generated new question and restarted cycle in room ${room.code}`);
 
       return {
         success: true,
