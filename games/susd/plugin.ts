@@ -329,7 +329,7 @@ class SUSDPlugin implements GamePlugin {
           return;
         }
 
-        const result = this.gameManager.skipCurrentPlayer(coreRoom.code);
+        const result = this.gameManager.skipCurrentPlayer(socket.id);
 
         if (!result.success) {
           socket.emit('error', { message: result.error });
