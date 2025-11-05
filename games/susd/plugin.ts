@@ -299,7 +299,7 @@ class SUSDPlugin implements GamePlugin {
           return;
         }
 
-        const result = this.gameManager.forceEndVoting(socket.id);
+        const result = this.gameManager.forceStartVoting(socket.id);
 
         if (!result.success) {
           socket.emit('error', { message: result.error });

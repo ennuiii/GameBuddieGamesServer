@@ -446,6 +446,12 @@ export class GameManager {
   private startVotingPhase(room: Room) {
     room.gamePhase = 'voting';
     room.currentTurn = null;
+    
+    // ✅ FIX: Save answers from truth mode before transitioning to voting
+    if (room.gameMode === 'truth' && room.answersThisRound.length > 0) {
+      room.allAnswersAllRounds.push([...room.answersThisRound]);
+      console.log(`[GameManager] Saved ${room.answersThisRound.length} answers to allAnswersAllRounds for room ${room.code}`);
+    }
     room.timer = {
       isActive: true,
       timeRemaining: room.settings.votingTimeLimit,
@@ -1590,6 +1596,12 @@ export class GameManager {
     room.gamePhase = 'lobby';
     room.currentRound = 0;
     room.currentTurn = null;
+    
+    // ✅ FIX: Save answers from truth mode before transitioning to voting
+    if (room.gameMode === 'truth' && room.answersThisRound.length > 0) {
+      room.allAnswersAllRounds.push([...room.answersThisRound]);
+      console.log(`[GameManager] Saved ${room.answersThisRound.length} answers to allAnswersAllRounds for room ${room.code}`);
+    }
     room.currentWord = null;
     room.currentQuestion = null;
     room.currentWordPair = null;
