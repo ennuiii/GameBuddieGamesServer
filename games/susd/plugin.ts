@@ -395,6 +395,90 @@ class SUSDPlugin implements GamePlugin {
     },
 
     /**
+     * Request skip (any player)
+     */
+    'skip-request': async (socket: Socket, data: any, coreRoom: CoreRoom, helpers: GameHelpers) => {
+      try {
+        const susdRoomId = this.roomMapping.get(coreRoom.code);
+        if (!susdRoomId) return;
+
+        const result = this.gameManager.requestSkip(socket.id);
+
+        if (!result.success) {
+          socket.emit('error', { message: result.error });
+          return;
+        }
+
+        // Broadcast skip request to all players (so GM can see the modal)
+        helpers.sendToRoom(coreRoom.code, 'skip-requested', { room: result.room });
+        console.log(`[SUSD] Skip request submitted in room ${coreRoom.code}`);
+      } catch (error: any) {
+        console.error('[SUSD] Error requesting skip:', error);
+        socket.emit('error', { message: 'Failed to request skip' });
+      }
+    },
+
+    /**
+     * Approve skip request (gamemaster only)
+     */
+    'approve-skip': async (socket: Socket, data: any, coreRoom: CoreRoom, helpers: GameHelpers) => {
+      try {
+        const susdRoomId = this.roomMapping.get(coreRoom.code);
+        if (!susdRoomId) return;
+
+        const player = this.gameManager.getPlayerBySocketId(socket.id);
+        if (!player || !player.isGamemaster) {
+          socket.emit('error', { message: 'Only gamemaster can approve skip' });
+          return;
+        }
+
+        const result = this.gameManager.approveSkip(socket.id);
+
+        if (!result.success) {
+          socket.emit('error', { message: result.error });
+          return;
+        }
+
+        // Broadcast room update to all players
+        helpers.sendToRoom(coreRoom.code, 'skip-approved', { room: result.room });
+        console.log(`[SUSD] Skip request approved in room ${coreRoom.code}`);
+      } catch (error: any) {
+        console.error('[SUSD] Error approving skip:', error);
+        socket.emit('error', { message: 'Failed to approve skip' });
+      }
+    },
+
+    /**
+     * Decline skip request (gamemaster only)
+     */
+    'decline-skip': async (socket: Socket, data: any, coreRoom: CoreRoom, helpers: GameHelpers) => {
+      try {
+        const susdRoomId = this.roomMapping.get(coreRoom.code);
+        if (!susdRoomId) return;
+
+        const player = this.gameManager.getPlayerBySocketId(socket.id);
+        if (!player || !player.isGamemaster) {
+          socket.emit('error', { message: 'Only gamemaster can decline skip' });
+          return;
+        }
+
+        const result = this.gameManager.declineSkip(socket.id);
+
+        if (!result.success) {
+          socket.emit('error', { message: result.error });
+          return;
+        }
+
+        // Broadcast room update to all players
+        helpers.sendToRoom(coreRoom.code, 'skip-declined', { room: result.room });
+        console.log(`[SUSD] Skip request declined in room ${coreRoom.code}`);
+      } catch (error: any) {
+        console.error('[SUSD] Error declining skip:', error);
+        socket.emit('error', { message: 'Failed to decline skip' });
+      }
+    },
+
+    /**
      * Force end voting (gamemaster only)
      */
     'end-voting': async (socket: Socket, data: any, coreRoom: CoreRoom, helpers: GameHelpers) => {
