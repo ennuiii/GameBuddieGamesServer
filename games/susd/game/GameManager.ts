@@ -1075,17 +1075,7 @@ export class GameManager {
         return { success: false, error: 'No first player found' };
       }
 
-      // Add a skipped word for the first player
-      room.wordsThisRound.push({
-        playerId: firstPlayer.id,
-        playerName: firstPlayer.name,
-        word: '[Skipped]',
-        timestamp: Date.now()
-      });
-
-      // Mark as submitted for this round
-      firstPlayer.hasSubmittedWord = true;
-      firstPlayer.lastSubmittedRound = room.currentRound;
+      // In pass-and-play skip: get new word and restart (don't track skip)
 
       // Generate new word and restart cycle
       if (room.gameMode === 'classic' || room.gameMode === 'hidden') {
@@ -1184,15 +1174,7 @@ export class GameManager {
         return { success: false, error: 'No first player found' };
       }
 
-      // Add a skipped answer for the first player
-      room.answersThisRound.push({
-        playerId: firstPlayer.id,
-        playerName: firstPlayer.name,
-        answer: '[Skipped]',
-        questionId: room.currentQuestion?.id || '',
-        questionText: room.currentQuestion?.text || '',
-        timestamp: Date.now()
-      });
+      // In pass-and-play skip: get new question and restart (don't track skip)
 
       // Generate new question and restart cycle
       this.assignQuestion(room);  // Calls questionManager to get new question
