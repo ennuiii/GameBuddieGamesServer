@@ -1042,15 +1042,56 @@ export class GameManager {
     const room = this.rooms.get(roomId);
     if (!room) return { success: false, error: 'Room not found' };
 
-    const gamemaster = room.players.find(p => p.socketId === gamemasterSocketId);
-    if (!gamemaster || !gamemaster.isGamemaster) {
-      return { success: false, error: 'Only gamemaster can skip players' };
+    const caller = room.players.find(p => p.socketId === gamemasterSocketId);
+    if (!caller) {
+      return { success: false, error: 'Player not found in room' };
+    }
+
+    // In Pass & Play mode, allow the first player (index 0) to skip
+    // In Online mode, only allow gamemaster to skip
+    const isPassPlayFirstPlayer = room.settings.gameType === 'pass-play' &&
+                                  room.players.get(Array.from(room.players.keys())[0])?.socketId === gamemasterSocketId;
+    const isGamemaster = caller.isGamemaster;
+
+    if (!isGamemaster && !isPassPlayFirstPlayer) {
+      return { success: false, error: 'Only gamemaster or the first player in Pass & Play can skip' };
     }
 
     if (room.gamePhase !== 'word-round') {
       return { success: false, error: 'Can only skip during word round' };
     }
 
+    // Special handling for Pass & Play mode
+    if (room.settings.gameType === 'pass-play') {
+      // In Pass & Play, the first player is skipping themselves
+      const firstPlayer = room.players.get(Array.from(room.players.keys())[0]);
+      if (!firstPlayer) {
+        return { success: false, error: 'No first player found' };
+      }
+
+      // Add a skipped word for the first player
+      room.wordsThisRound.push({
+        playerId: firstPlayer.id,
+        playerName: firstPlayer.name,
+        word: '[Skipped]',
+        timestamp: Date.now()
+      });
+
+      // Mark as submitted for this round
+      firstPlayer.hasSubmittedWord = true;
+      firstPlayer.lastSubmittedRound = room.currentRound;
+
+      // Advance to the next player in Pass & Play
+      room.passPlayCurrentPlayer++;
+      room.passPlayRevealed = false; // Reset revealed flag for next player
+
+      room.lastActivity = Date.now();
+      console.log(`[GameManager] First player skipped word in Pass & Play mode in room ${room.code}`);
+
+      return { success: true, room };
+    }
+
+    // Online mode: Skip the current player in turn
     const currentPlayer = room.players.find(p => p.id === room.currentTurn);
     if (!currentPlayer) {
       return { success: false, error: 'No current player to skip' };
@@ -1078,7 +1119,7 @@ export class GameManager {
     } else {
       // All players have submitted for this round
       room.allWordsAllRounds.push([...room.wordsThisRound]);
-      
+
       // Check if we should start another round or go to voting
       if (room.currentRound < room.settings.roundsBeforeVoting) {
         // Start next round
@@ -1101,9 +1142,19 @@ export class GameManager {
     const room = this.rooms.get(roomId);
     if (!room) return { success: false, error: 'Room not found' };
 
-    const gamemaster = room.players.find(p => p.socketId === gamemasterSocketId);
-    if (!gamemaster || !gamemaster.isGamemaster) {
-      return { success: false, error: 'Only gamemaster can skip players' };
+    const caller = room.players.find(p => p.socketId === gamemasterSocketId);
+    if (!caller) {
+      return { success: false, error: 'Player not found in room' };
+    }
+
+    // In Pass & Play mode, allow the first player (index 0) to skip
+    // In Online mode, only allow gamemaster to skip
+    const isPassPlayFirstPlayer = room.settings.gameType === 'pass-play' &&
+                                  room.players.get(Array.from(room.players.keys())[0])?.socketId === gamemasterSocketId;
+    const isGamemaster = caller.isGamemaster;
+
+    if (!isGamemaster && !isPassPlayFirstPlayer) {
+      return { success: false, error: 'Only gamemaster or the first player in Pass & Play can skip' };
     }
 
     if (room.gamePhase !== 'question-round') {
@@ -1114,8 +1165,42 @@ export class GameManager {
       return { success: false, error: 'Can only skip in truth mode' };
     }
 
-    // Find a player who hasn't answered yet
-    const playersWhoHaventAnswered = room.players.filter(p => 
+    // Special handling for Pass & Play mode
+    if (room.settings.gameType === 'pass-play') {
+      // In Pass & Play, the first player is skipping themselves
+      const firstPlayer = room.players.get(Array.from(room.players.keys())[0]);
+      if (!firstPlayer) {
+        return { success: false, error: 'No first player found' };
+      }
+
+      // Add a skipped answer for the first player
+      room.answersThisRound.push({
+        playerId: firstPlayer.id,
+        playerName: firstPlayer.name,
+        answer: '[Skipped]',
+        questionId: room.currentQuestion?.id || '',
+        questionText: room.currentQuestion?.text || '',
+        timestamp: Date.now()
+      });
+
+      // Advance to the next player in Pass & Play
+      room.passPlayCurrentPlayer++;
+      room.passPlayRevealed = false; // Reset revealed flag for next player
+
+      room.lastActivity = Date.now();
+      console.log(`[GameManager] First player skipped question in Pass & Play mode in room ${room.code}`);
+
+      return {
+        success: true,
+        room,
+        playerId: firstPlayer.id,
+        playerName: firstPlayer.name,
+        action: 'next-round'
+      };
+    }
+
+    // Online mode: Find a player who hasn't answered yet
+    const playersWhoHaventAnswered = room.players.filter(p =>
       !room.answersThisRound.some(a => a.playerId === p.id)
     );
 
@@ -1137,7 +1222,7 @@ export class GameManager {
     });
 
     // Check if all players have now answered (including the skip)
-    const allAnswered = room.players.every(p => 
+    const allAnswered = room.players.every(p =>
       room.answersThisRound.some(a => a.playerId === p.id)
     );
 
@@ -1146,7 +1231,7 @@ export class GameManager {
     if (allAnswered) {
       // In truth mode, always go to voting after first round (multiple question rounds don't make sense)
       const maxRounds = room.gameMode === 'truth' ? 1 : room.settings.roundsBeforeVoting;
-      
+
       // All players have answered, check if we should continue to next round or voting
       if (room.currentRound < maxRounds) {
         // Start next round
@@ -1161,13 +1246,13 @@ export class GameManager {
 
     room.lastActivity = Date.now();
     console.log(`[GameManager] Gamemaster skipped ${playerToSkip.name} in truth mode in room ${room.code}`);
-    
-    return { 
-      success: true, 
-      room, 
-      playerId: playerToSkip.id, 
+
+    return {
+      success: true,
+      room,
+      playerId: playerToSkip.id,
       playerName: playerToSkip.name,
-      action 
+      action
     };
   }
 
