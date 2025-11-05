@@ -1262,6 +1262,148 @@ export class GameManager {
     };
   }
 
+  // Skip request/approval flow methods
+  requestSkip(socketId: string): { success: boolean; error?: string; room?: Room } {
+    const roomId = this.getRoomIdBySocketId(socketId);
+    if (!roomId) return { success: false, error: 'Not in a room' };
+
+    const room = this.rooms.get(roomId);
+    if (!room) return { success: false, error: 'Room not found' };
+
+    const player = room.players.find(p => p.socketId === socketId);
+    if (!player) {
+      return { success: false, error: 'Player not found' };
+    }
+
+    if (room.gamePhase !== 'word-round' && room.gamePhase !== 'question-round') {
+      return { success: false, error: 'Can only request skip during word or question round' };
+    }
+
+    // Create skip request
+    room.pendingSkipRequest = {
+      playerId: player.id,
+      playerName: player.name,
+      requestedAt: Date.now(),
+      gamePhase: room.gamePhase
+    };
+
+    room.lastActivity = Date.now();
+    console.log(`[GameManager] Skip request from ${player.name} in room ${room.code}`);
+    return { success: true, room };
+  }
+
+  approveSkip(gamemasterSocketId: string): { success: boolean; error?: string; room?: Room } {
+    const roomId = this.getRoomIdBySocketId(gamemasterSocketId);
+    if (!roomId) return { success: false, error: 'Not in a room' };
+
+    const room = this.rooms.get(roomId);
+    if (!room) return { success: false, error: 'Room not found' };
+
+    if (!room.pendingSkipRequest) {
+      return { success: false, error: 'No pending skip request' };
+    }
+
+    const gamemaster = room.players.find(p => p.socketId === gamemasterSocketId);
+    if (!gamemaster || !gamemaster.isGamemaster) {
+      return { success: false, error: 'Only gamemaster can approve skip' };
+    }
+
+    // Process the skip based on game phase
+    if (room.pendingSkipRequest.gamePhase === 'word-round') {
+      // Add skipped word
+      room.wordsThisRound.push({
+        playerId: room.pendingSkipRequest.playerId,
+        playerName: room.pendingSkipRequest.playerName,
+        word: '[Skipped]',
+        timestamp: Date.now()
+      });
+
+      const skippedPlayer = room.players.find(p => p.id === room.pendingSkipRequest!.playerId);
+      if (skippedPlayer) {
+        skippedPlayer.hasSubmittedWord = true;
+      }
+
+      // Check if all submitted in Pass & Play mode
+      if (room.settings.gameType === 'pass-play') {
+        room.passPlayCurrentPlayer++;
+        room.passPlayRevealed = false;
+      } else {
+        // Online mode: advance turn
+        room.turnIndex++;
+        if (room.turnIndex < room.turnOrder.length) {
+          room.currentTurn = room.turnOrder[room.turnIndex];
+        } else {
+          // All submitted, move to next round or voting
+          room.allWordsAllRounds.push([...room.wordsThisRound]);
+          if (room.currentRound < room.settings.roundsBeforeVoting) {
+            this.startNextRound(room);
+          } else {
+            this.startVotingPhase(room);
+          }
+        }
+      }
+    } else if (room.pendingSkipRequest.gamePhase === 'question-round') {
+      // Add skipped answer
+      room.answersThisRound.push({
+        playerId: room.pendingSkipRequest.playerId,
+        playerName: room.pendingSkipRequest.playerName,
+        answer: '[Skipped]',
+        questionId: room.currentQuestion?.id || '',
+        questionText: room.currentQuestion?.text || '',
+        timestamp: Date.now()
+      });
+
+      // Check if all answered in Pass & Play mode
+      if (room.settings.gameType === 'pass-play') {
+        room.passPlayCurrentPlayer++;
+        room.passPlayRevealed = false;
+      } else {
+        // Online mode: check if all answered
+        const allAnswered = room.players.every(p =>
+          room.answersThisRound.some(a => a.playerId === p.id)
+        );
+
+        if (allAnswered) {
+          const maxRounds = room.gameMode === 'truth' ? 1 : room.settings.roundsBeforeVoting;
+          if (room.currentRound < maxRounds) {
+            this.startNextQuestionRound(room);
+          } else {
+            this.startVotingPhase(room);
+          }
+        }
+      }
+    }
+
+    // Clear pending skip request
+    room.pendingSkipRequest = undefined;
+    room.lastActivity = Date.now();
+    console.log(`[GameManager] Skip approved in room ${room.code}`);
+    return { success: true, room };
+  }
+
+  declineSkip(gamemasterSocketId: string): { success: boolean; error?: string; room?: Room } {
+    const roomId = this.getRoomIdBySocketId(gamemasterSocketId);
+    if (!roomId) return { success: false, error: 'Not in a room' };
+
+    const room = this.rooms.get(roomId);
+    if (!room) return { success: false, error: 'Room not found' };
+
+    if (!room.pendingSkipRequest) {
+      return { success: false, error: 'No pending skip request' };
+    }
+
+    const gamemaster = room.players.find(p => p.socketId === gamemasterSocketId);
+    if (!gamemaster || !gamemaster.isGamemaster) {
+      return { success: false, error: 'Only gamemaster can decline skip' };
+    }
+
+    // Simply clear the pending skip request
+    room.pendingSkipRequest = undefined;
+    room.lastActivity = Date.now();
+    console.log(`[GameManager] Skip declined in room ${room.code}`);
+    return { success: true, room };
+  }
+
   forceStartVoting(gamemasterSocketId: string): { success: boolean; error?: string; room?: Room } {
     const roomId = this.getRoomIdBySocketId(gamemasterSocketId);
     if (!roomId) return { success: false, error: 'Not in a room' };

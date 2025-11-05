@@ -93,6 +93,13 @@ export interface AnswerData {
   timestamp: number;
 }
 
+export interface SkipRequest {
+  playerId: string;
+  playerName: string;
+  requestedAt: number;
+  gamePhase: 'word-round' | 'question-round';
+}
+
 export interface Room {
   id: string;
   code: string;
@@ -118,7 +125,10 @@ export interface Room {
   // Pass & Play state
   passPlayCurrentPlayer: number; // Index of player currently viewing (pass & play mode)
   passPlayRevealed: boolean; // Whether current player has seen their word/role
-  
+
+  // Skip request state (for skip request/approval flow)
+  pendingSkipRequest?: SkipRequest;
+
   // Voting state
   votes: Record<string, string>; // voterId -> votedForId
   votingStartTime?: number;
