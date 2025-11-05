@@ -1056,7 +1056,7 @@ export class GameManager {
     // In Pass & Play mode, allow the first player (index 0) to skip
     // In Online mode, only allow gamemaster to skip
     const isPassPlayFirstPlayer = room.settings.gameType === 'pass-play' &&
-                                  room.players.get(Array.from(room.players.keys())[0])?.socketId === gamemasterSocketId;
+                                  room.players[0]?.socketId === gamemasterSocketId;
     const isGamemaster = caller.isGamemaster;
 
     if (!isGamemaster && !isPassPlayFirstPlayer) {
@@ -1070,7 +1070,7 @@ export class GameManager {
     // Special handling for Pass & Play mode
     if (room.settings.gameType === 'pass-play') {
       // In Pass & Play, the first player is skipping themselves
-      const firstPlayer = room.players.get(Array.from(room.players.keys())[0]);
+      const firstPlayer = room.players[0];
       if (!firstPlayer) {
         return { success: false, error: 'No first player found' };
       }
@@ -1156,7 +1156,7 @@ export class GameManager {
     // In Pass & Play mode, allow the first player (index 0) to skip
     // In Online mode, only allow gamemaster to skip
     const isPassPlayFirstPlayer = room.settings.gameType === 'pass-play' &&
-                                  room.players.get(Array.from(room.players.keys())[0])?.socketId === gamemasterSocketId;
+                                  room.players[0]?.socketId === gamemasterSocketId;
     const isGamemaster = caller.isGamemaster;
 
     if (!isGamemaster && !isPassPlayFirstPlayer) {
@@ -1174,7 +1174,7 @@ export class GameManager {
     // Special handling for Pass & Play mode
     if (room.settings.gameType === 'pass-play') {
       // In Pass & Play, the first player is skipping themselves
-      const firstPlayer = room.players.get(Array.from(room.players.keys())[0]);
+      const firstPlayer = room.players[0];
       if (!firstPlayer) {
         return { success: false, error: 'No first player found' };
       }
