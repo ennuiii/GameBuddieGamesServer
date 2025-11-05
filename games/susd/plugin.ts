@@ -337,6 +337,8 @@ class SUSDPlugin implements GamePlugin {
         }
 
         helpers.sendToRoom(coreRoom.code, 'player-skipped', { room: result.room });
+        // Broadcast room update so client receives new word/question
+        helpers.sendToRoom(coreRoom.code, 'room:updated', { room: result.room });
       } catch (error: any) {
         console.error('[SUSD] Error skipping player:', error);
         socket.emit('error', { message: 'Failed to skip player' });
@@ -372,6 +374,8 @@ class SUSDPlugin implements GamePlugin {
 
         // Update game state
         helpers.sendToRoom(coreRoom.code, 'game-state-updated', { room: result.room });
+        // Broadcast room update so client receives new word/question
+        helpers.sendToRoom(coreRoom.code, 'room:updated', { room: result.room });
 
         // Handle progression based on the result
         if (result.action === 'next-round') {
