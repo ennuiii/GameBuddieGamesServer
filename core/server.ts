@@ -1049,17 +1049,11 @@ class UnifiedGameServer {
         const lag = actualDelay - expectedDelay;
 
         // Show connection tracking with simple lag measurement
-        const utilizationPercent = ((this.connectionCount / this.MAX_CONNECTIONS) * 100).toFixed(1);
-        console.log(`\n📊 [METRICS] Connections: ${this.connectionCount}/${this.MAX_CONNECTIONS} (${utilizationPercent}%) | Active: ${activeConnections} | Rooms: ${totalRooms} | Lag: ${lag.toFixed(0)}ms`);
+        console.log(`\n📊 [METRICS] Connections: ${this.connectionCount} | Active: ${activeConnections} | Rooms: ${totalRooms} | Lag: ${lag.toFixed(0)}ms`);
 
         // Alert if event loop is significantly delayed
         if (lag > 100) {
           console.warn(`⚠️  [ALERT] Event loop lag HIGH: ${lag.toFixed(0)}ms (expected 0ms, indicates blocking)`);
-        }
-
-        // Alert if approaching capacity
-        if (this.connectionCount > this.MAX_CONNECTIONS * 0.9) {
-          console.warn(`⚠️  [CAPACITY] Approaching connection limit: ${this.connectionCount}/${this.MAX_CONNECTIONS} (${utilizationPercent}%)`);
         }
 
         lastCheck = now;
