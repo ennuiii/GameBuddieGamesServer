@@ -6,7 +6,6 @@ import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
 import { randomUUID } from 'crypto';
-import { monitorEventLoopDelay } from 'perf_hooks';
 
 // Core managers and services
 import { RoomManager } from './managers/RoomManager.js';
@@ -72,9 +71,7 @@ class UnifiedGameServer {
   private lastBroadcastTime = new Map<string, number>(); // Track last broadcast per room
   private pendingBroadcasts = new Map<string, { event: string; data: any }>(); // Queue pending broadcasts
 
-  // ⚡ MONITORING: Event loop performance
-  // Detects when event loop is saturated (indicates server capacity issue)
-  private eventLoopMonitor = monitorEventLoopDelay({ resolution: 20 });
+  // Using simple setInterval drift measurement instead of perf_hooks (more reliable)
 
   // ⚡ OPTIMIZATION: Connection tracking and limits
   // Prevent server overload by enforcing connection limits
@@ -1044,39 +1041,34 @@ class UnifiedGameServer {
       console.log('🎮 ================================');
       console.log('');
 
-      // ⚡ OPTIMIZATION: Start event loop monitoring
-      this.eventLoopMonitor.enable();
-      console.log('⚡ Event loop monitoring enabled');
-
       // ⚡ MONITORING: Log performance metrics every 30 seconds
+      // Use simple setInterval drift measurement (more reliable than perf_hooks)
+      let lastCheck = Date.now();
       setInterval(() => {
+        const now = Date.now();
         const activeConnections = this.io.engine.clientsCount;
         const totalRooms = this.roomManager.getAllRooms().length;
 
-        // Get percentile metrics (more reliable than mean)
-        const eventLoopP50 = this.eventLoopMonitor.percentile(50);  // Median
-        const eventLoopP99 = this.eventLoopMonitor.percentile(99);  // 99th percentile
-        const eventLoopMax = this.eventLoopMonitor.max;             // Worst case
+        // Measure event loop lag (setInterval drift)
+        const expectedDelay = 30000; // 30 seconds
+        const actualDelay = now - lastCheck;
+        const lag = actualDelay - expectedDelay;
 
-        // ✅ CRITICAL: Create NEW monitor for next interval
-        // This is the only way to truly reset the histogram
-        this.eventLoopMonitor.disable();
-        this.eventLoopMonitor = monitorEventLoopDelay({ resolution: 20 });
-        this.eventLoopMonitor.enable();
-
-        // Alert if event loop is degraded (use p99, not mean)
-        if (eventLoopP99 > 50) {
-          console.warn(`⚠️  [ALERT] Event loop p99 HIGH: ${eventLoopP99.toFixed(2)}ms max=${eventLoopMax.toFixed(2)}ms (threshold: 50ms)`);
-        }
-
-        // Show connection tracking with detailed event loop metrics
+        // Show connection tracking with simple lag measurement
         const utilizationPercent = ((this.connectionCount / this.MAX_CONNECTIONS) * 100).toFixed(1);
-        console.log(`\n📊 [METRICS] Connections: ${this.connectionCount}/${this.MAX_CONNECTIONS} (${utilizationPercent}%) | Active: ${activeConnections} | Rooms: ${totalRooms} | Event Loop: p50=${eventLoopP50.toFixed(2)}ms p99=${eventLoopP99.toFixed(2)}ms max=${eventLoopMax.toFixed(2)}ms`);
+        console.log(`\n📊 [METRICS] Connections: ${this.connectionCount}/${this.MAX_CONNECTIONS} (${utilizationPercent}%) | Active: ${activeConnections} | Rooms: ${totalRooms} | Lag: ${lag.toFixed(0)}ms`);
+
+        // Alert if event loop is significantly delayed
+        if (lag > 100) {
+          console.warn(`⚠️  [ALERT] Event loop lag HIGH: ${lag.toFixed(0)}ms (expected 0ms, indicates blocking)`);
+        }
 
         // Alert if approaching capacity
         if (this.connectionCount > this.MAX_CONNECTIONS * 0.9) {
           console.warn(`⚠️  [CAPACITY] Approaching connection limit: ${this.connectionCount}/${this.MAX_CONNECTIONS} (${utilizationPercent}%)`);
         }
+
+        lastCheck = now;
       }, 30000); // Every 30 seconds
     });
   }
