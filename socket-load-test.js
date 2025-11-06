@@ -19,7 +19,7 @@ const io = require('socket.io-client');
 // Configuration
 const SERVER_URL = 'https://ddf-server.onrender.com';
 const GAME_NAMESPACE = '/ddf';
-const RAMP_LEVELS = [5000];
+const RAMP_LEVELS = [10000];
 const HOLD_TIME_MS = 30000; // Hold each tier for 30 seconds
 const STATS_INTERVAL_MS = 2000; // Print stats every 2 seconds
 
