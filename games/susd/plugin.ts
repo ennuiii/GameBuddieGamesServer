@@ -492,9 +492,20 @@ class SUSDPlugin implements GamePlugin {
         const susdRoomId = this.roomMapping.get(coreRoom.code);
         if (!susdRoomId) return;
 
-        const player = this.gameManager.getPlayerBySocketId(socket.id);
-        if (!player || !player.isGamemaster) {
-          socket.emit('error', { message: 'Only gamemaster can skip word' });
+        const room = this.gameManager.getRoomBySocketId(socket.id);
+        const player = room?.players.find(p => p.socketId === socket.id);
+        if (!player) {
+          socket.emit('error', { message: 'Player not found in room' });
+          return;
+        }
+
+        const canSkipWord =
+          player.isGamemaster ||
+          (room?.settings.gameType === 'pass-play' &&
+            room?.skipControls?.wordEligiblePlayerIds.includes(player.id));
+
+        if (!canSkipWord) {
+          socket.emit('error', { message: 'Only designated players can skip the word' });
           return;
         }
 
@@ -522,9 +533,20 @@ class SUSDPlugin implements GamePlugin {
         const susdRoomId = this.roomMapping.get(coreRoom.code);
         if (!susdRoomId) return;
 
-        const player = this.gameManager.getPlayerBySocketId(socket.id);
-        if (!player || !player.isGamemaster) {
-          socket.emit('error', { message: 'Only gamemaster can skip question' });
+        const room = this.gameManager.getRoomBySocketId(socket.id);
+        const player = room?.players.find(p => p.socketId === socket.id);
+        if (!player) {
+          socket.emit('error', { message: 'Player not found in room' });
+          return;
+        }
+
+        const canSkipQuestion =
+          player.isGamemaster ||
+          (room?.settings.gameType === 'pass-play' &&
+            room?.skipControls?.questionEligiblePlayerIds.includes(player.id));
+
+        if (!canSkipQuestion) {
+          socket.emit('error', { message: 'Only designated players can skip the question' });
           return;
         }
 

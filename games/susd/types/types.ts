@@ -100,6 +100,14 @@ export interface SkipRequest {
   gamePhase: 'word-round' | 'question-round';
 }
 
+export interface SkipControls {
+  firstNonImposterId: string | null;
+  wordEligiblePlayerIds: string[];
+  questionEligiblePlayerIds: string[];
+  gamemasterCanSkipPlayer: boolean;
+  gamemasterCanSkipPlayerTruth: boolean;
+}
+
 export interface Room {
   id: string;
   code: string;
@@ -125,6 +133,7 @@ export interface Room {
   // Pass & Play state
   passPlayCurrentPlayer: number; // Index of player currently viewing (pass & play mode)
   passPlayRevealed: boolean; // Whether current player has seen their word/role
+  skipControls: SkipControls;
 
   // Skip request state (for skip request/approval flow)
   pendingSkipRequest?: SkipRequest;

@@ -1,4 +1,4 @@
-import { Room, Player, GameMode, GamePhase, Word, WordPair, TurnData, VoteData, RoundResult, Question, AnswerData, GameSettings } from '../types/types.js';
+import { Room, Player, GameMode, GamePhase, Word, WordPair, TurnData, VoteData, RoundResult, Question, AnswerData, GameSettings, SkipControls } from '../types/types.js';
 import { WordManager } from './WordManager.js';
 import { QuestionManager } from './QuestionManager.js';
 import { randomUUID as uuidv4 } from 'crypto';
@@ -99,6 +99,13 @@ export class GameManager {
       allAnswersAllRounds: [],
       passPlayCurrentPlayer: 0,
       passPlayRevealed: false,
+      skipControls: {
+        firstNonImposterId: null,
+        wordEligiblePlayerIds: [],
+        questionEligiblePlayerIds: [],
+        gamemasterCanSkipPlayer: true,
+        gamemasterCanSkipPlayerTruth: true
+      },
       votes: {},
       roundHistory: [],
       timer: {
@@ -117,6 +124,7 @@ export class GameManager {
     this.rooms.set(roomId, room);
     this.playerToRoom.set(gamemaster.socketId!, roomId);
 
+    this.updateSkipControls(room);
     console.log(`[GameManager] Room created: ${roomCode} (${roomId})`);
     return room;
   }
@@ -147,6 +155,7 @@ export class GameManager {
     this.playerToRoom.set(player.socketId!, room.id);
     room.lastActivity = Date.now();
 
+    this.updateSkipControls(room);
     console.log(`[GameManager] Player ${player.name} joined room ${roomCode}`);
     return { room, success: true };
   }
@@ -185,6 +194,7 @@ export class GameManager {
     }
 
     room.lastActivity = Date.now();
+    this.updateSkipControls(room);
     console.log(`[GameManager] Player ${player.name} left room ${room.code}`);
     return { room, player };
   }
@@ -218,6 +228,7 @@ export class GameManager {
     room.gameStartedAt = Date.now();
     room.lastActivity = Date.now();
 
+    this.updateSkipControls(room);
     console.log(`[GameManager] Game started in room ${room.code}, mode: ${room.gameMode}`);
     return { success: true, room };
   }
@@ -271,6 +282,7 @@ export class GameManager {
     console.log(`[GameManager] NEW IMPOSTER SELECTED: ${room.players[randomIndex].name} (index ${randomIndex})`);
     console.log(`[GameManager] Final imposter status: ${room.players.map(p => `${p.name}: ${p.isImposter}`).join(', ')}`);
     console.log(`[GameManager] Game type: ${room.settings.gameType}, Input mode: ${room.settings.inputMode}`);
+    this.updateSkipControls(room);
   }
 
   private assignWords(room: Room) {
@@ -304,6 +316,41 @@ export class GameManager {
     console.log(`[GameManager] Final room.currentQuestion:`, room.currentQuestion);
   }
 
+  private reassignImposter(room: Room): Player | null {
+    const eligiblePlayers = room.players.filter(player => !player.isEliminated);
+
+    if (eligiblePlayers.length === 0) {
+      console.warn(`[GameManager] Unable to reassign imposter in room ${room.code} - no eligible players`);
+      return null;
+    }
+
+    const currentImposter = eligiblePlayers.find(player => player.isImposter);
+
+    let selectionPool = eligiblePlayers;
+    if (currentImposter && eligiblePlayers.length > 1) {
+      const filtered = eligiblePlayers.filter(player => player.id !== currentImposter.id);
+      if (filtered.length > 0) {
+        selectionPool = filtered;
+      }
+    }
+
+    const randomIndex = Math.floor(Math.random() * selectionPool.length);
+    const nextImposter = selectionPool[randomIndex];
+
+    room.players.forEach(player => {
+      player.isImposter = player.id === nextImposter.id;
+    });
+
+    if (room.gamemaster) {
+      room.gamemaster.isImposter = room.gamemaster.id === nextImposter.id;
+    }
+
+    room.imposterGuess = undefined;
+
+    console.log(`[GameManager] Reassigned imposter to ${nextImposter.name} in room ${room.code}`);
+    return nextImposter;
+  }
+
   private startQuestionRound(room: Room) {
     room.answersThisRound = [];
     room.timer = {
@@ -312,6 +359,7 @@ export class GameManager {
       duration: room.settings.turnTimeLimit * 2,
       type: 'turn'
     };
+    this.updateSkipControls(room);
   }
 
   private startWordRound(room: Room) {
@@ -322,6 +370,7 @@ export class GameManager {
       duration: room.settings.turnTimeLimit,
       type: 'turn'
     };
+    this.updateSkipControls(room);
   }
 
   private startNextRound(room: Room) {
@@ -354,6 +403,7 @@ export class GameManager {
       type: 'turn'
     };
     
+    this.updateSkipControls(room);
     console.log(`[GameManager] Starting round ${room.currentRound} in room ${room.code}`);
   }
 
@@ -439,6 +489,7 @@ export class GameManager {
       }
     }
 
+    this.updateSkipControls(room);
     room.lastActivity = Date.now();
     return { success: true, room };
   }
@@ -465,6 +516,7 @@ export class GameManager {
       player.hasVoted = false;
       player.votedFor = undefined;
     });
+    this.updateSkipControls(room);
   }
 
   submitVote(socketId: string, votedForId: string): { success: boolean; error?: string; room?: Room } {
@@ -572,6 +624,7 @@ export class GameManager {
       this.startVotingPhase(room);
     }
 
+    this.updateSkipControls(room);
     room.lastActivity = Date.now();
     return { success: true, room };
   }
@@ -633,6 +686,7 @@ export class GameManager {
       type: 'turn'
     };
     
+    this.updateSkipControls(room);
     console.log(`[GameManager] Starting question round ${room.currentRound} in room ${room.code}`);
   }
 
@@ -999,6 +1053,70 @@ export class GameManager {
     return room?.players.find(p => p.socketId === socketId);
   }
 
+  private getFirstNonImposter(room: Room): Player | null {
+    const orderedIds = room.turnOrder && room.turnOrder.length > 0
+      ? room.turnOrder
+      : room.players.map(player => player.id);
+
+    for (const playerId of orderedIds) {
+      const player = room.players.find(p => p.id === playerId);
+      if (player && !player.isImposter) {
+        return player;
+      }
+    }
+
+    return null;
+  }
+
+  private hasSubmittedWordThisRound(room: Room, player: Player): boolean {
+    return player.hasSubmittedWord && player.lastSubmittedRound === room.currentRound;
+  }
+
+  private hasAnsweredQuestionThisRound(room: Room, player: Player): boolean {
+    return room.answersThisRound.some(answer => answer.playerId === player.id);
+  }
+
+  private updateSkipControls(room: Room): void {
+    const gamemaster = room.players.find(p => p.isGamemaster) || room.gamemaster;
+    const firstNonImposter = this.getFirstNonImposter(room);
+
+    const firstNonImposterId = firstNonImposter ? firstNonImposter.id : null;
+    const wordEligible = new Set<string>();
+    const questionEligible = new Set<string>();
+    const gamemasterNotImposter = !!gamemaster && !gamemaster.isImposter;
+    const isPassPlay = room.settings.gameType === 'pass-play';
+
+    if (room.gamePhase === 'word-round' && room.gameMode !== 'truth') {
+      if (isPassPlay) {
+        if (firstNonImposter) {
+          wordEligible.add(firstNonImposter.id);
+        }
+      } else if (gamemasterNotImposter) {
+        wordEligible.add(gamemaster!.id);
+      }
+    }
+
+    if (room.gamePhase === 'question-round' && room.gameMode === 'truth') {
+      if (isPassPlay) {
+        if (firstNonImposter) {
+          questionEligible.add(firstNonImposter.id);
+        }
+      } else if (gamemasterNotImposter) {
+        questionEligible.add(gamemaster!.id);
+      }
+    }
+
+    const nextControls: SkipControls = {
+      firstNonImposterId,
+      wordEligiblePlayerIds: Array.from(wordEligible),
+      questionEligiblePlayerIds: Array.from(questionEligible),
+      gamemasterCanSkipPlayer: Boolean(gamemaster),
+      gamemasterCanSkipPlayerTruth: Boolean(gamemaster)
+    };
+
+    room.skipControls = nextControls;
+  }
+
   /**
    * Update a player's socketId when they reconnect
    * This is critical for maintaining game state across reconnections
@@ -1053,43 +1171,16 @@ export class GameManager {
       return { success: false, error: 'Player not found in room' };
     }
 
-    // In Pass & Play mode, allow the first player (index 0) to skip
-    // In Online mode, only allow gamemaster to skip
-    const isPassPlayFirstPlayer = room.settings.gameType === 'pass-play' &&
-                                  room.players[0]?.socketId === gamemasterSocketId;
-    const isGamemaster = caller.isGamemaster;
+    if (!caller.isGamemaster) {
+      return { success: false, error: 'Only gamemaster can skip players' };
+    }
 
-    if (!isGamemaster && !isPassPlayFirstPlayer) {
-      return { success: false, error: 'Only gamemaster or the first player in Pass & Play can skip' };
+    if (room.settings.gameType === 'pass-play') {
+      return { success: false, error: 'Skip player is not available in pass & play mode' };
     }
 
     if (room.gamePhase !== 'word-round') {
       return { success: false, error: 'Can only skip during word round' };
-    }
-
-    // Special handling for Pass & Play mode
-    if (room.settings.gameType === 'pass-play') {
-      // In Pass & Play, the first player is skipping themselves
-      const firstPlayer = room.players[0];
-      if (!firstPlayer) {
-        return { success: false, error: 'No first player found' };
-      }
-
-      // In pass-and-play skip: get new word and restart (don't track skip)
-
-      // Generate new word and restart cycle
-      if (room.gameMode === 'classic' || room.gameMode === 'hidden') {
-        this.assignWords(room);  // Calls wordManager to get new word
-      }
-
-      // Reset to player 0 (first player)
-      room.passPlayCurrentPlayer = 0;
-      room.passPlayRevealed = false;
-
-      room.lastActivity = Date.now();
-      console.log(`[GameManager] Player skipped word in Pass & Play mode, generated new word and restarted cycle in room ${room.code}`);
-
-      return { success: true, room };
     }
 
     // Online mode: Skip the current player in turn
@@ -1132,6 +1223,7 @@ export class GameManager {
     }
 
     room.lastActivity = Date.now();
+    this.updateSkipControls(room);
     console.log(`[GameManager] Gamemaster skipped ${currentPlayer.name} in room ${room.code}`);
     return { success: true, room };
   }
@@ -1148,14 +1240,12 @@ export class GameManager {
       return { success: false, error: 'Player not found in room' };
     }
 
-    // In Pass & Play mode, allow the first player (index 0) to skip
-    // In Online mode, only allow gamemaster to skip
-    const isPassPlayFirstPlayer = room.settings.gameType === 'pass-play' &&
-                                  room.players[0]?.socketId === gamemasterSocketId;
-    const isGamemaster = caller.isGamemaster;
+    if (!caller.isGamemaster) {
+      return { success: false, error: 'Only gamemaster can skip players' };
+    }
 
-    if (!isGamemaster && !isPassPlayFirstPlayer) {
-      return { success: false, error: 'Only gamemaster or the first player in Pass & Play can skip' };
+    if (room.settings.gameType === 'pass-play') {
+      return { success: false, error: 'Skip player is not available in pass & play mode' };
     }
 
     if (room.gamePhase !== 'question-round') {
@@ -1164,35 +1254,6 @@ export class GameManager {
 
     if (room.gameMode !== 'truth') {
       return { success: false, error: 'Can only skip in truth mode' };
-    }
-
-    // Special handling for Pass & Play mode
-    if (room.settings.gameType === 'pass-play') {
-      // In Pass & Play, the first player is skipping themselves
-      const firstPlayer = room.players[0];
-      if (!firstPlayer) {
-        return { success: false, error: 'No first player found' };
-      }
-
-      // In pass-and-play skip: get new question and restart (don't track skip)
-
-      // Generate new question and restart cycle
-      this.assignQuestion(room);  // Calls questionManager to get new question
-
-      // Reset to player 0 (first player)
-      room.passPlayCurrentPlayer = 0;
-      room.passPlayRevealed = false;
-
-      room.lastActivity = Date.now();
-      console.log(`[GameManager] Player skipped question in Pass & Play mode, generated new question and restarted cycle in room ${room.code}`);
-
-      return {
-        success: true,
-        room,
-        playerId: firstPlayer.id,
-        playerName: firstPlayer.name,
-        action: 'next-round'
-      };
     }
 
     // Online mode: Find a player who hasn't answered yet
@@ -1241,6 +1302,7 @@ export class GameManager {
     }
 
     room.lastActivity = Date.now();
+    this.updateSkipControls(room);
     console.log(`[GameManager] Gamemaster skipped ${playerToSkip.name} in truth mode in room ${room.code}`);
 
     return {
@@ -1255,17 +1317,12 @@ export class GameManager {
   /**
    * Skip current word in online mode (generate new word for all players)
    */
-  skipWord(gamemasterSocketId: string): { success: boolean; error?: string; room?: Room } {
-    const roomId = this.getRoomIdBySocketId(gamemasterSocketId);
+  skipWord(socketId: string): { success: boolean; error?: string; room?: Room } {
+    const roomId = this.getRoomIdBySocketId(socketId);
     if (!roomId) return { success: false, error: 'Not in a room' };
 
     const room = this.rooms.get(roomId);
     if (!room) return { success: false, error: 'Room not found' };
-
-    // Only for online mode
-    if (room.settings.gameType !== 'online') {
-      return { success: false, error: 'Skip word only available in online mode' };
-    }
 
     if (room.gamePhase !== 'word-round') {
       return { success: false, error: 'Can only skip word during word round' };
@@ -1275,38 +1332,57 @@ export class GameManager {
       return { success: false, error: 'Use skip question in truth mode' };
     }
 
-    // Generate new word for all players
+    const caller = room.players.find(player => player.socketId === socketId);
+    if (!caller) {
+      return { success: false, error: 'Player not found in room' };
+    }
+
+    const isPassPlay = room.settings.gameType === 'pass-play';
+    const firstNonImposter = this.getFirstNonImposter(room);
+    const isFirstNonImposter = firstNonImposter ? firstNonImposter.id === caller.id : false;
+
+    if (isPassPlay) {
+      if (!caller.isGamemaster && !isFirstNonImposter) {
+        return { success: false, error: 'Only the pass & play host can skip the word' };
+      }
+    } else if (!caller.isGamemaster) {
+      return { success: false, error: 'Only gamemaster can skip word' };
+    }
+
     this.assignWords(room);
 
-    // Reset round state
     room.wordsThisRound = [];
     room.turnIndex = 0;
-    room.currentTurn = room.turnOrder[0];
+    room.currentTurn = room.turnOrder[0] ?? null;
 
-    // Reset all players' submission status
     room.players.forEach(player => {
       player.hasSubmittedWord = false;
+      player.lastSubmittedRound = 0;
     });
 
+    if (isPassPlay) {
+      room.passPlayCurrentPlayer = 0;
+      room.passPlayRevealed = false;
+    }
+
+    this.reassignImposter(room);
+    room.pendingSkipRequest = undefined;
     room.lastActivity = Date.now();
-    console.log(`[GameManager] Gamemaster skipped word, generated new word for room ${room.code}`);
+    this.updateSkipControls(room);
+
+    console.log(`[GameManager] Word skipped by ${caller.name} in room ${room.code}`);
     return { success: true, room };
   }
 
   /**
    * Skip current question in online mode (generate new question for all players)
    */
-  skipQuestion(gamemasterSocketId: string): { success: boolean; error?: string; room?: Room } {
-    const roomId = this.getRoomIdBySocketId(gamemasterSocketId);
+  skipQuestion(socketId: string): { success: boolean; error?: string; room?: Room } {
+    const roomId = this.getRoomIdBySocketId(socketId);
     if (!roomId) return { success: false, error: 'Not in a room' };
 
     const room = this.rooms.get(roomId);
     if (!room) return { success: false, error: 'Room not found' };
-
-    // Only for online mode
-    if (room.settings.gameType !== 'online') {
-      return { success: false, error: 'Skip question only available in online mode' };
-    }
 
     if (room.gamePhase !== 'question-round') {
       return { success: false, error: 'Can only skip question during question round' };
@@ -1316,14 +1392,38 @@ export class GameManager {
       return { success: false, error: 'Skip question only available in truth mode' };
     }
 
-    // Generate new question for all players
+    const caller = room.players.find(player => player.socketId === socketId);
+    if (!caller) {
+      return { success: false, error: 'Player not found in room' };
+    }
+
+    const isPassPlay = room.settings.gameType === 'pass-play';
+    const firstNonImposter = this.getFirstNonImposter(room);
+    const isFirstNonImposter = firstNonImposter ? firstNonImposter.id === caller.id : false;
+
+    if (isPassPlay) {
+      if (!caller.isGamemaster && !isFirstNonImposter) {
+        return { success: false, error: 'Only the pass & play host can skip the question' };
+      }
+    } else if (!caller.isGamemaster) {
+      return { success: false, error: 'Only gamemaster can skip question' };
+    }
+
     this.assignQuestion(room);
 
-    // Reset round state
     room.answersThisRound = [];
 
+    if (isPassPlay) {
+      room.passPlayCurrentPlayer = 0;
+      room.passPlayRevealed = false;
+    }
+
+    this.reassignImposter(room);
+    room.pendingSkipRequest = undefined;
     room.lastActivity = Date.now();
-    console.log(`[GameManager] Gamemaster skipped question, generated new question for room ${room.code}`);
+    this.updateSkipControls(room);
+
+    console.log(`[GameManager] Question skipped by ${caller.name} in room ${room.code}`);
     return { success: true, room };
   }
 
@@ -1373,45 +1473,24 @@ export class GameManager {
       return { success: false, error: 'Only gamemaster can approve skip' };
     }
 
-    // Process the skip based on game phase
+    let skipResult;
     if (room.pendingSkipRequest.gamePhase === 'word-round') {
-      // Check if all submitted in Pass & Play mode
-      if (room.settings.gameType === 'pass-play') {
-        room.passPlayCurrentPlayer++;
-        room.passPlayRevealed = false;
-      } else {
-        // Online mode: Generate new word and restart round for all players
-        this.assignWords(room);
-
-        // Reset round state
-        room.wordsThisRound = [];
-        room.turnIndex = 0;
-        room.currentTurn = room.turnOrder[0];
-
-        // Reset all players' submission status
-        room.players.forEach(player => {
-          player.hasSubmittedWord = false;
-        });
-      }
-    } else if (room.pendingSkipRequest.gamePhase === 'question-round') {
-      // Check if all answered in Pass & Play mode
-      if (room.settings.gameType === 'pass-play') {
-        room.passPlayCurrentPlayer++;
-        room.passPlayRevealed = false;
-      } else {
-        // Online mode: Generate new question and restart round for all players
-        this.assignQuestion(room);
-
-        // Reset round state
-        room.answersThisRound = [];
-      }
+      skipResult = this.skipWord(gamemasterSocketId);
+    } else {
+      skipResult = this.skipQuestion(gamemasterSocketId);
     }
 
-    // Clear pending skip request
-    room.pendingSkipRequest = undefined;
-    room.lastActivity = Date.now();
-    console.log(`[GameManager] Skip approved in room ${room.code}`);
-    return { success: true, room };
+    if (!skipResult.success) {
+      return skipResult;
+    }
+
+    const updatedRoom = skipResult.room!;
+    updatedRoom.pendingSkipRequest = undefined;
+    updatedRoom.lastActivity = Date.now();
+    this.updateSkipControls(updatedRoom);
+
+    console.log(`[GameManager] Skip approved in room ${updatedRoom.code}`);
+    return { success: true, room: updatedRoom };
   }
 
   declineSkip(gamemasterSocketId: string): { success: boolean; error?: string; room?: Room } {
