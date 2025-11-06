@@ -136,25 +136,21 @@ class UnifiedGameServer {
     this.sessionManager = new SessionManager();
     this.gameRegistry = new GameRegistry();
 
-    // ⚡ OPTIMIZATION: TCP socket tuning for low latency and fast cleanup
-    this.io.engine.on('connection', (rawSocket) => {
-      // Disable Nagle's algorithm for instant message delivery (30-40% lower latency)
-      rawSocket.setNoDelay(true);
-
-      // Enable TCP keepalive to detect dead connections faster (probe every 60s)
-      rawSocket.setKeepAlive(true, 60000);
-
-      // ⚡ OPTIMIZATION: Enforce connection limits to prevent overload
+    // ⚡ OPTIMIZATION: Connection tracking and limits
+    // Note: TCP_NODELAY is already enabled by the WebSocket transport (ws library)
+    // No need to manually configure since we're using transports: ['websocket']
+    this.io.engine.on('connection', (engineSocket: any) => {
+      // Track and enforce connection limits
       this.connectionCount++;
 
       if (this.connectionCount > this.MAX_CONNECTIONS) {
         console.warn(`⚠️  [CONNECTION LIMIT] Rejected connection (${this.connectionCount}/${this.MAX_CONNECTIONS})`);
-        rawSocket.close();
+        engineSocket.close();
         this.connectionCount--;
         return;
       }
 
-      rawSocket.on('close', () => {
+      engineSocket.on('close', () => {
         this.connectionCount--;
       });
     });
@@ -1057,19 +1053,25 @@ class UnifiedGameServer {
         const activeConnections = this.io.engine.clientsCount;
         const totalRooms = this.roomManager.getAllRooms().length;
 
-        // Get current delay and reset monitor for next interval
-        const eventLoopDelay = this.eventLoopMonitor.mean;
-        this.eventLoopMonitor.disable();
-        this.eventLoopMonitor.enable(); // ✅ Reset baseline for next measurement
+        // Get percentile metrics (more reliable than mean)
+        const eventLoopP50 = this.eventLoopMonitor.percentile(50);  // Median
+        const eventLoopP99 = this.eventLoopMonitor.percentile(99);  // 99th percentile
+        const eventLoopMax = this.eventLoopMonitor.max;             // Worst case
 
-        // Alert if event loop is degraded
-        if (eventLoopDelay > 50) {
-          console.warn(`⚠️  [ALERT] Event loop delay HIGH: ${eventLoopDelay.toFixed(2)}ms (threshold: 50ms)`);
+        // ✅ CRITICAL: Create NEW monitor for next interval
+        // This is the only way to truly reset the histogram
+        this.eventLoopMonitor.disable();
+        this.eventLoopMonitor = monitorEventLoopDelay({ resolution: 20 });
+        this.eventLoopMonitor.enable();
+
+        // Alert if event loop is degraded (use p99, not mean)
+        if (eventLoopP99 > 50) {
+          console.warn(`⚠️  [ALERT] Event loop p99 HIGH: ${eventLoopP99.toFixed(2)}ms max=${eventLoopMax.toFixed(2)}ms (threshold: 50ms)`);
         }
 
-        // Show connection tracking
+        // Show connection tracking with detailed event loop metrics
         const utilizationPercent = ((this.connectionCount / this.MAX_CONNECTIONS) * 100).toFixed(1);
-        console.log(`\n📊 [METRICS] Connections: ${this.connectionCount}/${this.MAX_CONNECTIONS} (${utilizationPercent}%) | Active: ${activeConnections} | Rooms: ${totalRooms} | Event Loop: ${eventLoopDelay.toFixed(2)}ms`);
+        console.log(`\n📊 [METRICS] Connections: ${this.connectionCount}/${this.MAX_CONNECTIONS} (${utilizationPercent}%) | Active: ${activeConnections} | Rooms: ${totalRooms} | Event Loop: p50=${eventLoopP50.toFixed(2)}ms p99=${eventLoopP99.toFixed(2)}ms max=${eventLoopMax.toFixed(2)}ms`);
 
         // Alert if approaching capacity
         if (this.connectionCount > this.MAX_CONNECTIONS * 0.9) {
