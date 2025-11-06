@@ -1,7 +1,7 @@
 import type { GamePlugin, Room as CoreRoom, Player as CorePlayer, GameHelpers } from '../../core/types/core.js';
 import type { Socket } from 'socket.io';
 import { GameManager } from './game/GameManager.js';
-import { Player, GameMode, GameSettings } from './types/types.js';
+import { Player, GameMode, GameSettings, Room } from './types/types.js';
 import { randomUUID } from 'crypto';
 
 /**
@@ -42,6 +42,55 @@ class SUSDPlugin implements GamePlugin {
 
   constructor() {
     this.gameManager = new GameManager();
+  }
+
+  private collectUniquePlayers(room: Room): Player[] {
+    const playersMap = new Map<string, Player>();
+    room.players.forEach(player => {
+      if (player.socketId) {
+        playersMap.set(player.id, player);
+      }
+    });
+    if (room.gamemaster?.socketId) {
+      playersMap.set(room.gamemaster.id, room.gamemaster);
+    }
+    return Array.from(playersMap.values());
+  }
+
+  private broadcastWordAssignments(room: Room, helpers: GameHelpers) {
+    if (!room) return;
+
+    const recipients = this.collectUniquePlayers(room);
+    recipients.forEach(player => {
+      if (!player.socketId) return;
+
+      const assignment = this.gameManager.getWordForPlayer(room, player.id);
+      helpers.sendToPlayer(player.socketId, 'word-assigned', {
+        word: assignment ?? null
+      });
+
+      if (room.settings.gameType === 'online' && room.currentTurn === player.id) {
+        helpers.sendToPlayer(player.socketId, 'turn-started', {
+          playerId: player.id,
+          word: assignment ?? undefined,
+          timeLimit: room.settings.turnTimeLimit
+        });
+      }
+    });
+  }
+
+  private broadcastQuestionAssignments(room: Room, helpers: GameHelpers) {
+    if (!room || !room.currentQuestion) return;
+
+    const recipients = this.collectUniquePlayers(room);
+    recipients.forEach(player => {
+      if (!player.socketId) return;
+
+      const payload = this.gameManager.getQuestionAssignmentForPlayer(room, player.id);
+      if (!payload) return;
+
+      helpers.sendToPlayer(player.socketId, 'question-assigned', payload);
+    });
   }
 
   /**
@@ -436,11 +485,22 @@ class SUSDPlugin implements GamePlugin {
           return;
         }
 
+        const existingRoom = this.gameManager.getRoomByCode(coreRoom.code);
+        const pendingPhase = existingRoom?.pendingSkipRequest?.gamePhase;
+
         const result = this.gameManager.approveSkip(socket.id);
 
         if (!result.success) {
           socket.emit('error', { message: result.error });
           return;
+        }
+
+        if (result.room) {
+          if (pendingPhase === 'word-round') {
+            this.broadcastWordAssignments(result.room, helpers);
+          } else if (pendingPhase === 'question-round') {
+            this.broadcastQuestionAssignments(result.room, helpers);
+          }
         }
 
         // Broadcast room update to all players
@@ -516,6 +576,10 @@ class SUSDPlugin implements GamePlugin {
           return;
         }
 
+        if (result.room) {
+          this.broadcastWordAssignments(result.room, helpers);
+        }
+
         // Broadcast room update to all players
         helpers.sendToRoom(coreRoom.code, 'room:updated', { room: result.room });
         console.log(`[SUSD] Skip word submitted in room ${coreRoom.code}`);
@@ -555,6 +619,10 @@ class SUSDPlugin implements GamePlugin {
         if (!result.success) {
           socket.emit('error', { message: result.error });
           return;
+        }
+
+        if (result.room) {
+          this.broadcastQuestionAssignments(result.room, helpers);
         }
 
         // Broadcast room update to all players

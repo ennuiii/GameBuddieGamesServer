@@ -251,7 +251,7 @@ export interface ServerEvents {
   'game-started': (data: { room: Room }) => void;
   'game-state-updated': (data: { room: Room }) => void;
   'turn-started': (data: { playerId: string; word?: Word; timeLimit: number }) => void;
-  'word-assigned': (data: { word: Word }) => void;
+  'word-assigned': (data: { word: Word | null }) => void;
   'question-assigned': (data: { question?: Question; imposterHint?: string; isImposter: boolean }) => void;
   'word-submitted': (data: { playerId: string; word: string }) => void;
   'answer-submitted': (data: { playerId: string; playerName: string }) => void;

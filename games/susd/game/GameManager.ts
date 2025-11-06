@@ -316,6 +316,77 @@ export class GameManager {
     console.log(`[GameManager] Final room.currentQuestion:`, room.currentQuestion);
   }
 
+  public getWordForPlayer(room: Room, playerId: string): Word | null {
+    if (!room.currentWord) {
+      return null;
+    }
+
+    const player =
+      room.players.find(p => p.id === playerId) ||
+      (room.gamemaster?.id === playerId ? room.gamemaster : undefined);
+
+    if (!player) {
+      return null;
+    }
+
+    if (room.gameMode === 'classic') {
+      if (player.isImposter) {
+        return null;
+      }
+      return { text: room.currentWord.text };
+    }
+
+    if (room.gameMode === 'hidden') {
+      if (!room.currentWordPair) {
+        return { text: room.currentWord.text };
+      }
+      const text = this.wordManager.getWordForPlayer(
+        player.isImposter,
+        room.gameMode,
+        room.currentWord.text,
+        room.currentWordPair
+      );
+      if (!text) {
+        return null;
+      }
+      return {
+        text,
+        isImposterWord: player.isImposter
+      };
+    }
+
+    return { text: room.currentWord.text };
+  }
+
+  public getQuestionAssignmentForPlayer(
+    room: Room,
+    playerId: string
+  ): { question?: Question; imposterHint?: string; isImposter: boolean } | null {
+    if (!room.currentQuestion) {
+      return null;
+    }
+
+    const player =
+      room.players.find(p => p.id === playerId) ||
+      (room.gamemaster?.id === playerId ? room.gamemaster : undefined);
+
+    if (!player) {
+      return null;
+    }
+
+    if (player.isImposter) {
+      return {
+        imposterHint: room.currentQuestion.imposterHint,
+        isImposter: true
+      };
+    }
+
+    return {
+      question: room.currentQuestion,
+      isImposter: false
+    };
+  }
+
   private reassignImposter(room: Room): Player | null {
     const eligiblePlayers = room.players.filter(player => !player.isEliminated);
 
@@ -1368,7 +1439,17 @@ export class GameManager {
     this.reassignImposter(room);
     room.pendingSkipRequest = undefined;
     room.lastActivity = Date.now();
-    this.updateSkipControls(room);
+    if (room.settings.gameType === 'online') {
+      this.startWordRound(room);
+    } else {
+      room.timer = {
+        isActive: false,
+        timeRemaining: 0,
+        duration: 0,
+        type: null
+      };
+      this.updateSkipControls(room);
+    }
 
     console.log(`[GameManager] Word skipped by ${caller.name} in room ${room.code}`);
     return { success: true, room };
@@ -1421,7 +1502,17 @@ export class GameManager {
     this.reassignImposter(room);
     room.pendingSkipRequest = undefined;
     room.lastActivity = Date.now();
-    this.updateSkipControls(room);
+    if (room.settings.gameType === 'online') {
+      this.startQuestionRound(room);
+    } else {
+      room.timer = {
+        isActive: false,
+        timeRemaining: 0,
+        duration: 0,
+        type: null
+      };
+      this.updateSkipControls(room);
+    }
 
     console.log(`[GameManager] Question skipped by ${caller.name} in room ${room.code}`);
     return { success: true, room };
