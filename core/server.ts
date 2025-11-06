@@ -114,11 +114,10 @@ class UnifiedGameServer {
       // Most game messages are small (<1KB), not worth compressing
       perMessageDeflate: false,
 
-      // ⚡ OPTIMIZATION 3: Optimize socket buffer sizes
-      // Increase sendBufferSize to prevent event queue buildup
-      // Prevents events from queuing when broadcasts spike
-      sendBufferSize: 1024 * 1024, // 1 MB per socket (default is 4 KB - too small!)
-      recvBufferSize: 1024 * 1024, // 1 MB per socket
+      // ⚡ OPTIMIZATION 3: Increase message buffer size
+      // Allows larger messages without disconnecting clients
+      // Default is 100 KB, we increase to 1 MB to handle large game state updates
+      maxHttpBufferSize: 1024 * 1024, // 1 MB per message (default 100 KB)
     });
 
     // Initialize managers
