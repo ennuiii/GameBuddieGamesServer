@@ -73,10 +73,10 @@ class UnifiedGameServer {
 
   // Using simple setInterval drift measurement instead of perf_hooks (more reliable)
 
-  // ⚡ OPTIMIZATION: Connection tracking and limits
-  // Prevent server overload by enforcing connection limits
+  // ⚡ OPTIMIZATION: Connection tracking (limit removed for testing)
+  // Track connection count for monitoring
   private connectionCount = 0;
-  private readonly MAX_CONNECTIONS = 2500; // Safety limit (25% buffer above target)
+  // MAX_CONNECTIONS limit removed - testing capacity
 
   constructor() {
     this.port = parseInt(process.env.PORT || '3001', 10);
@@ -133,19 +133,13 @@ class UnifiedGameServer {
     this.sessionManager = new SessionManager();
     this.gameRegistry = new GameRegistry();
 
-    // ⚡ OPTIMIZATION: Connection tracking and limits
+    // ⚡ OPTIMIZATION: Connection tracking
     // Note: TCP_NODELAY is already enabled by the WebSocket transport (ws library)
     // No need to manually configure since we're using transports: ['websocket']
+    // Connection limit removed for capacity testing
     this.io.engine.on('connection', (engineSocket: any) => {
-      // Track and enforce connection limits
+      // Track connection count for monitoring
       this.connectionCount++;
-
-      if (this.connectionCount > this.MAX_CONNECTIONS) {
-        console.warn(`⚠️  [CONNECTION LIMIT] Rejected connection (${this.connectionCount}/${this.MAX_CONNECTIONS})`);
-        engineSocket.close();
-        this.connectionCount--;
-        return;
-      }
 
       engineSocket.on('close', () => {
         this.connectionCount--;
