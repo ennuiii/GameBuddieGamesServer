@@ -409,8 +409,28 @@ class UnifiedGameServer {
               // Capture old socketId BEFORE updating (plugins need this for their own mappings)
               const oldSocketId = existingPlayer.socketId;
 
-              // Update socket ID in core room
-              this.roomManager.reconnectPlayer(oldSocketId, socket.id);
+              // ✅ Update socket ID in core room and check for success
+              const reconnectResult = this.roomManager.reconnectPlayer(oldSocketId, socket.id);
+
+              if (!reconnectResult.player) {
+                // ⚠️ reconnectPlayer couldn't find player under oldSocketId
+                // This can happen during rapid reconnections (grace period grace period) when player already updated under new socketId
+                // Fallback: manually update the player's socketId and room mappings
+                console.warn(
+                  `[CORE] reconnectPlayer failed for ${existingPlayer.name} - likely player already under new socket ID`,
+                  { oldSocketId, newSocketId: socket.id }
+                );
+
+                // Manually update the player object and room mappings
+                existingPlayer.socketId = socket.id;
+                existingPlayer.connected = true;
+                existingPlayer.lastActivity = Date.now();
+
+                // Update room players Map: remove old key, add with new key
+                room.players.delete(oldSocketId);
+                room.players.set(socket.id, existingPlayer);
+              }
+
               player = existingPlayer;
               player.oldSocketId = oldSocketId; // Store for plugin use
               sessionToken = data.sessionToken;

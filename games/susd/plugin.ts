@@ -1107,28 +1107,35 @@ class SUSDPlugin implements GamePlugin {
         // Use oldSocketId from core (captured before update) for accurate mapping update
         const oldSocketId = (player as any).oldSocketId;
 
-        // ✅ Validation: Prevent mapping socket to itself (critical bug fix)
-        if (!oldSocketId || oldSocketId === player.socketId) {
+        // ✅ Validation: Check if socket ID actually changed
+        if (!oldSocketId) {
           console.warn(
-            `[SUSD] ⚠️  Cannot update socket mapping - invalid oldSocketId`,
+            `[SUSD] ⚠️  No oldSocketId provided for reconnecting player ${player.name}`,
+            { playerId: player.id, currentSocketId: player.socketId }
+          );
+          // Continue - still send room state sync below
+        } else if (oldSocketId === player.socketId) {
+          console.warn(
+            `[SUSD] ℹ️  Socket ID unchanged during reconnection (rapid retry within grace period?)`,
             {
               playerId: player.id,
               playerName: player.name,
-              oldSocketId,
-              newSocketId: player.socketId,
+              socketId: player.socketId,
             }
           );
-          return;
+          // Don't try to update mapping - socket already correct
+          // Still send room state sync below to keep client in sync
+        } else {
+          // Socket ID actually changed - update both SUSD room and GameManager mapping
+          susdPlayer.socketId = player.socketId;
+
+          // Update the GameManager's playerToRoom mapping
+          this.gameManager.updatePlayerSocketId(oldSocketId, player.socketId);
+
+          console.log(
+            `[SUSD] Updated socketId for reconnecting player ${player.name}: ${oldSocketId} → ${player.socketId}`
+          );
         }
-
-        susdPlayer.socketId = player.socketId;
-
-        // Update the GameManager's playerToRoom mapping
-        this.gameManager.updatePlayerSocketId(oldSocketId, player.socketId);
-
-        console.log(
-          `[SUSD] Updated socketId for reconnecting player ${player.name}: ${oldSocketId} → ${player.socketId}`
-        );
       }
 
       // Send SUSD room to reconnected player
