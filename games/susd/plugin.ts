@@ -1111,6 +1111,19 @@ class SUSDPlugin implements GamePlugin {
         totalPlayers: susdRoom.players.length,
       });
 
+      // ✅ Populate core player's gameData with SUSD player fields for consistency
+      // This ensures all events (room:joined, room:updated, etc.) have complete SUSD data
+      player.gameData = {
+        isGamemaster: susdPlayer.isGamemaster,
+        isImposter: susdPlayer.isImposter,
+        hasSubmittedWord: susdPlayer.hasSubmittedWord,
+        hasVoted: susdPlayer.hasVoted,
+        votedFor: susdPlayer.votedFor,
+        isEliminated: susdPlayer.isEliminated,
+        lastSubmittedRound: susdPlayer.lastSubmittedRound,
+        gameBuddiesPlayerId: susdPlayer.gameBuddiesPlayerId,
+      };
+
       // Note: Core server will emit 'player:joined' with serializeRoom() result
       // No need to emit 'room:updated' here to avoid duplicate emissions
     } else {
@@ -1149,6 +1162,28 @@ class SUSDPlugin implements GamePlugin {
             `[SUSD] Updated socketId for reconnecting player ${player.name}: ${oldSocketId} → ${player.socketId}`
           );
         }
+
+        // ✅ CRITICAL FIX: Populate core player's gameData with SUSD player fields
+        // This ensures room:joined event includes all SUSD-specific data (especially isImposter)
+        player.gameData = {
+          isGamemaster: susdPlayer.isGamemaster,
+          isImposter: susdPlayer.isImposter,
+          hasSubmittedWord: susdPlayer.hasSubmittedWord,
+          hasVoted: susdPlayer.hasVoted,
+          votedFor: susdPlayer.votedFor,
+          isEliminated: susdPlayer.isEliminated,
+          lastSubmittedRound: susdPlayer.lastSubmittedRound,
+          gameBuddiesPlayerId: susdPlayer.gameBuddiesPlayerId,
+        };
+
+        console.log(
+          `[SUSD] Populated gameData for reconnecting player ${player.name}:`,
+          { isImposter: susdPlayer.isImposter, isGamemaster: susdPlayer.isGamemaster }
+        );
+      } else {
+        console.error(
+          `[SUSD] ❌ CRITICAL: Reconnecting player ${player.id} not found in SUSD room ${room.code}`
+        );
       }
 
       // Send SUSD room to reconnected player (use serialized/deduplicated version)
