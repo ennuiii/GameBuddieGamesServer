@@ -388,7 +388,11 @@ class UnifiedGameServer {
         const room = this.roomManager.getRoomByCode(data.roomCode);
 
         if (!room) {
-          socket.emit('error', { message: 'Room not found' });
+          // ✅ Emit specific error code so client can distinguish from other join errors
+          socket.emit('error', {
+            message: 'Room not found',
+            code: 'ROOM_NOT_FOUND'
+          });
           return;
         }
 
