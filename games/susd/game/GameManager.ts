@@ -1195,6 +1195,19 @@ export class GameManager {
   updatePlayerSocketId(oldSocketId: string | undefined, newSocketId: string): void {
     if (!oldSocketId) return;
 
+    // ✅ CRITICAL VALIDATION: Prevent corrupting the playerToRoom mapping
+    // This bug occurs when plugin receives wrong parameters (both old and new are the same socket)
+    if (oldSocketId === newSocketId) {
+      console.warn(
+        '[GameManager] ⚠️  CRITICAL: oldSocketId === newSocketId! This indicates a plugin bug. Skipping update to prevent mapping corruption.',
+        {
+          socketId: oldSocketId,
+          stack: new Error().stack,
+        }
+      );
+      return;
+    }
+
     // Try to get room from mapping first
     let roomId = this.playerToRoom.get(oldSocketId);
 

@@ -1105,13 +1105,30 @@ class SUSDPlugin implements GamePlugin {
       const susdPlayer = susdRoom.players.find(p => p.id === player.id);
       if (susdPlayer) {
         // Use oldSocketId from core (captured before update) for accurate mapping update
-        const oldSocketId = (player as any).oldSocketId || susdPlayer.socketId;
+        const oldSocketId = (player as any).oldSocketId;
+
+        // ✅ Validation: Prevent mapping socket to itself (critical bug fix)
+        if (!oldSocketId || oldSocketId === player.socketId) {
+          console.warn(
+            `[SUSD] ⚠️  Cannot update socket mapping - invalid oldSocketId`,
+            {
+              playerId: player.id,
+              playerName: player.name,
+              oldSocketId,
+              newSocketId: player.socketId,
+            }
+          );
+          return;
+        }
+
         susdPlayer.socketId = player.socketId;
 
         // Update the GameManager's playerToRoom mapping
         this.gameManager.updatePlayerSocketId(oldSocketId, player.socketId);
 
-        console.log(`[SUSD] Updated socketId for reconnecting player ${player.name}: ${oldSocketId} → ${player.socketId}`);
+        console.log(
+          `[SUSD] Updated socketId for reconnecting player ${player.name}: ${oldSocketId} → ${player.socketId}`
+        );
       }
 
       // Send SUSD room to reconnected player
