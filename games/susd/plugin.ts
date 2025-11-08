@@ -70,6 +70,29 @@ class SUSDPlugin implements GamePlugin {
     };
   }
 
+  /**
+   * ✅ Serialize CorePlayer to SUSD client-expected Player format
+   * Flattens gameData fields to top-level for consistency with SUSD client type definitions
+   * This ensures isImposter, isGamemaster, etc. are direct fields, not nested in gameData
+   */
+  private serializePlayerForClient(corePlayer: CorePlayer): Player {
+    const gameData = corePlayer.gameData || {};
+
+    return {
+      id: corePlayer.id,
+      name: corePlayer.name,
+      socketId: corePlayer.socketId,
+      isGamemaster: (gameData as any).isGamemaster ?? false,
+      isImposter: (gameData as any).isImposter ?? false,
+      hasSubmittedWord: (gameData as any).hasSubmittedWord ?? false,
+      hasVoted: (gameData as any).hasVoted ?? false,
+      votedFor: (gameData as any).votedFor,
+      isEliminated: (gameData as any).isEliminated ?? false,
+      lastSubmittedRound: (gameData as any).lastSubmittedRound ?? 0,
+      gameBuddiesPlayerId: (gameData as any).gameBuddiesPlayerId,
+    };
+  }
+
   private broadcastWordAssignments(room: Room, helpers: GameHelpers) {
     if (!room) return;
 
@@ -1239,7 +1262,10 @@ class SUSDPlugin implements GamePlugin {
 
   /**
    * Serialize room for sending to clients
-   * This is called by core server when emitting room updates
+   * This is called by core server when emitting room updates (room:joined, room:updated, etc.)
+   *
+   * ✅ CRITICAL FIX: Flattens player data so client receives isImposter, isGamemaster, etc.
+   * as direct fields (not nested in gameData) to match SUSD Player interface
    */
   serializeRoom(room: CoreRoom, socketId: string): any {
     const susdRoomId = this.roomMapping.get(room.code);
@@ -1254,8 +1280,30 @@ class SUSDPlugin implements GamePlugin {
       return room;
     }
 
-    // Return the SUSD-specific room with all game data
-    return susdRoom;
+    // ✅ Transform SUSD room with flattened player data
+    // Map SUSD players to client-compatible format by extracting core player data
+    const serialized = {
+      ...susdRoom,
+      players: susdRoom.players.map((susdPlayer: Player) => {
+        // Find corresponding core player for connection status and gameData
+        const corePlayer = Array.from(room.players.values()).find(cp => cp.id === susdPlayer.id);
+        if (corePlayer) {
+          // Use serialized player with flattened fields
+          return this.serializePlayerForClient(corePlayer);
+        }
+        // Fallback to SUSD player (shouldn't happen in normal flow)
+        return susdPlayer;
+      }),
+      // Also serialize gamemaster if it exists
+      gamemaster: (() => {
+        const gmId = susdRoom.gamemaster?.id;
+        if (!gmId) return undefined;
+        const coreGM = Array.from(room.players.values()).find(cp => cp.id === gmId);
+        return coreGM ? this.serializePlayerForClient(coreGM) : susdRoom.gamemaster;
+      })(),
+    };
+
+    return serialized;
   }
 
   /**
