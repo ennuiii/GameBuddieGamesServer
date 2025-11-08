@@ -78,7 +78,17 @@ class SUSDPlugin implements GamePlugin {
   private serializePlayerForClient(corePlayer: CorePlayer): Player {
     const gameData = corePlayer.gameData || {};
 
-    return {
+    console.log('[SUSD-DEBUG] 🔍 serializePlayerForClient called:', {
+      playerId: corePlayer.id,
+      playerName: corePlayer.name,
+      socketId: corePlayer.socketId,
+      hasGameData: !!corePlayer.gameData,
+      rawGameData: gameData,
+      isImposterRaw: (gameData as any).isImposter,
+      isGamemasterRaw: (gameData as any).isGamemaster,
+    });
+
+    const serialized = {
       id: corePlayer.id,
       name: corePlayer.name,
       socketId: corePlayer.socketId,
@@ -91,6 +101,14 @@ class SUSDPlugin implements GamePlugin {
       lastSubmittedRound: (gameData as any).lastSubmittedRound ?? 0,
       gameBuddiesPlayerId: (gameData as any).gameBuddiesPlayerId,
     };
+
+    console.log('[SUSD-DEBUG] ✅ Serialized player result:', {
+      playerName: serialized.name,
+      isImposter: serialized.isImposter,
+      isGamemaster: serialized.isGamemaster,
+    });
+
+    return serialized;
   }
 
   private broadcastWordAssignments(room: Room, helpers: GameHelpers) {
@@ -1147,6 +1165,13 @@ class SUSDPlugin implements GamePlugin {
         gameBuddiesPlayerId: susdPlayer.gameBuddiesPlayerId,
       };
 
+      console.log('[SUSD-DEBUG] 👤 New player join - gameData populated:', {
+        playerName: player.name,
+        playerId: player.id,
+        socketId: player.socketId,
+        gameData: player.gameData,
+      });
+
       // Note: Core server will emit 'player:joined' with serializeRoom() result
       // No need to emit 'room:updated' here to avoid duplicate emissions
     } else {
@@ -1203,6 +1228,13 @@ class SUSDPlugin implements GamePlugin {
           `[SUSD] Populated gameData for reconnecting player ${player.name}:`,
           { isImposter: susdPlayer.isImposter, isGamemaster: susdPlayer.isGamemaster }
         );
+
+        console.log('[SUSD-DEBUG] 🔌 Reconnection - gameData populated:', {
+          playerName: player.name,
+          playerId: player.id,
+          socketId: player.socketId,
+          gameData: player.gameData,
+        });
       } else {
         console.error(
           `[SUSD] ❌ CRITICAL: Reconnecting player ${player.id} not found in SUSD room ${room.code}`
@@ -1280,6 +1312,15 @@ class SUSDPlugin implements GamePlugin {
       return room;
     }
 
+    console.log('[SUSD-DEBUG] 🎯 serializeRoom called:', {
+      roomCode: room.code,
+      requestingSocketId: socketId,
+      corePlayerCount: room.players.size,
+      susdPlayerCount: susdRoom.players.length,
+      corePlayerIds: Array.from(room.players.keys()),
+      susdPlayerIds: susdRoom.players.map(p => p.id),
+    });
+
     // ✅ Transform SUSD room with flattened player data
     // Map SUSD players to client-compatible format by extracting core player data
     const serialized = {
@@ -1287,11 +1328,24 @@ class SUSDPlugin implements GamePlugin {
       players: susdRoom.players.map((susdPlayer: Player) => {
         // Find corresponding core player for connection status and gameData
         const corePlayer = Array.from(room.players.values()).find(cp => cp.id === susdPlayer.id);
+
+        console.log('[SUSD-DEBUG] 🔄 Processing player:', {
+          susdPlayerName: susdPlayer.name,
+          susdPlayerId: susdPlayer.id,
+          foundInCore: !!corePlayer,
+          path: corePlayer ? 'serializePlayerForClient' : 'fallback',
+        });
+
         if (corePlayer) {
           // Use serialized player with flattened fields
           return this.serializePlayerForClient(corePlayer);
         }
         // Fallback to SUSD player (shouldn't happen in normal flow)
+        console.log('[SUSD-DEBUG] ⚠️ Using fallback (pass-and-play):', {
+          playerName: susdPlayer.name,
+          isImposter: susdPlayer.isImposter,
+          isGamemaster: susdPlayer.isGamemaster,
+        });
         return susdPlayer;
       }),
       // Also serialize gamemaster if it exists
@@ -1299,9 +1353,26 @@ class SUSDPlugin implements GamePlugin {
         const gmId = susdRoom.gamemaster?.id;
         if (!gmId) return undefined;
         const coreGM = Array.from(room.players.values()).find(cp => cp.id === gmId);
+
+        console.log('[SUSD-DEBUG] 👑 Gamemaster serialization:', {
+          gmId,
+          gmName: susdRoom.gamemaster?.name,
+          foundInCore: !!coreGM,
+        });
+
         return coreGM ? this.serializePlayerForClient(coreGM) : susdRoom.gamemaster;
       })(),
     };
+
+    console.log('[SUSD-DEBUG] 📤 Final serialized room:', {
+      code: serialized.code,
+      playerCount: serialized.players.length,
+      players: serialized.players.map(p => ({
+        name: p.name,
+        isImposter: p.isImposter,
+        isGamemaster: p.isGamemaster,
+      })),
+    });
 
     return serialized;
   }
