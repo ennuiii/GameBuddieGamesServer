@@ -272,9 +272,11 @@ export class RoomManager {
     player.connected = true;
     player.lastActivity = Date.now();
 
-    // Update mappings
-    room.players.delete(oldSocketId);
+    // ✅ CRITICAL FIX: Keep BOTH old and new sockets in room.players during grace period
+    // This prevents "NOT IN A ROOM ERROR" when events from old socket arrive after reconnection
+    // Old socket will be removed after 2-second grace period
     room.players.set(newSocketId, player);
+    // DON'T delete oldSocketId yet - it stays in room.players for grace period
 
     // Keep old socket ID mapping for 2 seconds to handle in-flight events
     // Don't delete immediately - this prevents "Not in a room" errors for pending events
@@ -286,16 +288,22 @@ export class RoomManager {
       clearTimeout(existingTimer);
     }
 
-    // Schedule deletion of old socket ID after 2 seconds
+    // Schedule deletion of old socket ID after 2 seconds (from BOTH playerRoomMap AND room.players)
     const cleanupTimer = setTimeout(() => {
       this.playerRoomMap.delete(oldSocketId);
+      // ✅ CRITICAL: Remove from room.players NOW (delayed to grace period end)
+      room.players.delete(oldSocketId);
       this.oldSocketCleanupTimers.delete(oldSocketId);
-      console.log(`[RoomManager] Cleaned up old socket ID ${oldSocketId} after grace period`);
+      console.log(
+        `[RoomManager] Cleaned up old socket ID ${oldSocketId} after grace period (removed from room.players and playerRoomMap)`
+      );
     }, 2000);
 
     this.oldSocketCleanupTimers.set(oldSocketId, cleanupTimer);
 
-    console.log(`[RoomManager] Reconnected player ${player.name} in room ${roomCode} (keeping old socket ${oldSocketId} for 2s)`);
+    console.log(
+      `[RoomManager] Reconnected player ${player.name} in room ${roomCode} (keeping old socket ${oldSocketId} in room.players for 2s grace period)`
+    );
 
     return { room, player };
   }

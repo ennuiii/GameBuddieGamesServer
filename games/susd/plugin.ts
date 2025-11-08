@@ -57,6 +57,19 @@ class SUSDPlugin implements GamePlugin {
     return Array.from(playersMap.values());
   }
 
+  /**
+   * ✅ Serialize room for sending to clients
+   * Deduplicates players (important during grace period when old socket still exists)
+   * This prevents showing duplicate players during reconnection when both old and new sockets are in room.players
+   */
+  private serializeRoomForClients(room: Room): Room {
+    const uniquePlayers = this.collectUniquePlayers(room);
+    return {
+      ...room,
+      players: uniquePlayers
+    };
+  }
+
   private broadcastWordAssignments(room: Room, helpers: GameHelpers) {
     if (!room) return;
 
@@ -1138,8 +1151,8 @@ class SUSDPlugin implements GamePlugin {
         }
       }
 
-      // Send SUSD room to reconnected player
-      namespace.to(player.socketId).emit('room:updated', { room: susdRoom });
+      // Send SUSD room to reconnected player (use serialized/deduplicated version)
+      namespace.to(player.socketId).emit('room:updated', { room: this.serializeRoomForClients(susdRoom) });
       console.log(`[SUSD] Sent SUSD room to reconnecting player ${player.name} in ${room.code}`);
     }
   }
@@ -1158,10 +1171,10 @@ class SUSDPlugin implements GamePlugin {
     const susdRoom = this.gameManager.getRoomByCode(room.code);
     if (!susdRoom) return;
 
-    // Broadcast updated room state so other players see disconnected status
+    // Broadcast updated room state so other players see disconnected status (use serialized/deduplicated version)
     if (this.io) {
       const namespace = this.io.of('/susd');
-      namespace.to(room.code).emit('room:updated', { room: susdRoom });
+      namespace.to(room.code).emit('room:updated', { room: this.serializeRoomForClients(susdRoom) });
       console.log(`[SUSD] Broadcast disconnect status for ${player.name} to room ${room.code}`);
     }
   }
@@ -1181,10 +1194,10 @@ class SUSDPlugin implements GamePlugin {
     const susdRoom = this.gameManager.getRoomByCode(room.code);
     if (!susdRoom) return;
 
-    // Broadcast updated room state so other players see removal
+    // Broadcast updated room state so other players see removal (use serialized/deduplicated version)
     if (this.io) {
       const namespace = this.io.of('/susd');
-      namespace.to(room.code).emit('room:updated', { room: susdRoom });
+      namespace.to(room.code).emit('room:updated', { room: this.serializeRoomForClients(susdRoom) });
       console.log(`[SUSD] Broadcast player removal for ${player.name} to room ${room.code}`);
     }
   }
