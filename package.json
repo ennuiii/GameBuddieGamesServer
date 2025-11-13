@@ -5,7 +5,7 @@
   "main": "dist/server.js",
   "type": "module",
   "scripts": {
-    "dev": "node --max-old-space-size=450 --optimize-for-size tsx watch core/server.ts",
+    "dev": "node --max-old-space-size=450 --optimize-for-size \"node_modules/tsx/dist/cli.mjs\" watch core/server.ts",
     "build": "tsc && node -e \"const fs = require('fs'); const path = require('path'); function copyJson(src, dest) { if (!fs.existsSync(dest)) fs.mkdirSync(dest, {recursive: true}); fs.readdirSync(src, {withFileTypes: true}).forEach(entry => { const srcPath = path.join(src, entry.name); const destPath = path.join(dest, entry.name); if (entry.isDirectory()) copyJson(srcPath, destPath); else if (entry.name.endsWith('.json')) fs.copyFileSync(srcPath, destPath); }); } copyJson('games', 'dist/games');\"",
     "start": "node --max-old-space-size=450 --optimize-for-size dist/core/server.js",
     "lint": "eslint core games --ext .ts",
@@ -52,7 +52,7 @@
     "@typescript-eslint/parser": "^6.14.0",
     "eslint": "^8.55.0",
     "playwright": "^1.56.1",
-    "tsx": "^4.6.2"
+    "tsx": "^4.20.6"
   },
   "engines": {
     "node": ">=18.0.0"

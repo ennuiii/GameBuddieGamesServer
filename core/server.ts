@@ -28,6 +28,7 @@ import { SUSDGame } from '../games/susd/plugin.js';
 import { cluePlugin } from '../games/clue/plugin.js';
 import bingoPlugin from '../games/bingo/plugin.js';
 import DDFGamePlugin from '../games/ddf/plugin.js';
+import thinkAlikePlugin from '../games/thinkalike/plugin.js';
 
 /**
  * Global error handlers to prevent server crashes
@@ -965,6 +966,14 @@ class UnifiedGameServer {
       console.log('[Server] ✓ DDF game registered');
     } else {
       console.error('[Server] ✗ Failed to register DDF game');
+    }
+
+    // Register ThinkAlike game
+    const thinkAlikeRegistered = await this.registerGame(thinkAlikePlugin);
+    if (thinkAlikeRegistered) {
+      console.log('[Server] ✓ ThinkAlike game registered');
+    } else {
+      console.error('[Server] ✗ Failed to register ThinkAlike game');
     }
 
     // TODO: Load games dynamically from games/ directory

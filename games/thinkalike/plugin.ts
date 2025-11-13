@@ -224,7 +224,8 @@ class ThinkAlikePlugin implements GamePlugin {
         minPlayers: room.settings.minPlayers,
         maxPlayers: room.settings.maxPlayers,
         timerDuration: gameState.settings.timerDuration,
-        maxLives: gameState.settings.maxLives
+        maxLives: gameState.settings.maxLives,
+        voiceMode: gameState.settings.voiceMode
       },
 
       // Messages (last 100)
@@ -319,12 +320,12 @@ class ThinkAlikePlugin implements GamePlugin {
 
         console.log(`[${this.name}] Game started in room ${room.code}`);
 
-        // After 3 seconds, move to word input phase
+        // After 3.5 seconds, move to word input phase (matches client countdown: 3→2→1→GO!)
         const timerKey = `${room.code}:round-prep-transition`;
         const timeout = setTimeout(() => {
           console.log(`[${this.name}] Round prep countdown complete, transitioning to word input in room ${room.code}`);
           this.startWordInputPhase(room);
-        }, 3000);
+        }, 3500);
         this.timers.set(timerKey, timeout);
 
       } catch (error) {
@@ -416,12 +417,12 @@ class ThinkAlikePlugin implements GamePlugin {
 
           console.log(`[${this.name}] Moving to round ${gameState.currentRound} in room ${room.code}`);
 
-          // After 3 seconds, start word input
+          // After 3.5 seconds, start word input (matches client countdown: 3→2→1→GO!)
           const timerKey = `${room.code}:next-round-transition`;
           const timeout = setTimeout(() => {
             console.log(`[${this.name}] Round prep countdown complete in next-round, transitioning to word input in room ${room.code}`);
             this.startWordInputPhase(room);
-          }, 3000);
+          }, 3500);
           this.timers.set(timerKey, timeout);
         } else {
           // No lives left - game over
@@ -523,6 +524,213 @@ class ThinkAlikePlugin implements GamePlugin {
       } catch (error) {
         console.error(`[${this.name}] Error updating settings:`, error);
         socket.emit('error', { message: 'Failed to update settings' });
+      }
+    },
+
+    /**
+     * Voice mode: Player votes on whether they matched
+     */
+    'game:voice-vote': async (socket: Socket, data: { vote: 'match' | 'no-match' }, room: Room, helpers: GameHelpers) => {
+      try {
+        const player = Array.from(room.players.values()).find(p => p.socketId === socket.id);
+        if (!player) return;
+
+        const gameState = room.gameState.data as ThinkAlikeGameState;
+
+        // Validate phase
+        if (gameState.phase !== 'word_input') {
+          socket.emit('error', { message: 'Not in voice voting phase' });
+          return;
+        }
+
+        // Store vote (reusing player word fields for vote storage)
+        // Player 1 is first to join, Player 2 is second
+        const isPlayer1 = Array.from(room.players.values())[0]?.id === player.id;
+        if (isPlayer1) {
+          gameState.player1Word = data.vote; // Store vote in word field temporarily
+          gameState.player1Submitted = true;
+        } else {
+          gameState.player2Word = data.vote; // Store vote in word field temporarily
+          gameState.player2Submitted = true;
+        }
+
+        console.log(`[${this.name}] Voice vote from ${player.name}: ${data.vote}`);
+
+        // Notify opponent of the vote
+        const opponentPlayer = Array.from(room.players.values()).find(p => p.id !== player.id);
+        if (opponentPlayer && this.io) {
+          const namespace = this.io.of(this.namespace);
+          namespace.to(opponentPlayer.socketId).emit('game:opponent-vote', {
+            playerId: player.id,
+            playerName: player.name,
+            vote: data.vote
+          });
+        }
+
+        // Check if both players voted
+        if (gameState.player1Submitted && gameState.player2Submitted) {
+          const vote1 = gameState.player1Word as string;
+          const vote2 = gameState.player2Word as string;
+
+          if (vote1 === vote2) {
+            // AGREEMENT
+            if (vote1 === 'match') {
+              // Victory!
+              gameState.phase = 'victory';
+              room.gameState.phase = 'victory';
+
+              // Add to history
+              const roundHistory: RoundHistory = {
+                number: gameState.currentRound,
+                player1Word: 'MATCH', // Use vote indicator in history
+                player2Word: 'MATCH',
+                wasMatch: true,
+                timeTaken: 0,
+                timestamp: Date.now()
+              };
+              gameState.rounds.push(roundHistory);
+
+              // Broadcast final state
+              this.broadcastRoomState(room);
+
+              // Notify players
+              if (this.io) {
+                const namespace = this.io.of(this.namespace);
+                namespace.to(room.code).emit('game:victory', {
+                  matchedWord: 'VOICE_MODE_MATCH',
+                  round: gameState.currentRound,
+                  timeTaken: 0
+                });
+              }
+
+              console.log(`[${this.name}] VOICE MODE VICTORY in room ${room.code}!`);
+            } else {
+              // No match, lose a life
+              gameState.livesRemaining--;
+
+              // Add to history
+              const roundHistory: RoundHistory = {
+                number: gameState.currentRound,
+                player1Word: 'NO_MATCH',
+                player2Word: 'NO_MATCH',
+                wasMatch: false,
+                timeTaken: 0,
+                timestamp: Date.now()
+              };
+              gameState.rounds.push(roundHistory);
+
+              if (gameState.livesRemaining > 0) {
+                // Continue to next round
+                gameState.phase = 'reveal'; // Show the reveal screen
+                room.gameState.phase = 'reveal';
+
+                // Broadcast state to show result
+                this.broadcastRoomState(room);
+
+                console.log(`[${this.name}] Voice mode no-match in room ${room.code}, lives: ${gameState.livesRemaining}`);
+              } else {
+                // Game over
+                this.endGame(room, 'all-lives-lost');
+              }
+            }
+          } else {
+            // DISAGREEMENT - Both agreed but voted differently
+            // The client side will handle dispute UI, we just track that both voted
+            console.log(`[${this.name}] Voice mode vote disagreement in room ${room.code}: ${vote1} vs ${vote2}`);
+            // Client will show dispute dialog and re-vote
+          }
+        }
+
+      } catch (error) {
+        console.error(`[${this.name}] Error in voice vote:`, error);
+        socket.emit('error', { message: 'Failed to submit voice vote' });
+      }
+    },
+
+    /**
+     * Voice mode: Player revotes during dispute
+     */
+    'game:voice-dispute-revote': async (socket: Socket, data: { vote: 'match' | 'no-match' }, room: Room, helpers: GameHelpers) => {
+      try {
+        const player = Array.from(room.players.values()).find(p => p.socketId === socket.id);
+        if (!player) return;
+
+        const gameState = room.gameState.data as ThinkAlikeGameState;
+
+        // Reset opponent's vote to allow revoting
+        const isPlayer1 = Array.from(room.players.values())[0]?.id === player.id;
+        if (isPlayer1) {
+          gameState.player1Word = data.vote;
+          gameState.player2Submitted = false; // Reset opponent's submission flag
+        } else {
+          gameState.player2Word = data.vote;
+          gameState.player1Submitted = false; // Reset opponent's submission flag
+        }
+
+        console.log(`[${this.name}] Voice mode revote from ${player.name}: ${data.vote}`);
+
+        // Notify opponent of the revote
+        const opponentPlayer = Array.from(room.players.values()).find(p => p.id !== player.id);
+        if (opponentPlayer && this.io) {
+          const namespace = this.io.of(this.namespace);
+          namespace.to(opponentPlayer.socketId).emit('game:opponent-vote', {
+            playerId: player.id,
+            playerName: player.name,
+            vote: data.vote
+          });
+        }
+
+        // Check if both players have voted again
+        if (gameState.player1Submitted && gameState.player2Submitted) {
+          const vote1 = gameState.player1Word as string;
+          const vote2 = gameState.player2Word as string;
+
+          if (vote1 === vote2) {
+            // AGREEMENT on revote
+            if (vote1 === 'match') {
+              // Victory!
+              gameState.phase = 'victory';
+              room.gameState.phase = 'victory';
+
+              // Broadcast final state
+              this.broadcastRoomState(room);
+
+              // Notify players
+              if (this.io) {
+                const namespace = this.io.of(this.namespace);
+                namespace.to(room.code).emit('game:victory', {
+                  matchedWord: 'VOICE_MODE_MATCH',
+                  round: gameState.currentRound,
+                  timeTaken: 0
+                });
+              }
+
+              console.log(`[${this.name}] VOICE MODE VICTORY (after dispute) in room ${room.code}!`);
+            } else {
+              // No match, lose a life
+              gameState.livesRemaining--;
+
+              if (gameState.livesRemaining > 0) {
+                // Continue to next round
+                gameState.phase = 'reveal';
+                room.gameState.phase = 'reveal';
+
+                // Broadcast state
+                this.broadcastRoomState(room);
+              } else {
+                // Game over
+                this.endGame(room, 'all-lives-lost');
+              }
+            }
+          } else {
+            // Still disagreeing - client will show dispute again
+            console.log(`[${this.name}] Voice mode still disagreeing in room ${room.code}: ${vote1} vs ${vote2}`);
+          }
+        }
+
+      } catch (error) {
+        console.error(`[${this.name}] Error in voice dispute revote:`, error);
+        socket.emit('error', { message: 'Failed to submit revote' });
       }
     }
   };
