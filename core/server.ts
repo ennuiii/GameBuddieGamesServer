@@ -330,7 +330,7 @@ class UnifiedGameServer {
       console.log(`[${plugin.id.toUpperCase()}] Player connected: ${socket.id}`);
 
       // Common event: Create room
-      socket.on('room:create', (data: { playerName: string; roomCode?: string; settings?: any }) => {
+      socket.on('room:create', (data: { playerName: string; roomCode?: string; isGameBuddiesRoom?: boolean; settings?: any }) => {
         const nameValidation = validationService.validatePlayerName(data.playerName);
 
         if (!nameValidation.isValid) {
@@ -350,6 +350,11 @@ class UnifiedGameServer {
 
         const settings = { ...plugin.defaultSettings, ...data.settings };
         const room = this.roomManager.createRoom(plugin.id, player, settings, data.roomCode);
+
+        // Preserve GameBuddies flag if provided
+        if (data.isGameBuddiesRoom) {
+          room.isGameBuddiesRoom = true;
+        }
 
         // Generate session token
         const sessionToken = this.sessionManager.createSession(player.id, room.code);
