@@ -64,6 +64,15 @@ class DDFGamePlugin implements GamePlugin {
   }
 
   onRoomCreate(room: Room): void {
+    // ✅ FIX: Remove gamemaster from players list
+    // In DDF, the host is the gamemaster, NOT a player
+    // They ask questions while players answer them
+    const host = Array.from(room.players.values()).find(p => p.isHost);
+    if (host) {
+      room.players.delete(host.socketId);
+      console.log(`[DDF] Removed gamemaster ${host.name} from players list`);
+    }
+
     // Initialize DDF game state
     const gameState: DDFGameState = {
       phase: 'lobby',
