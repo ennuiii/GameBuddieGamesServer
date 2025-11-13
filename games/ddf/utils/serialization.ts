@@ -76,9 +76,23 @@ export function serializeRoomToDDF(room: Room, socketId: string): any {
   // =========================================================================
   // 1. Convert players Map to Array with client-expected format
   // =========================================================================
-  // Exclude host from players list - host is represented as gamemaster
-  const players = Array.from(room.players.values())
-    .filter((p) => !p.isHost)
+  // In GameBuddies rooms, include all players
+  // In regular DDF, exclude host (they're the gamemaster)
+  const allPlayers = Array.from(room.players.values());
+
+  // Debug logging for GameBuddies rooms to diagnose join issues
+  if (room.isGameBuddiesRoom) {
+    console.log(`[DDF Serialization] GameBuddies room: ${room.code}, Total players: ${allPlayers.length}`);
+    console.log(`[DDF Serialization] Players:`, allPlayers.map(p => ({ id: p.id, name: p.name, isHost: p.isHost, connected: p.connected })));
+  }
+
+  const players = allPlayers
+    .filter((p) => {
+      if (room.isGameBuddiesRoom) {
+        return true; // Include everyone in GameBuddies mode
+      }
+      return !p.isHost; // Regular DDF: exclude gamemaster
+    })
     .map((p) => {
     const playerData = p.gameData as DDFPlayerData | undefined;
 
