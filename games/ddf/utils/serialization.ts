@@ -88,10 +88,18 @@ export function serializeRoomToDDF(room: Room, socketId: string): any {
 
   const players = allPlayers
     .filter((p) => {
-      if (room.isGameBuddiesRoom) {
-        return true; // Include everyone in GameBuddies mode
+      const playerData = p.gameData as DDFPlayerData | undefined;
+
+      // Exclude gamemaster from player list (they're marked with isGamemaster flag)
+      if (playerData?.isGamemaster) {
+        return false;
       }
-      return !p.isHost; // Regular DDF: exclude gamemaster
+
+      // Include all other players
+      if (room.isGameBuddiesRoom) {
+        return true; // Include everyone except gamemaster in GameBuddies mode
+      }
+      return !p.isHost; // Regular DDF: exclude by isHost (fallback)
     })
     .map((p) => {
     const playerData = p.gameData as DDFPlayerData | undefined;

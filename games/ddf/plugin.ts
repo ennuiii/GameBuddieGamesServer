@@ -64,13 +64,25 @@ class DDFGamePlugin implements GamePlugin {
   }
 
   onRoomCreate(room: Room): void {
-    // ✅ FIX: Remove gamemaster from players list
-    // In DDF, the host is the gamemaster, NOT a player
+    // ✅ FIX: Mark gamemaster with flag (keep in players for broadcasts)
+    // In DDF, the host is the gamemaster, NOT a player in the game logic
     // They ask questions while players answer them
+    // We mark them with isGamemaster=true but keep them in room.players so:
+    // 1. Server broadcasts (player:joined) reach the GM
+    // 2. Server can look up the GM for return-to-lobby
+    // 3. Serialization filters them from the player list UI
     const host = Array.from(room.players.values()).find(p => p.isHost);
     if (host) {
-      room.players.delete(host.socketId);
-      console.log(`[DDF] Removed gamemaster ${host.name} from players list`);
+      host.gameData = {
+        lives: 3,
+        isEliminated: false,
+        isGamemaster: true,  // Flag as gamemaster
+        mediaState: {
+          isMicOn: false,
+          lastUpdated: Date.now(),
+        },
+      } as DDFPlayerData;
+      console.log(`[DDF] Marked ${host.name} as gamemaster (kept in players for broadcasts)`);
     }
 
     // Initialize DDF game state
