@@ -665,7 +665,7 @@ class UnifiedGameServer {
         console.log(`[GameBuddies] ✅ Broadcasted return command to all players in room ${room.code}`);
       });
 
-      // GameBuddies Integration - Modern return handler using API
+      // GameBuddies Integration - Return handler using API v2
       socket.on('gamebuddies:return', async (data: {
         roomCode: string;
         mode: 'group' | 'individual';
@@ -692,13 +692,44 @@ class UnifiedGameServer {
 
         console.log(`[GameBuddies] ${player.name} requesting ${returnAll ? 'group' : 'individual'} return for room ${data.roomCode}`);
 
-        // TODO: Call GameBuddies API service to get proper return URL
-        // For now, use placeholder response
-        const payload = {
-          returnUrl: room.gameBuddiesData?.returnUrl || 'https://gamebuddies.io',
-          sessionToken: room.gameBuddiesData?.sessionToken,
-          success: true,
-        };
+        // Call GameBuddies API v2 to get proper return URL
+        let payload: any;
+
+        const apiResponse = await gameBuddiesService.requestReturnToLobby(
+          room.gameId,
+          data.roomCode,
+          {
+            returnAll,
+            playerId: data.mode === 'individual' ? player.id : undefined,
+            initiatedBy: player.name,
+            reason: data.reason || 'player_initiated_return',
+            metadata: {
+              game: room.gameId,
+              playerName: player.name,
+              timestamp: new Date().toISOString()
+            }
+          }
+        );
+
+        if (apiResponse.success && apiResponse.data) {
+          // ✅ Use API response (includes proper room URL and session token)
+          payload = {
+            returnUrl: apiResponse.data.returnUrl,
+            sessionToken: apiResponse.data.sessionToken,
+            playersReturned: apiResponse.data.playersReturned,
+            success: true,
+          };
+          console.log(`[GameBuddies] ✅ Using API response for return URL`);
+        } else {
+          // ⚠️ API failed, use fallback with room code (NOT just homepage!)
+          console.warn('[GameBuddies] ⚠️ API failed, using fallback URL with room code');
+          payload = {
+            returnUrl: gameBuddiesService.getFallbackReturnUrl(data.roomCode),
+            sessionToken: undefined,
+            success: true,
+            apiError: apiResponse.error
+          };
+        }
 
         console.log(`[GameBuddies] Return result:`, payload);
 

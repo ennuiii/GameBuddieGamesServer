@@ -1,6 +1,28 @@
 import axios from 'axios';
 import type { GameBuddiesStatusUpdate, GameBuddiesReturnResult } from '../types/core.js';
 
+export interface ReturnToLobbyOptions {
+  playerId?: string;
+  initiatedBy?: string;
+  reason?: string;
+  returnAll?: boolean;
+  metadata?: Record<string, any>;
+}
+
+export interface ReturnToLobbyResponse {
+  success: boolean;
+  data?: {
+    returnUrl: string;
+    sessionToken?: string;
+    playersReturned?: number;
+    roomCode: string;
+    pendingReturn: boolean;
+    pollEndpoint: string;
+  };
+  error?: string;
+  status?: number;
+}
+
 /**
  * Unified GameBuddies Platform Integration Service
  *
@@ -40,6 +62,7 @@ export class GameBuddiesService {
       'ddf': process.env.DDF_API_KEY || '',
       'susd': process.env.SUSD_API_KEY || '',
       'school-quiz': process.env.QUIZ_API_KEY || '',
+      'thinkalike': process.env.THINKALIKE_API_KEY || '',
     };
 
     for (const [gameId, apiKey] of Object.entries(keyMappings)) {
@@ -240,6 +263,95 @@ export class GameBuddiesService {
     }));
 
     await this.updateMultiplePlayerStatus(gameId, roomCode, updates);
+  }
+
+  /**
+   * Request return to GameBuddies lobby via API v2
+   *
+   * Calls POST https://gamebuddies.io/api/v2/external/return
+   * to get the proper room-specific return URL and session token
+   */
+  async requestReturnToLobby(
+    gameId: string,
+    roomCode: string,
+    options: ReturnToLobbyOptions = {}
+  ): Promise<ReturnToLobbyResponse> {
+    const apiKey = this.gameApiKeys.get(gameId);
+
+    if (!apiKey) {
+      console.warn(`[GameBuddies] No API key for ${gameId}, cannot call return API`);
+      return {
+        success: false,
+        error: 'NO_API_KEY',
+      };
+    }
+
+    const {
+      playerId,
+      initiatedBy,
+      reason = 'external_return',
+      returnAll = true,
+      metadata = {},
+    } = options;
+
+    const payload = {
+      roomCode,
+      returnAll,
+      reason,
+      metadata,
+      ...(playerId && { playerId }),
+      ...(initiatedBy && { initiatedBy }),
+    };
+
+    const url = `${this.centralServerUrl}/api/v2/external/return`;
+
+    console.log(`[GameBuddies] Requesting return-to-lobby for room ${roomCode}`, {
+      game: gameId,
+      returnAll,
+      hasPlayerId: !!playerId,
+      initiatedBy: initiatedBy || 'unknown',
+    });
+
+    try {
+      const response = await axios.post(url, payload, {
+        timeout: this.apiTimeout,
+        headers: {
+          'Content-Type': 'application/json',
+          'X-API-Key': apiKey,
+        },
+      });
+
+      console.log(`[GameBuddies] ✅ Return request succeeded:`, {
+        returnUrl: response.data.returnUrl,
+        hasSessionToken: !!response.data.sessionToken,
+        playersReturned: response.data.playersReturned,
+      });
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error: any) {
+      console.error(`[GameBuddies] ❌ Return request failed:`, {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+      });
+
+      return {
+        success: false,
+        error: error.message,
+        status: error.response?.status,
+      };
+    }
+  }
+
+  /**
+   * Get fallback return URL for when API is unavailable
+   * This ensures even if API fails, players return to correct room (not homepage)
+   */
+  getFallbackReturnUrl(roomCode: string): string {
+    return `${this.centralServerUrl}/lobby/${roomCode}`;
   }
 
   /**
