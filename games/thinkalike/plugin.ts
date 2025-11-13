@@ -16,7 +16,7 @@ import type {
   SocketEventHandler,
   GameHelpers,
   RoomSettings
-} from '../../core/types/core.js';
+} from '../../core/types/core';
 import type { Socket } from 'socket.io';
 import {
   ThinkAlikeGameState,
@@ -27,7 +27,7 @@ import {
   createInitialGameState,
   createInitialPlayerData,
   DEFAULT_SETTINGS
-} from './types.js';
+} from './types';
 
 // ============================================================================
 // PLUGIN CLASS
@@ -53,7 +53,6 @@ class ThinkAlikePlugin implements GamePlugin {
   defaultSettings: RoomSettings = {
     minPlayers: 2,  // Exactly 2 players required
     maxPlayers: 2,  // Exactly 2 players allowed
-    disconnectTimeout: 30000, // 30 seconds
     gameSpecific: {
       ...DEFAULT_SETTINGS
     } as ThinkAlikeSettings
@@ -235,8 +234,8 @@ class ThinkAlikePlugin implements GamePlugin {
       mySocketId: socketId,
 
       // GameBuddies integration
-      isGameBuddiesRoom: room.metadata?.isGameBuddiesRoom || false,
-      gameBuddiesRoomCode: room.metadata?.gameBuddiesRoomCode
+      isGameBuddiesRoom: room.isGameBuddiesRoom || false,
+      gameBuddiesRoomId: room.gameBuddiesRoomId
     };
   }
 

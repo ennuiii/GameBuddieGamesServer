@@ -19,7 +19,7 @@ import type {
   SocketEventHandler,
   GameHelpers,
   RoomSettings
-} from '../../core/types/core.js';
+} from '../core/types/core';
 import type { Socket } from 'socket.io';
 
 // ============================================================================
@@ -83,7 +83,6 @@ class YourGamePlugin implements GamePlugin {
   defaultSettings: RoomSettings = {
     minPlayers: 2,
     maxPlayers: 8,
-    disconnectTimeout: 30000, // 30 seconds
     gameSpecific: {
       roundsPerGame: 3,
       timePerRound: 60,
@@ -272,8 +271,8 @@ class YourGamePlugin implements GamePlugin {
       mySocketId: socketId,
 
       // GameBuddies integration
-      isGameBuddiesRoom: room.metadata?.isGameBuddiesRoom || false,
-      gameBuddiesRoomCode: room.metadata?.gameBuddiesRoomCode
+      isGameBuddiesRoom: room.isGameBuddiesRoom || false,
+      gameBuddiesRoomId: room.gameBuddiesRoomId
     };
   }
 
