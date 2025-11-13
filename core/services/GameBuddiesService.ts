@@ -62,7 +62,7 @@ export class GameBuddiesService {
       'ddf': process.env.DDF_API_KEY || '',
       'susd': process.env.SUSD_API_KEY || '',
       'school-quiz': process.env.QUIZ_API_KEY || '',
-      'thinkalike': process.env.THINKALIKE_API_KEY || '',
+      'thinkalike': process.env.GAMEBUDDIES_API_KEY || '', // Shared key for unified server games
     };
 
     for (const [gameId, apiKey] of Object.entries(keyMappings)) {
