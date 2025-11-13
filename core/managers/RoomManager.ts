@@ -37,8 +37,8 @@ export class RoomManager {
   /**
    * Create a new room
    */
-  createRoom(gameId: string, hostPlayer: Player, settings: RoomSettings): Room {
-    const roomCode = this.generateUniqueRoomCode();
+  createRoom(gameId: string, hostPlayer: Player, settings: RoomSettings, providedRoomCode?: string): Room {
+    const roomCode = providedRoomCode || this.generateUniqueRoomCode();
 
     const room: Room = {
       code: roomCode,

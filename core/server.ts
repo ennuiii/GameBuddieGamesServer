@@ -330,7 +330,7 @@ class UnifiedGameServer {
       console.log(`[${plugin.id.toUpperCase()}] Player connected: ${socket.id}`);
 
       // Common event: Create room
-      socket.on('room:create', (data: { playerName: string; settings?: any }) => {
+      socket.on('room:create', (data: { playerName: string; roomCode?: string; settings?: any }) => {
         const nameValidation = validationService.validatePlayerName(data.playerName);
 
         if (!nameValidation.isValid) {
@@ -349,7 +349,7 @@ class UnifiedGameServer {
         };
 
         const settings = { ...plugin.defaultSettings, ...data.settings };
-        const room = this.roomManager.createRoom(plugin.id, player, settings);
+        const room = this.roomManager.createRoom(plugin.id, player, settings, data.roomCode);
 
         // Generate session token
         const sessionToken = this.sessionManager.createSession(player.id, room.code);
