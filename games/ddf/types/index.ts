@@ -203,6 +203,12 @@ export interface DDFPlayerData {
   isEliminated: boolean;
 
   /**
+   * Whether this player is the gamemaster (DDF host who asks questions)
+   * Gamemasters are kept in room.players but filtered from player list UI
+   */
+  isGamemaster?: boolean;
+
+  /**
    * Whether player is currently disconnected
    */
   isDisconnected?: boolean;
