@@ -27,7 +27,7 @@ import {
   createInitialGameState,
   createInitialPlayerData,
   DEFAULT_SETTINGS
-} from './types';
+} from './types.js';
 
 // ============================================================================
 // PLUGIN CLASS
