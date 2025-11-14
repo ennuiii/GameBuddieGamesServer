@@ -41,6 +41,9 @@ class DDFGamePlugin implements GamePlugin {
   private io: any;
   private timerIntervals: Map<string, NodeJS.Timeout> = new Map();
 
+  // Hidden categories that should only be selected manually
+  private HIDDEN_CATEGORIES = ['League of Legends'];
+
   // =========================================================================
   // Constructor & Initialization
   // =========================================================================
@@ -231,10 +234,18 @@ class DDFGamePlugin implements GamePlugin {
         // Filter by selected categories
         let questions = allQuestions;
         if (gameState.selectedCategories && gameState.selectedCategories.length > 0) {
+          // Use selected categories
           questions = allQuestions.filter((q: any) =>
             gameState.selectedCategories.includes(q.category)
           );
           console.log(`[DDF] 📚 Filtered to ${questions.length} questions for categories: ${JSON.stringify(gameState.selectedCategories)}`);
+        } else {
+          // When no categories selected, exclude hidden categories
+          questions = allQuestions.filter((q: any) => {
+            const category = q.category || 'General';
+            return !this.HIDDEN_CATEGORIES.includes(category);
+          });
+          console.log(`[DDF] 📚 No categories selected, using all non-hidden questions: ${questions.length} questions`);
         }
 
         // If no questions found for selected categories, use all questions
@@ -512,7 +523,13 @@ class DDFGamePlugin implements GamePlugin {
         const gameState = room.gameState.data as DDFGameState;
         const { categories } = data;
 
-        gameState.selectedCategories = categories || [];
+        // Server-side validation: Filter out hidden categories that shouldn't be auto-selected
+        // Hidden categories can only be selected if explicitly allowed
+        const validatedCategories = (categories || []).filter((category: string) =>
+          !this.HIDDEN_CATEGORIES.includes(category)
+        );
+
+        gameState.selectedCategories = validatedCategories;
 
         const serialized = serializeRoomToDDF(room, socket.id);
         helpers.sendToRoom(room.code, 'ddf:game-state-update', { room: serialized });
