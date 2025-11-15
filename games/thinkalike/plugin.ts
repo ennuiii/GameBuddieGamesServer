@@ -101,15 +101,36 @@ class ThinkAlikePlugin implements GamePlugin {
       player.gameData = createInitialPlayerData();
     }
 
+    const playerData = player.gameData as ThinkAlikePlayerData;
+
+    // Auto-assign spectator role: first 2 players are active, 3+ are spectators
+    if (!isReconnecting) {
+      const activePlayers = Array.from(room.players.values())
+        .filter(p => !(p.gameData as ThinkAlikePlayerData)?.isSpectator)
+        .filter(p => p.socketId !== player.socketId); // Don't count the player joining
+
+      if (activePlayers.length >= 2) {
+        // This is the 3rd+ player, make them a spectator
+        playerData.isSpectator = true;
+        console.log(`[${this.name}] Player ${player.name} joined as SPECTATOR`);
+      } else {
+        // This is the 1st or 2nd player, they're active
+        playerData.isSpectator = false;
+      }
+    }
+
     // Broadcast updated state to all players
     this.broadcastRoomState(room);
 
     // Send welcome message to new player
     if (!isReconnecting && this.io) {
       const namespace = this.io.of(this.namespace);
+      const roleMsg = playerData.isSpectator ? 'spectator' : 'player';
       namespace.to(player.socketId).emit('welcome', {
-        message: `Welcome to ${this.name}, ${player.name}!`,
-        rules: 'Type the same word as your opponent to win! You share 5 lives.'
+        message: `Welcome to ${this.name}, ${player.name}! You are a ${roleMsg}.`,
+        rules: playerData.isSpectator
+          ? 'You are spectating! Watch the two players compete.'
+          : 'Type the same word as your opponent to win! You share 5 lives.'
       });
     }
   }

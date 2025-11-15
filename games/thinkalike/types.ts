@@ -40,6 +40,10 @@ export interface ThinkAlikeGameState {
   player1Submitted: boolean;
   player2Submitted: boolean;
 
+  // Live typing (for spectators to see real-time input)
+  player1LiveWord: string | null;
+  player2LiveWord: string | null;
+
   // Round history
   rounds: RoundHistory[];
 
@@ -73,6 +77,7 @@ export interface ThinkAlikeSettings {
  */
 export interface ThinkAlikePlayerData {
   isReady: boolean;
+  isSpectator: boolean; // true if player is a spectator (3rd+ player)
   wins: number;        // Total games won
   totalGames: number;  // Total games played
 }
@@ -102,6 +107,8 @@ export function createInitialGameState(settings: ThinkAlikeSettings): ThinkAlike
     player2Word: null,
     player1Submitted: false,
     player2Submitted: false,
+    player1LiveWord: null,  // For spectators to see real-time typing
+    player2LiveWord: null,
     rounds: [],
     settings: settings,
   };
@@ -113,6 +120,7 @@ export function createInitialGameState(settings: ThinkAlikeSettings): ThinkAlike
 export function createInitialPlayerData(): ThinkAlikePlayerData {
   return {
     isReady: false,
+    isSpectator: false, // Will be set to true if 3+ players join
     wins: 0,
     totalGames: 0,
   };
