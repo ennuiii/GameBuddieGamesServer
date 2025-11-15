@@ -189,26 +189,35 @@ class ThinkAlikePlugin implements GamePlugin {
    */
   serializeRoom(room: Room, socketId: string): any {
     const gameState = room.gameState.data as ThinkAlikeGameState;
-    const players = Array.from(room.players.values());
+    const allPlayers = Array.from(room.players.values());
 
-    // Find requesting player
-    const requestingPlayer = players.find(p => p.socketId === socketId);
+    // Find requesting player and determine if they're a spectator
+    const requestingPlayer = allPlayers.find(p => p.socketId === socketId);
+    const isSpectator = (requestingPlayer?.gameData as ThinkAlikePlayerData)?.isSpectator || false;
+
+    // Separate active players and spectators
+    const activePlayers = allPlayers.filter(p => !(p.gameData as ThinkAlikePlayerData)?.isSpectator);
+    const spectators = allPlayers.filter(p => (p.gameData as ThinkAlikePlayerData)?.isSpectator);
 
     return {
       // Core room data
       code: room.code,
       hostId: room.hostId,
 
-      // Convert Map to Array for client
-      players: players.map((p, index) => {
+      // Convert Map to Array for client (active players only)
+      players: activePlayers.map((p, index) => {
         const playerData = p.gameData as ThinkAlikePlayerData;
 
-        // Determine which word to show (hide opponent's word until both submit)
+        // Determine which word to show
         let currentWord = null;
-        if (p.socketId === socketId) {
-          // Show player their own word
+        if (isSpectator) {
+          // Spectators see LIVE words (real-time typing)
+          currentWord = index === 0 ? gameState.player1LiveWord : gameState.player2LiveWord;
+        } else if (p.socketId === socketId) {
+          // Players see their own word
           currentWord = index === 0 ? gameState.player1Word : gameState.player2Word;
         }
+        // Otherwise null (opponent's word hidden from opponent)
 
         return {
           socketId: p.socketId,
@@ -217,10 +226,20 @@ class ThinkAlikePlugin implements GamePlugin {
           connected: p.connected,
           disconnectedAt: p.disconnectedAt,
           isReady: playerData?.isReady || false,
-          currentWord: currentWord, // null for opponent, own word for self
+          isSpectator: false,  // Active players, not spectators
+          currentWord: currentWord,
           hasSubmitted: index === 0 ? gameState.player1Submitted : gameState.player2Submitted
         };
       }),
+
+      // Spectators array (3rd+ players)
+      spectators: spectators.map(s => ({
+        socketId: s.socketId,
+        name: s.name,
+        isHost: s.isHost,
+        connected: s.connected,
+        isSpectator: true
+      })),
 
       // Game state - map to client-friendly format
       state: this.mapPhaseToClientState(gameState.phase),
@@ -253,6 +272,9 @@ class ThinkAlikePlugin implements GamePlugin {
 
       // CRITICAL: Client needs to identify themselves
       mySocketId: socketId,
+
+      // Spectator flag (am I a spectator?)
+      isSpectator: isSpectator,
 
       // GameBuddies integration
       isGameBuddiesRoom: room.isGameBuddiesRoom || false,
@@ -751,6 +773,60 @@ class ThinkAlikePlugin implements GamePlugin {
       } catch (error) {
         console.error(`[${this.name}] Error in voice dispute revote:`, error);
         socket.emit('error', { message: 'Failed to submit revote' });
+      }
+    },
+
+    /**
+     * Live typing update (players send their current typed word to spectators)
+     * Only broadcasts to spectators, not to other players (for privacy)
+     */
+    'game:typing-update': async (socket: Socket, data: { word: string }, room: Room, helpers: GameHelpers) => {
+      try {
+        const player = Array.from(room.players.values()).find(p => p.socketId === socket.id);
+        if (!player) return;
+
+        const playerData = player.gameData as ThinkAlikePlayerData;
+
+        // Only active players can send typing updates, not spectators
+        if (playerData?.isSpectator) return;
+
+        const gameState = room.gameState.data as ThinkAlikeGameState;
+
+        // Only accept typing during WORD_INPUT phase
+        if (gameState.phase !== 'word_input') return;
+
+        // Get all active players (non-spectators)
+        const activePlayers = Array.from(room.players.values())
+          .filter(p => !(p.gameData as ThinkAlikePlayerData)?.isSpectator);
+
+        // Find which player this is (0 or 1)
+        const playerIndex = activePlayers.findIndex(p => p.socketId === socket.id);
+        if (playerIndex === -1) return;
+
+        // Update live word in game state
+        if (playerIndex === 0) {
+          gameState.player1LiveWord = data.word;
+        } else {
+          gameState.player2LiveWord = data.word;
+        }
+
+        // Broadcast ONLY to spectators (not to other players for privacy)
+        const spectators = Array.from(room.players.values())
+          .filter(p => (p.gameData as ThinkAlikePlayerData)?.isSpectator);
+
+        if (this.io && spectators.length > 0) {
+          const namespace = this.io.of(this.namespace);
+          spectators.forEach(spectator => {
+            namespace.to(spectator.socketId).emit('spectator:typing-update', {
+              playerIndex,
+              playerName: player.name,
+              word: data.word
+            });
+          });
+        }
+
+      } catch (error) {
+        console.error(`[${this.name}] Error in game:typing-update:`, error);
       }
     }
   };
