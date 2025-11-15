@@ -51,8 +51,8 @@ class ThinkAlikePlugin implements GamePlugin {
   // ============================================================================
 
   defaultSettings: RoomSettings = {
-    minPlayers: 2,  // Exactly 2 players required
-    maxPlayers: 2,  // Exactly 2 players allowed
+    minPlayers: 2,  // Exactly 2 players required to start
+    maxPlayers: 999,  // Allow unlimited players (2 active + unlimited spectators)
     gameSpecific: {
       ...DEFAULT_SETTINGS
     } as ThinkAlikeSettings
@@ -303,12 +303,12 @@ class ThinkAlikePlugin implements GamePlugin {
         const playerData = player.gameData as ThinkAlikePlayerData;
         playerData.isReady = data.ready;
 
-        // Check if both players are ready
-        const allReady = Array.from(room.players.values())
-          .filter(p => p.connected)
-          .every(p => (p.gameData as ThinkAlikePlayerData)?.isReady);
+        // Check if both active players are ready (ignore spectators)
+        const activePlayers = Array.from(room.players.values())
+          .filter(p => p.connected && !(p.gameData as ThinkAlikePlayerData)?.isSpectator);
+        const allReady = activePlayers.length === 2 && activePlayers.every(p => (p.gameData as ThinkAlikePlayerData)?.isReady);
 
-        if (allReady && room.players.size === 2) {
+        if (allReady) {
           helpers.sendToRoom(room.code, 'all:ready', {});
         }
 
@@ -333,10 +333,11 @@ class ThinkAlikePlugin implements GamePlugin {
           return;
         }
 
-        // Validate exactly 2 players
-        const connectedPlayers = Array.from(room.players.values()).filter(p => p.connected);
-        if (connectedPlayers.length !== 2) {
-          socket.emit('error', { message: 'Need exactly 2 players to start' });
+        // Validate exactly 2 active players (not counting spectators)
+        const activePlayers = Array.from(room.players.values())
+          .filter(p => p.connected && !(p.gameData as ThinkAlikePlayerData)?.isSpectator);
+        if (activePlayers.length !== 2) {
+          socket.emit('error', { message: 'Need exactly 2 active players to start' });
           return;
         }
 
