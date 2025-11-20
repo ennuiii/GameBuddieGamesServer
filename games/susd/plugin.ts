@@ -100,12 +100,14 @@ class SUSDPlugin implements GamePlugin {
       isEliminated: (gameData as any).isEliminated ?? false,
       lastSubmittedRound: (gameData as any).lastSubmittedRound ?? 0,
       gameBuddiesPlayerId: (gameData as any).gameBuddiesPlayerId,
+      premiumTier: corePlayer.premiumTier,
     };
 
     console.log('[SUSD-DEBUG] ✅ Serialized player result:', {
       playerName: serialized.name,
       isImposter: serialized.isImposter,
       isGamemaster: serialized.isGamemaster,
+      premiumTier: serialized.premiumTier,
     });
 
     return serialized;

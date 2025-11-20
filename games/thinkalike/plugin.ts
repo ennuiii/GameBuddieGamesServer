@@ -228,7 +228,8 @@ class ThinkAlikePlugin implements GamePlugin {
           isReady: playerData?.isReady || false,
           isSpectator: false,  // Active players, not spectators
           currentWord: currentWord,
-          hasSubmitted: index === 0 ? gameState.player1Submitted : gameState.player2Submitted
+          hasSubmitted: index === 0 ? gameState.player1Submitted : gameState.player2Submitted,
+          premiumTier: p.premiumTier
         };
       }),
 
@@ -238,7 +239,8 @@ class ThinkAlikePlugin implements GamePlugin {
         name: s.name,
         isHost: s.isHost,
         connected: s.connected,
-        isSpectator: true
+        isSpectator: true,
+        premiumTier: s.premiumTier
       })),
 
       // Game state - map to client-friendly format
