@@ -330,10 +330,20 @@ class UnifiedGameServer {
       console.log(`[${plugin.id.toUpperCase()}] Player connected: ${socket.id}`);
 
       // Common event: Create room
-      socket.on('room:create', (data: { playerName: string; roomCode?: string; isGameBuddiesRoom?: boolean; settings?: any }) => {
+      socket.on('room:create', (data: { playerName: string; roomCode?: string; isGameBuddiesRoom?: boolean; settings?: any; playerId?: string; sessionToken?: string }) => {
+        console.log(`📥 [${plugin.id.toUpperCase()}] room:create received:`, {
+          playerName: data.playerName,
+          roomCode: data.roomCode,
+          isGameBuddiesRoom: data.isGameBuddiesRoom,
+          playerId: data.playerId,
+          sessionToken: data.sessionToken?.substring(0, 8) + '...',
+          settings: data.settings
+        });
+
         const nameValidation = validationService.validatePlayerName(data.playerName);
 
         if (!nameValidation.isValid) {
+          console.log(`❌ [${plugin.id.toUpperCase()}] Name validation failed:`, nameValidation.error);
           socket.emit('error', { message: nameValidation.error });
           return;
         }
@@ -350,6 +360,13 @@ class UnifiedGameServer {
 
         const settings = { ...plugin.defaultSettings, ...data.settings };
         const room = this.roomManager.createRoom(plugin.id, player, settings, data.roomCode);
+
+        console.log(`🏠 [${plugin.id.toUpperCase()}] Room created:`, {
+          code: room.code,
+          playerId: player.id,
+          playerName: player.name,
+          isGameBuddiesRoom: data.isGameBuddiesRoom
+        });
 
         // Preserve GameBuddies flag if provided
         if (data.isGameBuddiesRoom) {
@@ -368,12 +385,13 @@ class UnifiedGameServer {
           plugin.onRoomCreate(room);
         }
 
+        const sanitizedRoom = this.sanitizeRoom(room, socket.id);
         socket.emit('room:created', {
-          room: this.sanitizeRoom(room, socket.id),
+          room: sanitizedRoom,
           sessionToken,
         });
 
-        console.log(`[${plugin.id.toUpperCase()}] Room created: ${room.code}`);
+        console.log(`✅ [${plugin.id.toUpperCase()}] Emitted room:created for ${room.code}`);
       });
 
       // Common event: Join room
