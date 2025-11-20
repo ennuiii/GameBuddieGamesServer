@@ -16,6 +16,7 @@ export interface Player {
   joinedAt: number;
   lastActivity: number;
   gameData?: any; // Game-specific data
+  premiumTier?: string; // 'free' | 'monthly' | 'lifetime' - GameBuddies premium status
 }
 
 export interface Room {

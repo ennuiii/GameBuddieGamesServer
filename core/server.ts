@@ -330,15 +330,17 @@ class UnifiedGameServer {
       console.log(`[${plugin.id.toUpperCase()}] Player connected: ${socket.id}`);
 
       // Common event: Create room
-      socket.on('room:create', (data: { playerName: string; roomCode?: string; isGameBuddiesRoom?: boolean; settings?: any; playerId?: string; sessionToken?: string }) => {
+      socket.on('room:create', (data: { playerName: string; roomCode?: string; isGameBuddiesRoom?: boolean; settings?: any; playerId?: string; sessionToken?: string; premiumTier?: string }) => {
         console.log(`📥 [${plugin.id.toUpperCase()}] room:create received:`, {
           playerName: data.playerName,
           roomCode: data.roomCode,
           isGameBuddiesRoom: data.isGameBuddiesRoom,
           playerId: data.playerId,
           sessionToken: data.sessionToken?.substring(0, 8) + '...',
+          premiumTier: data.premiumTier,
           settings: data.settings
         });
+        console.log(`💎 [PREMIUM DEBUG] premiumTier received from client: ${data.premiumTier}`);
 
         const nameValidation = validationService.validatePlayerName(data.playerName);
 
@@ -356,7 +358,9 @@ class UnifiedGameServer {
           connected: true,
           joinedAt: Date.now(),
           lastActivity: Date.now(),
+          premiumTier: data.premiumTier,
         };
+        console.log(`💎 [PREMIUM DEBUG] Player created with premiumTier: ${player.premiumTier}`);
 
         const settings = { ...plugin.defaultSettings, ...data.settings };
         const room = this.roomManager.createRoom(plugin.id, player, settings, data.roomCode);
@@ -395,7 +399,8 @@ class UnifiedGameServer {
       });
 
       // Common event: Join room
-      socket.on('room:join', (data: { roomCode: string; playerName: string; sessionToken?: string }) => {
+      socket.on('room:join', (data: { roomCode: string; playerName: string; sessionToken?: string; premiumTier?: string }) => {
+        console.log(`💎 [PREMIUM DEBUG] room:join premiumTier: ${data.premiumTier}`);
         const codeValidation = validationService.validateRoomCode(data.roomCode);
         const nameValidation = validationService.validatePlayerName(data.playerName);
 
@@ -466,17 +471,17 @@ class UnifiedGameServer {
               console.log(`[${plugin.id.toUpperCase()}] Player reconnected: ${player.name}`);
             } else {
               // Session valid but player not in room - join as new
-              player = this.createPlayer(socket.id, nameValidation.sanitizedValue!);
+              player = this.createPlayer(socket.id, nameValidation.sanitizedValue!, data.premiumTier);
               sessionToken = this.sessionManager.createSession(player.id, room.code);
             }
           } else {
             // Invalid session - join as new
-            player = this.createPlayer(socket.id, nameValidation.sanitizedValue!);
+            player = this.createPlayer(socket.id, nameValidation.sanitizedValue!, data.premiumTier);
             sessionToken = this.sessionManager.createSession(player.id, room.code);
           }
         } else {
           // New player
-          player = this.createPlayer(socket.id, nameValidation.sanitizedValue!);
+          player = this.createPlayer(socket.id, nameValidation.sanitizedValue!, data.premiumTier);
           sessionToken = this.sessionManager.createSession(player.id, room.code);
         }
 
@@ -1039,7 +1044,7 @@ class UnifiedGameServer {
   /**
    * Helper: Create new player
    */
-  private createPlayer(socketId: string, name: string): Player {
+  private createPlayer(socketId: string, name: string, premiumTier?: string): Player {
     return {
       socketId,
       id: randomUUID(),
@@ -1048,6 +1053,7 @@ class UnifiedGameServer {
       connected: true,
       joinedAt: Date.now(),
       lastActivity: Date.now(),
+      premiumTier,
     };
   }
 
