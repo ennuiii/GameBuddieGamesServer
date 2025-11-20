@@ -37,6 +37,7 @@ export interface Room {
     returnUrl?: string;
     sessionToken?: string;
     streamerId?: string;
+    premiumTier?: string; // 'free' | 'monthly' | 'lifetime'
   };
 
   // Chat
