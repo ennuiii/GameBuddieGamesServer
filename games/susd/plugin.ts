@@ -207,6 +207,23 @@ class SUSDPlugin implements GamePlugin {
         // Store SUSD room data in core room
         coreRoom.gameState.data = { susdRoomId: susdRoom.id };
 
+        // ✅ Update host player's gameData with SUSD player fields
+        // This ensures serializeRoom correctly sees the host as gamemaster
+        hostPlayer.gameData = {
+          isGamemaster: true,
+          isImposter: false,
+          hasSubmittedWord: false,
+          hasVoted: false,
+          isEliminated: false,
+          lastSubmittedRound: 0,
+          gameBuddiesPlayerId: hostPlayer.id,
+        };
+
+        console.log('[SUSD-DEBUG] 👑 Host player gameData initialized:', {
+          playerId: hostPlayer.id,
+          isGamemaster: true
+        });
+
         const serializedRoom = this.serializeRoom(coreRoom, socket.id);
         socket.emit('susd:game-setup', { room: serializedRoom });
         console.log(`[SUSD] Game setup for room ${coreRoom.code}`);
