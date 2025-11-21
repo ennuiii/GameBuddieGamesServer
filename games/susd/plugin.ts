@@ -1140,7 +1140,7 @@ class SUSDPlugin implements GamePlugin {
         id: player.id,
         name: player.name,
         socketId: player.socketId,
-        isGamemaster: false,
+        isGamemaster: player.isHost || false,
         isImposter: false,
         hasSubmittedWord: false,
         hasVoted: false,
