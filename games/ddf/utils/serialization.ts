@@ -123,12 +123,16 @@ export function serializeRoomToDDF(room: Room, socketId: string): any {
   });
 
   // =========================================================================
-  // 2. Ensure gamemaster has the correct actual name
+  // 2. Ensure gamemaster has the correct actual name and premiumTier
   // =========================================================================
   // Use the host's actual name from the room, falling back to gameState if not set
+  // Find the host player to get their premiumTier
+  const hostPlayer = allPlayers.find(p => p.id === room.hostId);
+
   const gamemasterWithName = {
     id: room.hostId,
     name: room.hostName || gs.gamemaster?.name || 'Gamemaster',
+    premiumTier: hostPlayer?.premiumTier || 'free',
   };
 
   // =========================================================================
