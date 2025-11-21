@@ -1092,6 +1092,7 @@ class UnifiedGameServer {
       connected: player.connected,
       disconnectedAt: player.disconnectedAt,
       gameData: player.gameData,
+      premiumTier: player.premiumTier,
     };
   }
 
