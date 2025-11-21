@@ -83,7 +83,7 @@ export function serializeRoomToDDF(room: Room, socketId: string): any {
   // Debug logging for GameBuddies rooms to diagnose join issues
   if (room.isGameBuddiesRoom) {
     console.log(`[DDF Serialization] GameBuddies room: ${room.code}, Total players: ${allPlayers.length}`);
-    console.log(`[DDF Serialization] Players:`, allPlayers.map(p => ({ id: p.id, name: p.name, isHost: p.isHost, connected: p.connected })));
+    console.log(`[DDF Serialization] Players:`, allPlayers.map(p => ({ id: p.id, name: p.name, isHost: p.isHost, connected: p.connected, premiumTier: p.premiumTier })));
   }
 
   const players = allPlayers
