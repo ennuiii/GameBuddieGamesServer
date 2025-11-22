@@ -40,6 +40,7 @@ class DDFGamePlugin implements GamePlugin {
   private questionManager: any;
   private io: any;
   private timerIntervals: Map<string, NodeJS.Timeout> = new Map();
+  private cachedQuestions: any[] = [];
 
   // Hidden categories that should only be selected manually
   private HIDDEN_CATEGORIES = ['League of Legends'];
@@ -59,8 +60,16 @@ class DDFGamePlugin implements GamePlugin {
     // Log Supabase availability
     if (supabaseService.isSupabaseAvailable()) {
       console.log('[DDF Plugin] ✅ Supabase integration enabled');
+      try {
+        console.log('[DDF Plugin] 🔄 Pre-fetching questions from Supabase...');
+        this.cachedQuestions = await supabaseService.getQuestions();
+        console.log(`[DDF Plugin] 📚 Cached ${this.cachedQuestions.length} questions`);
+      } catch (error) {
+        console.error('[DDF Plugin] ❌ Failed to pre-fetch questions:', error);
+      }
     } else {
       console.log('[DDF Plugin] ℹ️ Using local JSON storage for questions');
+      this.cachedQuestions = this.questionManager.getAllQuestions();
     }
 
     console.log('[DDF Plugin] Initialized');
@@ -219,24 +228,30 @@ class DDFGamePlugin implements GamePlugin {
 
         console.log(`[DDF] ✅ Phase set to 'playing', round: 1`);
 
-        // Get available questions - try Supabase first, fallback to local
-        let allQuestions: any[] = [];
-        if (supabaseService.isSupabaseAvailable()) {
-          console.log('[DDF] Fetching questions from Supabase for game start...');
-          allQuestions = await supabaseService.getQuestions();
-          console.log(`[DDF] 📚 Loaded ${allQuestions.length} questions from Supabase`);
-        } else {
-          console.log('[DDF] Fetching questions from local JSON...');
-          allQuestions = this.questionManager.getAllQuestions();
-          console.log(`[DDF] 📚 Loaded ${allQuestions.length} questions from local file`);
+        // Get available questions - use cache if available
+        let allQuestions: any[] = this.cachedQuestions;
+        
+        // If cache is empty, try to fetch/reload
+        if (allQuestions.length === 0) {
+            if (supabaseService.isSupabaseAvailable()) {
+                console.log('[DDF] Cache empty, fetching questions from Supabase...');
+                allQuestions = await supabaseService.getQuestions();
+                this.cachedQuestions = allQuestions; // Update cache
+            } else {
+                console.log('[DDF] Cache empty, fetching from local JSON...');
+                allQuestions = this.questionManager.getAllQuestions();
+                this.cachedQuestions = allQuestions;
+            }
         }
+        
+        console.log(`[DDF] 📚 Using ${allQuestions.length} questions from cache`);
 
         // Filter by selected categories
         let questions = allQuestions;
         if (gameState.selectedCategories && gameState.selectedCategories.length > 0) {
           // Use selected categories
           questions = allQuestions.filter((q: any) =>
-            gameState.selectedCategories.includes(q.category)
+            gameState.selectedCategories.includes(q.category || 'General')
           );
           console.log(`[DDF] 📚 Filtered to ${questions.length} questions for categories: ${JSON.stringify(gameState.selectedCategories)}`);
         } else {
@@ -248,11 +263,14 @@ class DDFGamePlugin implements GamePlugin {
           console.log(`[DDF] 📚 No categories selected, using all non-hidden questions: ${questions.length} questions`);
         }
 
-        // If no questions found for selected categories, use all questions
+        // If no questions found for selected categories, use all non-hidden questions
         if (questions.length === 0) {
-          console.warn(`[DDF] ⚠️  No questions for selected categories, using ALL questions`);
-          questions = allQuestions;
-          console.log(`[DDF] 📚 Using all ${questions.length} questions`);
+          console.warn(`[DDF] ⚠️  No questions for selected categories, using ALL NON-HIDDEN questions`);
+          questions = allQuestions.filter((q: any) => {
+            const category = q.category || 'General';
+            return !this.HIDDEN_CATEGORIES.includes(category);
+          });
+          console.log(`[DDF] 📚 Using ${questions.length} questions`);
         }
 
         if (questions.length === 0) {
@@ -523,13 +541,9 @@ class DDFGamePlugin implements GamePlugin {
         const gameState = room.gameState.data as DDFGameState;
         const { categories } = data;
 
-        // Server-side validation: Filter out hidden categories that shouldn't be auto-selected
-        // Hidden categories can only be selected if explicitly allowed
-        const validatedCategories = (categories || []).filter((category: string) =>
-          !this.HIDDEN_CATEGORIES.includes(category)
-        );
-
-        gameState.selectedCategories = validatedCategories;
+        // Server-side validation: Trust the client's selection
+        // Allow explicit selection of hidden categories if sent by client
+        gameState.selectedCategories = Array.isArray(categories) ? categories : [];
 
         const serialized = serializeRoomToDDF(room, socket.id);
         helpers.sendToRoom(room.code, 'ddf:game-state-update', { room: serialized });
@@ -1041,6 +1055,17 @@ class DDFGamePlugin implements GamePlugin {
         const gameState = room.gameState.data as DDFGameState;
         const { questionId, answer } = data;
 
+        // Validation: Must be in finale phase and not finished
+        if (gameState.phase !== 'finale' && gameState.phase !== 'voting') { // Allow voting phase for transition
+             console.warn(`[DDF] Ignored finale answer in phase ${gameState.phase}`);
+             return;
+        }
+        
+        // Ensure finale state structures exist
+        if (!gameState.finaleScores) gameState.finaleScores = {};
+        if (!gameState.finaleEvaluations) gameState.finaleEvaluations = [];
+        if (!gameState.finaleCurrentAnswers) gameState.finaleCurrentAnswers = [];
+
         // Get the player object to use player ID (not socket ID)
         let player: Player | undefined;
         for (const p of room.players.values()) {
@@ -1424,6 +1449,11 @@ class DDFGamePlugin implements GamePlugin {
       path: '/api/ddf/questions',
       handler: async (req: any, res: any) => {
         try {
+          // Use cache if available and not forced refresh
+          if (this.cachedQuestions.length > 0 && !req.query.refresh) {
+             return res.json(this.cachedQuestions);
+          }
+
           let questions: any[] = [];
 
           // Try Supabase first if available
@@ -1437,6 +1467,9 @@ class DDFGamePlugin implements GamePlugin {
             console.log('[DDF] Fetching questions from local JSON...');
             questions = this.questionManager.getAllQuestions();
           }
+          
+          // Update cache
+          this.cachedQuestions = questions;
 
           res.json(questions);
         } catch (error) {
@@ -1448,9 +1481,20 @@ class DDFGamePlugin implements GamePlugin {
     {
       method: 'post' as const,
       path: '/api/ddf/questions',
-      handler: (req: any, res: any) => {
+      handler: async (req: any, res: any) => {
         try {
           const question = this.questionManager.addQuestion(req.body);
+          
+          // Update Supabase if available
+           if (supabaseService.isSupabaseAvailable()) {
+              // Note: Ideally we should add to Supabase too, but for now we assume the QuestionManager handles local
+              // and maybe we should invalidate cache?
+              // For now, let's invalidate cache so next fetch gets it
+              this.cachedQuestions = []; 
+           } else {
+               this.cachedQuestions.push(question);
+           }
+
           res.json(question);
         } catch (error) {
           res.status(500).json({ error: 'Failed to add question' });
@@ -1464,6 +1508,8 @@ class DDFGamePlugin implements GamePlugin {
         try {
           const question = this.questionManager.updateQuestion(req.params.id, req.body);
           if (question) {
+            // Invalidate cache
+            this.cachedQuestions = [];
             res.json(question);
           } else {
             res.status(404).json({ error: 'Question not found' });
@@ -1480,6 +1526,8 @@ class DDFGamePlugin implements GamePlugin {
         try {
           const deleted = this.questionManager.deleteQuestion(req.params.id);
           if (deleted) {
+            // Invalidate cache
+            this.cachedQuestions = [];
             res.json({ success: true });
           } else {
             res.status(404).json({ error: 'Question not found' });
