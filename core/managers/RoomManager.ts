@@ -295,14 +295,17 @@ export class RoomManager {
       room.players.delete(oldSocketId);
       this.oldSocketCleanupTimers.delete(oldSocketId);
       console.log(
-        `[RoomManager] Cleaned up old socket ID ${oldSocketId} after grace period (removed from room.players and playerRoomMap)`
+        `[RECONNECT-DEBUG] Cleaned up old socket ID ${oldSocketId} after grace period (room.players: ${room.players.size} remaining)`
       );
     }, 2000);
 
     this.oldSocketCleanupTimers.set(oldSocketId, cleanupTimer);
 
     console.log(
-      `[RoomManager] Reconnected player ${player.name} in room ${roomCode} (keeping old socket ${oldSocketId} in room.players for 2s grace period)`
+      `[RECONNECT-DEBUG] Reconnected player ${player.name} in room ${roomCode}` +
+      ` | OLD socket: ${oldSocketId} | NEW socket: ${newSocketId}` +
+      ` | room.players now contains: ${room.players.size} sockets (DUPLICATE GRACE PERIOD ACTIVE)` +
+      ` | Cleanup timer set for 2s`
     );
 
     return { room, player };

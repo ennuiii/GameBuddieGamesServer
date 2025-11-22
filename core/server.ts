@@ -509,9 +509,25 @@ class UnifiedGameServer {
         });
 
         if (isReconnecting) {
-          const players = Array.from(room.players.values());
+          // ✅ Filter out duplicate sockets during grace period
+          // When a player reconnects, both old and new sockets are in room.players for 2s
+          // We must only broadcast to the NEWEST socket per unique player ID
+          const uniquePlayersByIdMap = new Map<string, Player>();
+          for (const p of room.players.values()) {
+            const existing = uniquePlayersByIdMap.get(p.id);
+            // Keep the socket with the most recent lastActivity (newer connection)
+            if (!existing || p.lastActivity > existing.lastActivity) {
+              uniquePlayersByIdMap.set(p.id, p);
+            }
+          }
+          const uniquePlayers = Array.from(uniquePlayersByIdMap.values());
 
-          for (const p of players) {
+          console.log(
+            `[CORE] Broadcasting reconnection update: ${uniquePlayers.length} unique players ` +
+            `(filtered from ${room.players.size} total sockets in room)`
+          );
+
+          for (const p of uniquePlayers) {
             const serializedRoom = plugin.serializeRoom
               ? plugin.serializeRoom(room, p.socketId)
               : this.sanitizeRoom(room, p.socketId);

@@ -1470,20 +1470,31 @@ class SUSDPlugin implements GamePlugin {
       return room;
     }
 
-    console.log('[SUSD-DEBUG] 🎯 serializeRoom called:', {
-      roomCode: room.code,
-      requestingSocketId: socketId,
-      corePlayerCount: room.players.size,
-      susdPlayerCount: susdRoom.players.length,
-      corePlayerIds: Array.from(room.players.keys()),
-      susdPlayerIds: susdRoom.players.map(p => p.id),
-    });
-    
-    console.log('[Ghost-Debug] Raw SUSD Players:', susdRoom.players.map(p => `${p.name} (${p.id})`));
+    const corePlayerCount = room.players.size;
+    const susdPlayerCount = susdRoom.players.length;
+    const countMismatch = corePlayerCount !== susdPlayerCount;
+
+    console.log(
+      `[SUSD-DEBUG] 🎯 serializeRoom called:` +
+      (countMismatch ? ` ⚠️ MISMATCH DETECTED` : '') +
+      ` | roomCode: ${room.code}` +
+      ` | core: ${corePlayerCount} sockets, susd: ${susdPlayerCount} players`
+    );
+
+    if (countMismatch) {
+      console.log('[RECONNECT-DEBUG] 🔴 PLAYER COUNT MISMATCH - Grace period likely active!');
+      console.log('[RECONNECT-DEBUG] Core player sockets:', Array.from(room.players.keys()));
+      console.log('[RECONNECT-DEBUG] SUSD player IDs:', susdRoom.players.map(p => p.id));
+      console.log('[RECONNECT-DEBUG] SUSD player names:', susdRoom.players.map(p => p.name));
+    }
+
+    console.log('[SUSD-DEBUG] Raw SUSD Players:', susdRoom.players.map(p => `${p.name} (${p.id})`));
 
     // DEDUPLICATION LOGIC:
     // The core room might contain multiple sockets for the same player during the grace period.
-    // We need to ensure the serialized SUSD room only returns ONE entry per unique player name/id.
+    // We need to ensure the serialized SUSD room only returns ONE entry per unique PLAYER (not socket).
+    // Use gameBuddiesPlayerId as the stable identifier (stays same across reconnections).
+    const processedGameBuddiesIds = new Set<string>();
     const processedPlayerIds = new Set<string>();
     const processedPlayerNames = new Set<string>();
 
@@ -1494,7 +1505,7 @@ class SUSDPlugin implements GamePlugin {
         // Find corresponding core player for connection status and gameData
         // Priority: Match by ID first
         let corePlayer = Array.from(room.players.values()).find(cp => cp.id === susdPlayer.id);
-        
+
         // If no ID match (rare), try matching by name (for legacy/reconnection edge cases)
         if (!corePlayer) {
              corePlayer = Array.from(room.players.values()).find(cp => cp.name === susdPlayer.name);
@@ -1503,6 +1514,7 @@ class SUSDPlugin implements GamePlugin {
         console.log('[SUSD-DEBUG] 🔄 Processing player:', {
           susdPlayerName: susdPlayer.name,
           susdPlayerId: susdPlayer.id,
+          gameBuddiesPlayerId: (susdPlayer as any).gameBuddiesPlayerId,
           foundInCore: !!corePlayer,
           path: corePlayer ? 'serializePlayerForClient' : 'fallback',
         });
@@ -1520,17 +1532,34 @@ class SUSDPlugin implements GamePlugin {
         return susdPlayer;
       })
       .filter((player) => {
-        // Filter out duplicates based on ID or Name
-        if (processedPlayerIds.has(player.id) || processedPlayerNames.has(player.name)) {
-            console.log(`[Ghost-Debug] 🛑 Skipping duplicate player in serialization: ${player.name} (${player.id})`);
-            return false;
+        // ✅ CRITICAL: Filter out duplicates using MULTIPLE identifiers
+        // 1. gameBuddiesPlayerId - THE STABLE IDENTIFIER across reconnections
+        // 2. player.id - Fallback for same session
+        // 3. player.name - Last resort for identifying same player
+
+        const gbId = (player as any).gameBuddiesPlayerId;
+        const playerId = player.id;
+        const playerName = player.name;
+
+        if (gbId && processedGameBuddiesIds.has(gbId)) {
+          console.log(`[SUSD-GHOST-DEBUG] 🛑 Skipping duplicate player by gameBuddiesPlayerId: ${playerName} (gbId: ${gbId})`);
+          return false;
         }
-        processedPlayerIds.add(player.id);
-        processedPlayerNames.add(player.name);
+
+        if (processedPlayerIds.has(playerId) || processedPlayerNames.has(playerName)) {
+          console.log(`[SUSD-GHOST-DEBUG] 🛑 Skipping duplicate player by ID/Name: ${playerName} (id: ${playerId})`);
+          return false;
+        }
+
+        // Track this player to prevent duplicates
+        if (gbId) processedGameBuddiesIds.add(gbId);
+        processedPlayerIds.add(playerId);
+        processedPlayerNames.add(playerName);
         return true;
       });
-      
-    console.log('[Ghost-Debug] Final Serialized Players:', uniqueSerializedPlayers.map((p: any) => `${p.name} (${p.id})`));
+
+    console.log('[SUSD-GHOST-DEBUG] Final Serialized Players:',
+      uniqueSerializedPlayers.map((p: any) => `${p.name} (id: ${p.id}, gbId: ${p.gameBuddiesPlayerId})`));
 
     // ✅ Transform SUSD room with flattened player data
     const serialized = {
