@@ -1206,6 +1206,7 @@ class SUSDPlugin implements GamePlugin {
 
     // Only add player to SUSD room if NOT reconnecting AND not already in room
     if (!isReconnecting && !existingPlayer) {
+      console.log(`[Ghost-Debug] New player detected: ${player.name} (${player.id})`);
       // Create SUSD player
       const susdPlayer: Player = {
         id: player.id,
@@ -1254,6 +1255,7 @@ class SUSDPlugin implements GamePlugin {
       const susdPlayer = existingPlayer || susdRoom.players.find(p => p.id === player.id);
       
       if (susdPlayer) {
+        console.log(`[Ghost-Debug] Existing player found: ${susdPlayer.name} (Old ID: ${susdPlayer.id})`);
         // If we found an existing player but isReconnecting was false, it means we caught a duplicate!
         if (!isReconnecting) {
            console.log(`[SUSD] 🔄 DUPLICATE PREVENTED: Player ${player.name} (${player.id}) already in room. Treating as reconnection.`);
@@ -1476,6 +1478,8 @@ class SUSDPlugin implements GamePlugin {
       corePlayerIds: Array.from(room.players.keys()),
       susdPlayerIds: susdRoom.players.map(p => p.id),
     });
+    
+    console.log('[Ghost-Debug] Raw SUSD Players:', susdRoom.players.map(p => `${p.name} (${p.id})`));
 
     // DEDUPLICATION LOGIC:
     // The core room might contain multiple sockets for the same player during the grace period.
@@ -1518,13 +1522,15 @@ class SUSDPlugin implements GamePlugin {
       .filter((player) => {
         // Filter out duplicates based on ID or Name
         if (processedPlayerIds.has(player.id) || processedPlayerNames.has(player.name)) {
-            console.log(`[SUSD-DEBUG] 🛑 Skipping duplicate player in serialization: ${player.name} (${player.id})`);
+            console.log(`[Ghost-Debug] 🛑 Skipping duplicate player in serialization: ${player.name} (${player.id})`);
             return false;
         }
         processedPlayerIds.add(player.id);
         processedPlayerNames.add(player.name);
         return true;
       });
+      
+    console.log('[Ghost-Debug] Final Serialized Players:', uniqueSerializedPlayers.map((p: any) => `${p.name} (${p.id})`));
 
     // ✅ Transform SUSD room with flattened player data
     const serialized = {
