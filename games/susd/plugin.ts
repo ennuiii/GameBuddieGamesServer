@@ -1200,7 +1200,8 @@ class SUSDPlugin implements GamePlugin {
     const namespace = this.io.of(this.namespace);
 
     // Check if player already exists in SUSD room (duplicate check)
-    const existingPlayerIndex = susdRoom.players.findIndex(p => p.id === player.id);
+    // Check by ID first, then by Name if ID doesn't match
+    const existingPlayerIndex = susdRoom.players.findIndex(p => p.id === player.id || p.name === player.name);
     const existingPlayer = susdRoom.players[existingPlayerIndex];
 
     // Only add player to SUSD room if NOT reconnecting AND not already in room
@@ -1256,6 +1257,80 @@ class SUSDPlugin implements GamePlugin {
         // If we found an existing player but isReconnecting was false, it means we caught a duplicate!
         if (!isReconnecting) {
            console.log(`[SUSD] 🔄 DUPLICATE PREVENTED: Player ${player.name} (${player.id}) already in room. Treating as reconnection.`);
+        }
+
+        // If we matched by name but IDs are different (core assigned new ID), we need to adopt the new ID
+        if (susdPlayer.id !== player.id) {
+            console.log(`[SUSD] 🆔 Player ID changed (reconnection with new ID): ${susdPlayer.id} -> ${player.id}`);
+            const oldId = susdPlayer.id;
+            
+            // Update SUSD player ID
+            susdPlayer.id = player.id;
+            susdPlayer.gameBuddiesPlayerId = player.id;
+
+            // Update GameManager mapping? GameManager maps socketId -> roomId, so that's fine.
+            // But if GameManager stores player IDs internally (e.g. in turn order, votes), we might have an issue.
+            // SUSD GameManager seems to reference players by ID in:
+            // - turnOrder (array of strings)
+            // - votes (key is playerId, value is playerId)
+            // - answersThisRound (playerId)
+            // - wordsThisRound (playerId)
+            // - skipControls (playerIds)
+            
+            // We need to update ALL references to the old ID in the room state
+            
+            // 1. Update turnOrder
+            if (susdRoom.turnOrder) {
+                const turnIndex = susdRoom.turnOrder.indexOf(oldId);
+                if (turnIndex !== -1) {
+                    susdRoom.turnOrder[turnIndex] = player.id;
+                }
+            }
+            
+            // 2. Update currentTurn
+            if (susdRoom.currentTurn === oldId) {
+                susdRoom.currentTurn = player.id;
+            }
+            
+            // 3. Update votes (keys and values)
+            if (susdRoom.votes) {
+                // If they voted, move their vote to new ID key
+                if (susdRoom.votes[oldId]) {
+                    susdRoom.votes[player.id] = susdRoom.votes[oldId];
+                    delete susdRoom.votes[oldId];
+                }
+                // If someone voted FOR them, update the value
+                Object.keys(susdRoom.votes).forEach(voterId => {
+                    if (susdRoom.votes[voterId] === oldId) {
+                        susdRoom.votes[voterId] = player.id;
+                    }
+                });
+            }
+            
+            // 4. Update wordsThisRound
+            if (susdRoom.wordsThisRound) {
+                susdRoom.wordsThisRound.forEach(word => {
+                    if (word.playerId === oldId) word.playerId = player.id;
+                });
+            }
+            
+            // 5. Update answersThisRound
+            if (susdRoom.answersThisRound) {
+                susdRoom.answersThisRound.forEach(answer => {
+                    if (answer.playerId === oldId) answer.playerId = player.id;
+                });
+            }
+            
+            // 6. Update skipControls
+            if (susdRoom.skipControls) {
+                if (susdRoom.skipControls.firstNonImposterId === oldId) susdRoom.skipControls.firstNonImposterId = player.id;
+                
+                const wordEligibleIndex = susdRoom.skipControls.wordEligiblePlayerIds.indexOf(oldId);
+                if (wordEligibleIndex !== -1) susdRoom.skipControls.wordEligiblePlayerIds[wordEligibleIndex] = player.id;
+                
+                const questionEligibleIndex = susdRoom.skipControls.questionEligiblePlayerIds.indexOf(oldId);
+                if (questionEligibleIndex !== -1) susdRoom.skipControls.questionEligiblePlayerIds[questionEligibleIndex] = player.id;
+            }
         }
 
         // Use oldSocketId from core (captured before update) for accurate mapping update
