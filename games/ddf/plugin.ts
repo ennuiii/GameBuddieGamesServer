@@ -613,7 +613,7 @@ class DDFGamePlugin implements GamePlugin {
             break;
 
           case 'start-voting':
-            console.log(`[DDF] Starting voting phase for room ${room.code}`);
+            console.log(`[DDF] 🗳️  ACTION: start-voting received for room ${room.code} (current phase: ${gameState.phase})`);
             gameState.phase = 'voting';
             gameState.targetPlayerId = null; // Clear target player
             gameState.currentQuestion = null; // Clear current question
