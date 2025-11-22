@@ -1062,6 +1062,55 @@ class SUSDPlugin implements GamePlugin {
     },
 
     /**
+     * Kick player (gamemaster only)
+     */
+    'kick-player': async (socket: Socket, data: { playerId: string }, coreRoom: CoreRoom, helpers: GameHelpers) => {
+      try {
+        const susdRoomId = this.roomMapping.get(coreRoom.code);
+        if (!susdRoomId) return;
+
+        const player = this.gameManager.getPlayerBySocketId(socket.id);
+        if (!player || !player.isGamemaster) {
+          socket.emit('error', { message: 'Only gamemaster can kick players' });
+          return;
+        }
+
+        // Find target player
+        const room = this.gameManager.getRoomBySocketId(socket.id);
+        if (!room) return;
+
+        const targetPlayer = room.players.find(p => p.id === data.playerId);
+        if (!targetPlayer) {
+          socket.emit('error', { message: 'Player not found' });
+          return;
+        }
+
+        if (targetPlayer.isGamemaster) {
+          socket.emit('error', { message: 'Cannot kick gamemaster' });
+          return;
+        }
+
+        // Remove player from SUSD room
+        const result = this.gameManager.leaveRoom(targetPlayer.socketId!);
+        
+        if (result.player) {
+          // Notify the kicked player
+          if (targetPlayer.socketId) {
+             helpers.sendToPlayer(targetPlayer.socketId, 'kicked', { message: 'You have been kicked from the room' });
+             // Optionally force disconnect socket if possible, or let client handle it
+             // this.io.of(this.namespace).connected[targetPlayer.socketId]?.disconnect();
+          }
+
+          helpers.sendToRoom(coreRoom.code, 'room:updated', { room: result.room });
+          console.log(`[SUSD] Player ${targetPlayer.name} kicked by GM in room ${coreRoom.code}`);
+        }
+      } catch (error: any) {
+        console.error('[SUSD] Error kicking player:', error);
+        socket.emit('error', { message: 'Failed to kick player' });
+      }
+    },
+
+    /**
      * WebRTC: Enable video
      */
     'webrtc:enable-video': async (socket: Socket, data: { connectionType: string }, coreRoom: CoreRoom, helpers: GameHelpers) => {
@@ -1150,8 +1199,12 @@ class SUSDPlugin implements GamePlugin {
 
     const namespace = this.io.of(this.namespace);
 
-    // Only add player to SUSD room if NOT reconnecting
-    if (!isReconnecting) {
+    // Check if player already exists in SUSD room (duplicate check)
+    const existingPlayerIndex = susdRoom.players.findIndex(p => p.id === player.id);
+    const existingPlayer = susdRoom.players[existingPlayerIndex];
+
+    // Only add player to SUSD room if NOT reconnecting AND not already in room
+    if (!isReconnecting && !existingPlayer) {
       // Create SUSD player
       const susdPlayer: Player = {
         id: player.id,
@@ -1195,19 +1248,27 @@ class SUSDPlugin implements GamePlugin {
       // Note: Core server will emit 'player:joined' with serializeRoom() result
       // No need to emit 'room:updated' here to avoid duplicate emissions
     } else {
-      // Player is reconnecting - update their socketId in SUSD room
-      const susdPlayer = susdRoom.players.find(p => p.id === player.id);
+      // Player is reconnecting OR already exists - update their socketId in SUSD room
+      // Use existing player if found, otherwise (reconnecting case) find by id
+      const susdPlayer = existingPlayer || susdRoom.players.find(p => p.id === player.id);
+      
       if (susdPlayer) {
+        // If we found an existing player but isReconnecting was false, it means we caught a duplicate!
+        if (!isReconnecting) {
+           console.log(`[SUSD] 🔄 DUPLICATE PREVENTED: Player ${player.name} (${player.id}) already in room. Treating as reconnection.`);
+        }
+
         // Use oldSocketId from core (captured before update) for accurate mapping update
         const oldSocketId = (player as any).oldSocketId;
 
         // ✅ Validation: Check if socket ID actually changed
         if (!oldSocketId) {
-          console.warn(
-            `[SUSD] ⚠️  No oldSocketId provided for reconnecting player ${player.name}`,
-            { playerId: player.id, currentSocketId: player.socketId }
-          );
-          // Continue - still send room state sync below
+          // If we're just handling a duplicate join on the same socket, we might not have oldSocketId
+          // but we should ensure current socket is up to date
+          if (susdPlayer.socketId !== player.socketId) {
+             susdPlayer.socketId = player.socketId;
+             console.log(`[SUSD] Updated socketId for existing player ${player.name} (no oldSocketId): -> ${player.socketId}`);
+          }
         } else if (oldSocketId === player.socketId) {
           console.warn(
             `[SUSD] ℹ️  Socket ID unchanged during reconnection (rapid retry within grace period?)`,
