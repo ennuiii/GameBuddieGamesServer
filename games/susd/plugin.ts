@@ -1477,13 +1477,24 @@ class SUSDPlugin implements GamePlugin {
       susdPlayerIds: susdRoom.players.map(p => p.id),
     });
 
-    // ✅ Transform SUSD room with flattened player data
+    // DEDUPLICATION LOGIC:
+    // The core room might contain multiple sockets for the same player during the grace period.
+    // We need to ensure the serialized SUSD room only returns ONE entry per unique player name/id.
+    const processedPlayerIds = new Set<string>();
+    const processedPlayerNames = new Set<string>();
+
     // Map SUSD players to client-compatible format by extracting core player data
-    const serialized = {
-      ...susdRoom,
-      players: susdRoom.players.map((susdPlayer: Player) => {
+    // Filter out duplicates on the fly
+    const uniqueSerializedPlayers = susdRoom.players
+      .map((susdPlayer: Player) => {
         // Find corresponding core player for connection status and gameData
-        const corePlayer = Array.from(room.players.values()).find(cp => cp.id === susdPlayer.id);
+        // Priority: Match by ID first
+        let corePlayer = Array.from(room.players.values()).find(cp => cp.id === susdPlayer.id);
+        
+        // If no ID match (rare), try matching by name (for legacy/reconnection edge cases)
+        if (!corePlayer) {
+             corePlayer = Array.from(room.players.values()).find(cp => cp.name === susdPlayer.name);
+        }
 
         console.log('[SUSD-DEBUG] 🔄 Processing player:', {
           susdPlayerName: susdPlayer.name,
@@ -1503,7 +1514,22 @@ class SUSDPlugin implements GamePlugin {
           isGamemaster: susdPlayer.isGamemaster,
         });
         return susdPlayer;
-      }),
+      })
+      .filter((player) => {
+        // Filter out duplicates based on ID or Name
+        if (processedPlayerIds.has(player.id) || processedPlayerNames.has(player.name)) {
+            console.log(`[SUSD-DEBUG] 🛑 Skipping duplicate player in serialization: ${player.name} (${player.id})`);
+            return false;
+        }
+        processedPlayerIds.add(player.id);
+        processedPlayerNames.add(player.name);
+        return true;
+      });
+
+    // ✅ Transform SUSD room with flattened player data
+    const serialized = {
+      ...susdRoom,
+      players: uniqueSerializedPlayers,
       // Also serialize gamemaster if it exists
       gamemaster: (() => {
         const gmId = susdRoom.gamemaster?.id;
