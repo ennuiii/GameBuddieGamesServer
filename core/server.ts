@@ -1152,11 +1152,53 @@ class UnifiedGameServer {
   }
 
   /**
+   * Set up handlers for the root namespace (Lobby)
+   */
+  private setupRootHandlers(): void {
+    console.log('[Server] Setting up root namespace handlers');
+
+    this.io.on('connection', (socket: Socket) => {
+      // Chat Handler (Root)
+      socket.on('chat:message', (data: { message: string }) => {
+        const player = this.roomManager.getPlayer(socket.id);
+        const room = this.roomManager.getRoomBySocket(socket.id);
+
+        if (room && player) {
+            const chatMessage: ChatMessage = {
+              id: randomUUID(),
+              playerId: player.id,
+              playerName: player.name,
+              message: data.message,
+              timestamp: Date.now(),
+            };
+            this.io.to(room.code).emit('chat:message', chatMessage);
+        }
+      });
+
+      // Mini-Game Handler (Root)
+      socket.on('minigame:click', (data: { score: number; time: number }) => {
+        const player = this.roomManager.getPlayer(socket.id);
+        const room = this.roomManager.getRoomBySocket(socket.id);
+
+        if (room && player) {
+           this.io.to(room.code).emit('minigame:leaderboard-update', {
+            playerId: player.id,
+            playerName: player.name,
+            score: data.score,
+            time: data.time
+          });
+        }
+      });
+    });
+  }
+
+  /**
    * Start the server
    */
   async start(): Promise<void> {
     this.configureMiddleware();
     this.configureRoutes();
+    this.setupRootHandlers(); // <--- Call the new method
     await this.loadGamePlugins();
 
     this.httpServer.listen(this.port, () => {
