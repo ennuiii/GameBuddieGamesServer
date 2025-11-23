@@ -1161,26 +1161,23 @@ class UnifiedGameServer {
       // Handle legacy/root joinRoom to ensure socket is in the channel
       socket.on('joinRoom', (data: { roomCode: string; playerName: string }) => {
         const { roomCode, playerName } = data;
-        // We assume the player is already created via REST or previous logic
-        // But we MUST join the socket.io room to receive broadcasts
+        console.log(`[Root DEBUG] joinRoom received from ${socket.id} for room ${roomCode}`);
+        
         if (roomCode) {
           socket.join(roomCode);
-          console.log(`[Root] Socket ${socket.id} joined room channel ${roomCode}`);
-          
-          // Optional: Check if player exists in manager and map socket
-          // This helps if the player was created via REST but socket wasn't mapped yet
-          // const room = this.roomManager.getRoomByCode(roomCode);
-          // if (room) {
-          //   // Logic to find player by name and update socketId could go here
-          // }
+          console.log(`[Root DEBUG] Socket ${socket.id} successfully joined channel ${roomCode}`);
         }
       });
 
       // Chat Handler (Root)
       socket.on('chat:message', (data: { message: string; playerName?: string }) => {
+        console.log(`[Root DEBUG] chat:message received from ${socket.id}`, data);
+        console.log(`[Root DEBUG] Socket rooms:`, Array.from(socket.rooms));
+
         // Iterate over rooms the socket is in
         for (const roomCode of socket.rooms) {
           if (roomCode !== socket.id) {
+            console.log(`[Root DEBUG] Broadcasting chat to room ${roomCode}`);
             // Broadcast to this room
             this.io.to(roomCode).emit('chat:message', {
               id: randomUUID(),
@@ -1194,8 +1191,11 @@ class UnifiedGameServer {
 
       // Mini-Game Handler (Root)
       socket.on('minigame:click', (data: { score: number; time: number; playerName?: string; playerId?: string }) => {
+        console.log(`[Root DEBUG] minigame:click received from ${socket.id}`, data);
+        
         for (const roomCode of socket.rooms) {
           if (roomCode !== socket.id) {
+             console.log(`[Root DEBUG] Broadcasting minigame update to room ${roomCode}`);
              this.io.to(roomCode).emit('minigame:leaderboard-update', {
               playerId: data.playerId || socket.id,
               playerName: data.playerName || 'Player',
