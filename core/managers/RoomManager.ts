@@ -272,40 +272,24 @@ export class RoomManager {
     player.connected = true;
     player.lastActivity = Date.now();
 
-    // ✅ CRITICAL FIX: Keep BOTH old and new sockets in room.players during grace period
-    // This prevents "NOT IN A ROOM ERROR" when events from old socket arrive after reconnection
-    // Old socket will be removed after 2-second grace period
+    // Swap socket IDs in room.players immediately to prevent duplicates
+    room.players.delete(oldSocketId);
     room.players.set(newSocketId, player);
-    // DON'T delete oldSocketId yet - it stays in room.players for grace period
 
-    // Keep old socket ID mapping for 2 seconds to handle in-flight events
-    // Don't delete immediately - this prevents "Not in a room" errors for pending events
+    // Update mappings
+    this.playerRoomMap.delete(oldSocketId);
     this.playerRoomMap.set(newSocketId, roomCode);
 
     // Cancel any existing cleanup timer for this old socket
     const existingTimer = this.oldSocketCleanupTimers.get(oldSocketId);
     if (existingTimer) {
       clearTimeout(existingTimer);
+      this.oldSocketCleanupTimers.delete(oldSocketId);
     }
 
-    // Schedule deletion of old socket ID after 2 seconds (from BOTH playerRoomMap AND room.players)
-    const cleanupTimer = setTimeout(() => {
-      this.playerRoomMap.delete(oldSocketId);
-      // ✅ CRITICAL: Remove from room.players NOW (delayed to grace period end)
-      room.players.delete(oldSocketId);
-      this.oldSocketCleanupTimers.delete(oldSocketId);
-      console.log(
-        `[RECONNECT-DEBUG] Cleaned up old socket ID ${oldSocketId} after grace period (room.players: ${room.players.size} remaining)`
-      );
-    }, 2000);
-
-    this.oldSocketCleanupTimers.set(oldSocketId, cleanupTimer);
-
     console.log(
-      `[RECONNECT-DEBUG] Reconnected player ${player.name} in room ${roomCode}` +
-      ` | OLD socket: ${oldSocketId} | NEW socket: ${newSocketId}` +
-      ` | room.players now contains: ${room.players.size} sockets (DUPLICATE GRACE PERIOD ACTIVE)` +
-      ` | Cleanup timer set for 2s`
+      `[RoomManager] Reconnected player ${player.name} in room ${roomCode}` +
+      ` | OLD socket: ${oldSocketId} | NEW socket: ${newSocketId}`
     );
 
     return { room, player };

@@ -220,6 +220,12 @@ class DDFGamePlugin implements GamePlugin {
         const gameState = room.gameState.data as DDFGameState;
         const { soloMode } = data;
 
+        // Prevent double start or start while playing
+        if (gameState.phase === 'playing') {
+             console.warn(`[DDF] Game already playing in room ${room.code}, ignoring start request`);
+             return;
+        }
+
         console.log(`[DDF] 🎮 Solo mode: ${soloMode}, Selected categories: ${JSON.stringify(gameState.selectedCategories)}`);
 
         // Start game
@@ -242,6 +248,12 @@ class DDFGamePlugin implements GamePlugin {
                 allQuestions = this.questionManager.getAllQuestions();
                 this.cachedQuestions = allQuestions;
             }
+        }
+
+        // RACE CONDITION CHECK: Ensure game wasn't reset while we were awaiting
+        if (gameState.phase !== 'playing') {
+             console.warn(`[DDF] Game phase changed to ${gameState.phase} during initialization, aborting start`);
+             return;
         }
         
         console.log(`[DDF] 📚 Using ${allQuestions.length} questions from cache`);

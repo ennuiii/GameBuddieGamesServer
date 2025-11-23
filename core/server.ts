@@ -29,6 +29,7 @@ import { cluePlugin } from '../games/clue/plugin.js';
 import bingoPlugin from '../games/bingo/plugin.js';
 import DDFGamePlugin from '../games/ddf/plugin.js';
 import thinkAlikePlugin from '../games/thinkalike/plugin.js';
+import templatePlugin from '../games/template/plugin.js';
 
 /**
  * Global error handlers to prevent server crashes
@@ -1049,6 +1050,14 @@ class UnifiedGameServer {
       console.log('[Server] ✓ ThinkAlike game registered');
     } else {
       console.error('[Server] ✗ Failed to register ThinkAlike game');
+    }
+
+    // Register Template game
+    const templateRegistered = await this.registerGame(templatePlugin);
+    if (templateRegistered) {
+      console.log('[Server] ✓ Template game registered');
+    } else {
+      console.error('[Server] ✗ Failed to register Template game');
     }
 
     // TODO: Load games dynamically from games/ directory

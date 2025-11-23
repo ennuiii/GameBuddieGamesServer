@@ -368,6 +368,12 @@ class ThinkAlikePlugin implements GamePlugin {
         // After 3.5 seconds, move to word input phase (matches client countdown: 3→2→1→GO!)
         const timerKey = `${room.code}:round-prep-transition`;
         const timeout = setTimeout(() => {
+          // RACE CONDITION CHECK: Ensure phase hasn't changed (e.g. by restart/end game)
+          if (room.gameState.phase !== 'round_prep') {
+            console.log(`[${this.name}] Timer expired but phase changed to ${room.gameState.phase}, aborting transition`);
+            return;
+          }
+          
           console.log(`[${this.name}] Round prep countdown complete, transitioning to word input in room ${room.code}`);
           this.startWordInputPhase(room);
         }, 3500);
