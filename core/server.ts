@@ -1158,6 +1158,24 @@ class UnifiedGameServer {
     console.log('[Server] Setting up root namespace handlers');
 
     this.io.on('connection', (socket: Socket) => {
+      // Handle legacy/root joinRoom to ensure socket is in the channel
+      socket.on('joinRoom', (data: { roomCode: string; playerName: string }) => {
+        const { roomCode, playerName } = data;
+        // We assume the player is already created via REST or previous logic
+        // But we MUST join the socket.io room to receive broadcasts
+        if (roomCode) {
+          socket.join(roomCode);
+          console.log(`[Root] Socket ${socket.id} joined room channel ${roomCode}`);
+          
+          // Optional: Check if player exists in manager and map socket
+          // This helps if the player was created via REST but socket wasn't mapped yet
+          // const room = this.roomManager.getRoomByCode(roomCode);
+          // if (room) {
+          //   // Logic to find player by name and update socketId could go here
+          // }
+        }
+      });
+
       // Chat Handler (Root)
       socket.on('chat:message', (data: { message: string }) => {
         const player = this.roomManager.getPlayer(socket.id);
