@@ -610,6 +610,22 @@ class UnifiedGameServer {
         namespace.to(room.code).emit('chat:message', chatMessage);
       });
 
+      // Common event: Mini-Game (Click the Dot)
+      socket.on('minigame:click', (data: { score: number; time: number }) => {
+        const room = this.roomManager.getRoomBySocket(socket.id);
+        const player = this.roomManager.getPlayer(socket.id);
+
+        if (!room || !player) return;
+
+        // Broadcast score to room to update leaderboard
+        namespace.to(room.code).emit('minigame:leaderboard-update', {
+          playerId: player.id,
+          playerName: player.name,
+          score: data.score,
+          time: data.time
+        });
+      });
+
       // WebRTC Signaling Events
       socket.on('webrtc:enable-video', (data: { roomCode: string; connectionType: string }) => {
         const room = this.roomManager.getRoomBySocket(socket.id);
