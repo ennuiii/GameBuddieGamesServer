@@ -1249,6 +1249,8 @@ class UnifiedGameServer {
           console.log(`👤 [Friends DEBUG] Sending online list to ${userId}:`, onlineFriends);
           socket.emit('friend:list-online', { onlineUserIds: onlineFriends });
           
+          console.log(`👤 [Friends DEBUG] Identification process complete for ${userId}`);
+          
         } catch (error) {
           console.error('Error in user:identify:', error);
         }
@@ -1256,6 +1258,7 @@ class UnifiedGameServer {
 
       // Friend System: Game Invite
       socket.on('game:invite', (data: { friendId: string; roomId: string; gameName: string; hostName: string }) => {
+        console.log(`💌 [Friends DEBUG] Game invite from ${socket.id} to ${data.friendId} for room ${data.roomId}`);
         // Forward invite to specific friend
         this.io.to(`user:${data.friendId}`).emit('game:invite_received', {
           roomId: data.roomId,
@@ -1270,10 +1273,14 @@ class UnifiedGameServer {
       socket.on('disconnect', async () => {
         const userId = (socket as any).userId;
         if (userId) {
+           console.log(`👤 [Friends DEBUG] User ${userId} disconnected (socket ${socket.id}) - notifying friends`);
            try {
              // Notify friends
              const friends = await friendService.getFriends(userId);
+             console.log(`👤 [Friends DEBUG] Notifying ${friends.length} friends of ${userId}'s disconnect`);
+             
              for (const friend of friends) {
+               // console.log(`👤 [Friends DEBUG] Telling ${friend.username} (${friend.id}) that ${userId} is offline`);
                this.io.to(`user:${friend.id}`).emit('friend:offline', { userId });
              }
            } catch (e) { console.error('Error in friend disconnect:', e); }
