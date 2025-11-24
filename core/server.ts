@@ -12,6 +12,7 @@ import { RoomManager } from './managers/RoomManager.js';
 import { SessionManager } from './managers/SessionManager.js';
 import { GameRegistry } from './managers/GameRegistry.js';
 import { gameBuddiesService } from './services/GameBuddiesService.js';
+import { friendService } from './services/FriendService.js';
 import { validationService } from './services/ValidationService.js';
 
 // Types
@@ -1203,6 +1204,71 @@ class UnifiedGameServer {
               time: data.time
             });
           }
+        }
+      });
+
+      // Friend System: Identify User
+      socket.on('user:identify', async (userId: string) => {
+        if (!userId) return;
+        
+        // console.log(`👤 [Friends] User identified: ${userId} (socket ${socket.id})`);
+        
+        // Join user-specific room for targeting
+        socket.join(`user:${userId}`);
+        
+        // Store userId on socket for disconnect handler
+        (socket as any).userId = userId;
+
+        try {
+          // 1. Fetch friends from API
+          const friends = await friendService.getFriends(userId);
+          
+          // 2. Notify friends that I am online
+          // And 3. Build list of online friends
+          const onlineFriends: string[] = [];
+
+          for (const friend of friends) {
+            const friendRoom = `user:${friend.id}`;
+            const isOnline = this.io.sockets.adapter.rooms.has(friendRoom);
+            
+            if (isOnline) {
+              onlineFriends.push(friend.id);
+              // Notify this friend
+              this.io.to(friendRoom).emit('friend:online', { userId });
+            }
+          }
+
+          // 4. Send online friends list to me
+          socket.emit('friend:list-online', { onlineUserIds: onlineFriends });
+          
+        } catch (error) {
+          console.error('Error in user:identify:', error);
+        }
+      });
+
+      // Friend System: Game Invite
+      socket.on('game:invite', (data: { friendId: string; roomId: string; gameName: string; hostName: string }) => {
+        // Forward invite to specific friend
+        this.io.to(`user:${data.friendId}`).emit('game:invite_received', {
+          roomId: data.roomId,
+          gameName: data.gameName,
+          hostName: data.hostName,
+          senderId: (socket as any).userId
+        });
+      });
+
+      // Friend System: Disconnect Handler (Add to existing listeners if needed, or rely on connection closure)
+      // Note: The main disconnect handler is below, we hook into it via the socket object
+      socket.on('disconnect', async () => {
+        const userId = (socket as any).userId;
+        if (userId) {
+           try {
+             // Notify friends
+             const friends = await friendService.getFriends(userId);
+             for (const friend of friends) {
+               this.io.to(`user:${friend.id}`).emit('friend:offline', { userId });
+             }
+           } catch (e) { console.error('Error in friend disconnect:', e); }
         }
       });
     });
