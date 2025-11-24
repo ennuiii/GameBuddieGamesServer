@@ -1211,17 +1211,20 @@ class UnifiedGameServer {
       socket.on('user:identify', async (userId: string) => {
         if (!userId) return;
         
-        // console.log(`👤 [Friends] User identified: ${userId} (socket ${socket.id})`);
+        console.log(`👤 [Friends DEBUG] User identified: ${userId} (socket ${socket.id})`);
         
         // Join user-specific room for targeting
         socket.join(`user:${userId}`);
+        console.log(`👤 [Friends DEBUG] Socket ${socket.id} joined room user:${userId}`);
         
         // Store userId on socket for disconnect handler
         (socket as any).userId = userId;
 
         try {
           // 1. Fetch friends from API
+          console.log(`👤 [Friends DEBUG] Fetching friends for ${userId}...`);
           const friends = await friendService.getFriends(userId);
+          console.log(`👤 [Friends DEBUG] Found ${friends.length} friends for ${userId}`);
           
           // 2. Notify friends that I am online
           // And 3. Build list of online friends
@@ -1229,8 +1232,12 @@ class UnifiedGameServer {
 
           for (const friend of friends) {
             const friendRoom = `user:${friend.id}`;
-            const isOnline = this.io.sockets.adapter.rooms.has(friendRoom);
+            // Check if any socket is in this room
+            const room = this.io.sockets.adapter.rooms.get(friendRoom);
+            const isOnline = room && room.size > 0;
             
+            // console.log(`👤 [Friends DEBUG] Checking friend ${friend.username} (${friend.id}): Room ${friendRoom} online? ${isOnline}`);
+
             if (isOnline) {
               onlineFriends.push(friend.id);
               // Notify this friend
@@ -1239,6 +1246,7 @@ class UnifiedGameServer {
           }
 
           // 4. Send online friends list to me
+          console.log(`👤 [Friends DEBUG] Sending online list to ${userId}:`, onlineFriends);
           socket.emit('friend:list-online', { onlineUserIds: onlineFriends });
           
         } catch (error) {
