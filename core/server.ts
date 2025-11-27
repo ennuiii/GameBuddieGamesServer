@@ -957,6 +957,17 @@ class UnifiedGameServer {
               plugin.onPlayerDisconnected(room, player);
             }
 
+            // Notify Gamebuddies.io that player disconnected (sets current_location to 'disconnected')
+            if (room.isGameBuddiesRoom && player.id) {
+              gameBuddiesService.updatePlayerStatus(
+                room.gameId,
+                room.code,
+                player.id,
+                'disconnected',
+                'Player disconnected from game'
+              ).catch(err => console.error('[GameBuddies] Player disconnect update failed:', err));
+            }
+
             // Remove after grace period (60 seconds)
             setTimeout(() => {
               const stillDisconnected = !player.connected;
