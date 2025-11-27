@@ -355,6 +355,64 @@ export class GameBuddiesService {
   }
 
   /**
+   * Mark room as abandoned in Gamebuddies.io
+   * Called when game server room is deleted or becomes empty
+   *
+   * This updates:
+   * - Room status to 'abandoned'
+   * - All players to in_game=false, current_location='lobby'
+   *
+   * @param gameId - Which game (e.g., 'clue-scale')
+   * @param roomCode - GameBuddies room code
+   * @param reason - Reason for abandonment (e.g., 'host_disconnected', 'room_empty', 'all_players_left')
+   */
+  async markRoomAbandoned(
+    gameId: string,
+    roomCode: string,
+    reason: string = 'game_room_deleted'
+  ): Promise<boolean> {
+    const apiKey = this.gameApiKeys.get(gameId);
+
+    if (!apiKey) {
+      console.warn(`[GameBuddies] No API key for ${gameId}, skipping room abandon notification`);
+      return false;
+    }
+
+    const url = `${this.centralServerUrl}/api/v2/game/rooms/${roomCode}/abandon`;
+
+    try {
+      console.log(`[GameBuddies] 🚪 Marking room ${roomCode} as abandoned (${reason})`);
+
+      await axios.post(url, { reason }, {
+        timeout: this.apiTimeout,
+        headers: {
+          'Content-Type': 'application/json',
+          'X-API-Key': apiKey,
+        },
+      });
+
+      console.log(`[GameBuddies] ✅ Room ${roomCode} marked as abandoned`);
+      return true;
+    } catch (error: any) {
+      if (error.code === 'ECONNABORTED') {
+        console.error(`[GameBuddies] ❌ Timeout marking room abandoned (${this.apiTimeout}ms)`);
+      } else if (error.response?.status === 404) {
+        // Room not found in gamebuddies.io - might already be deleted, that's fine
+        console.log(`[GameBuddies] Room ${roomCode} not found in central server (may already be deleted)`);
+        return true;
+      } else if (error.response) {
+        console.error(`[GameBuddies] ❌ API error marking room abandoned:`, {
+          status: error.response.status,
+          data: error.response.data,
+        });
+      } else {
+        console.error(`[GameBuddies] ❌ Network error marking room abandoned:`, error.message);
+      }
+      return false;
+    }
+  }
+
+  /**
    * Health check: Test connection to GameBuddies platform
    */
   async healthCheck(): Promise<boolean> {

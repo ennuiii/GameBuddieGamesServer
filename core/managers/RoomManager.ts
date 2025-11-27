@@ -21,6 +21,13 @@ export class RoomManager {
   private oldSocketCleanupTimers: Map<string, NodeJS.Timeout>; // Track cleanup timers for old socket IDs
   private cleanupInterval: NodeJS.Timeout;
 
+  /**
+   * Callback invoked when a room is deleted.
+   * Used to notify external services (e.g., Gamebuddies.io) about room abandonment.
+   * The callback receives the room object and a reason string.
+   */
+  public onRoomDeleted?: (room: Room, reason: string) => void | Promise<void>;
+
   constructor() {
     this.rooms = new Map();
     this.playerRoomMap = new Map();
@@ -132,7 +139,7 @@ export class RoomManager {
 
     // If room is empty, delete it
     if (room.players.size === 0) {
-      this.deleteRoom(roomCode);
+      this.deleteRoom(roomCode, 'all_players_left');
     }
     // If host left, transfer host to another player
     else if (player && player.isHost) {
@@ -210,10 +217,27 @@ export class RoomManager {
 
   /**
    * Delete room
+   * @param roomCode - The room code to delete
+   * @param reason - Optional reason for deletion (used in callback)
    */
-  deleteRoom(roomCode: string): boolean {
+  deleteRoom(roomCode: string, reason: string = 'room_deleted'): boolean {
     const room = this.rooms.get(roomCode);
     if (!room) return false;
+
+    // Call onRoomDeleted callback before deleting (fire-and-forget)
+    if (this.onRoomDeleted && room.isGameBuddiesRoom) {
+      try {
+        // Call async callback without awaiting to avoid blocking
+        const result = this.onRoomDeleted(room, reason);
+        if (result instanceof Promise) {
+          result.catch(err => {
+            console.error(`[RoomManager] onRoomDeleted callback failed for room ${roomCode}:`, err);
+          });
+        }
+      } catch (err) {
+        console.error(`[RoomManager] onRoomDeleted callback error for room ${roomCode}:`, err);
+      }
+    }
 
     // Remove all player mappings
     for (const socketId of room.players.keys()) {
@@ -221,7 +245,7 @@ export class RoomManager {
     }
 
     this.rooms.delete(roomCode);
-    console.log(`[RoomManager] Deleted room ${roomCode}`);
+    console.log(`[RoomManager] Deleted room ${roomCode} (reason: ${reason})`);
 
     return true;
   }
@@ -329,7 +353,7 @@ export class RoomManager {
 
     for (const [code, room] of this.rooms.entries()) {
       if (now - room.lastActivity > inactiveThreshold) {
-        this.deleteRoom(code);
+        this.deleteRoom(code, 'inactive_timeout');
         cleanedCount++;
       }
     }

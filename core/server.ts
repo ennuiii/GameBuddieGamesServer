@@ -12,7 +12,6 @@ import { RoomManager } from './managers/RoomManager.js';
 import { SessionManager } from './managers/SessionManager.js';
 import { GameRegistry } from './managers/GameRegistry.js';
 import { gameBuddiesService } from './services/GameBuddiesService.js';
-import { friendService } from './services/FriendService.js';
 import { validationService } from './services/ValidationService.js';
 
 // Types
@@ -135,6 +134,14 @@ class UnifiedGameServer {
     this.roomManager = new RoomManager();
     this.sessionManager = new SessionManager();
     this.gameRegistry = new GameRegistry();
+
+    // Register callback to notify Gamebuddies.io when rooms are deleted
+    this.roomManager.onRoomDeleted = async (room, reason) => {
+      if (room.isGameBuddiesRoom) {
+        console.log(`[Server] Room ${room.code} deleted (${reason}), notifying Gamebuddies.io...`);
+        await gameBuddiesService.markRoomAbandoned(room.gameId, room.code, reason);
+      }
+    };
 
     // ⚡ OPTIMIZATION: Connection tracking
     // Note: TCP_NODELAY is already enabled by the WebSocket transport (ws library)
@@ -978,8 +985,8 @@ class UnifiedGameServer {
             // Notify about WebRTC peer leaving
             namespace.to(room.code).emit('webrtc:peer-left', { peerId: socket.id });
 
-            // Remove host and end the room
-            this.roomManager.deleteRoom(room.code);
+            // Remove host and end the room (this will trigger onRoomDeleted callback)
+            this.roomManager.deleteRoom(room.code, 'host_disconnected');
             console.log(`[${plugin.id.toUpperCase()}] Host disconnected - room ${room.code} deleted`);
 
             if (plugin.onHostLeave) {
