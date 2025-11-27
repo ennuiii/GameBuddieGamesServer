@@ -1,62 +1,68 @@
 import axios from 'axios';
 
-export interface Friend {
+/**
+ * Friend Service
+ *
+ * Fetches friend data from Gamebuddies.io API for friend system features.
+ */
+
+interface Friend {
   id: string;
   username: string;
-  displayName: string;
-  avatarUrl: string;
+  displayName: string | null;
+  avatarUrl: string | null;
 }
 
-/**
- * Friend Service for GameBuddieGamesServer
- * 
- * Handles retrieving friend lists from the central GameBuddies.io server
- * to support real-time presence features.
- */
-export class FriendService {
+class FriendService {
   private centralServerUrl: string;
-  private apiKey: string;
   private apiTimeout: number;
+  private apiKey: string;
 
   constructor() {
     this.centralServerUrl = process.env.GAMEBUDDIES_CENTRAL_URL || 'https://gamebuddies.io';
-    // Use the shared server key for internal friend lookups
-    this.apiKey = process.env.GAMEBUDDIES_API_KEY || ''; 
     this.apiTimeout = 5000;
+    // Use the general API key for friend lookups
+    this.apiKey = process.env.GAMEBUDDIES_API_KEY || process.env.CLUE_API_KEY || '';
 
     if (!this.apiKey) {
-      console.warn('[FriendService] ⚠️ No GAMEBUDDIES_API_KEY found. Friend features may not work.');
+      console.warn('[FriendService] No API key configured - friend features will be limited');
     }
   }
 
   /**
-   * Get a user's friend list from the central server
+   * Get friends for a user from Gamebuddies.io API
    */
   async getFriends(userId: string): Promise<Friend[]> {
     if (!this.apiKey) {
-      console.warn('[FriendService] ⚠️ Missing API Key - cannot fetch friends');
+      console.warn('[FriendService] No API key, returning empty friends list');
       return [];
     }
 
+    const url = `${this.centralServerUrl}/api/v2/game/users/${userId}/friends`;
+
     try {
-      const url = `${this.centralServerUrl}/api/v2/game/users/${userId}/friends`;
-      // console.log(`[FriendService] Fetching friends from: ${url}`);
-      
       const response = await axios.get(url, {
-        headers: { 'X-API-Key': this.apiKey },
-        timeout: this.apiTimeout
+        timeout: this.apiTimeout,
+        headers: {
+          'X-API-Key': this.apiKey,
+        },
       });
 
-      // console.log(`[FriendService] ✅ Fetched ${response.data.friends?.length} friends for ${userId}`);
-      return response.data.friends || [];
-    } catch (error: any) {
-      console.error(`[FriendService] ❌ Failed to fetch friends for ${userId}:`, error.message);
-      if (error.response) {
-        console.error(`[FriendService] Response: ${error.response.status} - ${JSON.stringify(error.response.data)}`);
+      if (response.data.success && Array.isArray(response.data.friends)) {
+        return response.data.friends;
       }
+
+      return [];
+    } catch (error: any) {
+      if (error.response?.status === 404) {
+        // User not found or no friends - not an error
+        return [];
+      }
+      console.error('[FriendService] Error fetching friends:', error.message);
       return [];
     }
   }
 }
 
+// Singleton instance
 export const friendService = new FriendService();

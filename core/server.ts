@@ -13,6 +13,7 @@ import { SessionManager } from './managers/SessionManager.js';
 import { GameRegistry } from './managers/GameRegistry.js';
 import { gameBuddiesService } from './services/GameBuddiesService.js';
 import { validationService } from './services/ValidationService.js';
+import { friendService } from './services/FriendService.js';
 
 // Types
 import type {
