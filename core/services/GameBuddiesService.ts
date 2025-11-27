@@ -54,15 +54,22 @@ export class GameBuddiesService {
 
   /**
    * Load API keys for all games from environment variables
+   * Uses GAMEBUDDIES_API_KEY as the default for all games,
+   * with game-specific overrides if needed.
    */
   private loadApiKeys(): void {
+    // Single shared API key for all games (preferred)
+    const sharedKey = process.env.GAMEBUDDIES_API_KEY || '';
+
+    // Game-specific overrides (optional, falls back to shared key)
     const keyMappings: Record<string, string> = {
-      'bingo-buddies': process.env.BINGO_API_KEY || '',
-      'clue-scale': process.env.CLUE_API_KEY || '',
-      'ddf': process.env.DDF_API_KEY || '',
-      'susd': process.env.SUSD_API_KEY || '',
-      'school-quiz': process.env.QUIZ_API_KEY || '',
-      'thinkalike': process.env.GAMEBUDDIES_API_KEY || '', // Shared key for unified server games
+      'bingo-buddies': process.env.BINGO_API_KEY || sharedKey,
+      'clue-scale': process.env.CLUE_API_KEY || sharedKey,
+      'ddf': process.env.DDF_API_KEY || sharedKey,
+      'susd': process.env.SUSD_API_KEY || sharedKey,
+      'school-quiz': process.env.QUIZ_API_KEY || sharedKey,
+      'thinkalike': sharedKey,
+      'template': sharedKey,
     };
 
     for (const [gameId, apiKey] of Object.entries(keyMappings)) {
@@ -72,6 +79,10 @@ export class GameBuddiesService {
       } else {
         console.log(`   ⚠️  ${gameId}: No API key (status updates disabled)`);
       }
+    }
+
+    if (sharedKey) {
+      console.log(`   🔑 Using shared GAMEBUDDIES_API_KEY for all games`);
     }
   }
 
