@@ -314,7 +314,7 @@ export class GameBuddiesService {
       ...(initiatedBy && { initiatedBy }),
     };
 
-    const url = `${this.centralServerUrl}/api/v2/external/return`;
+    const url = `${this.centralServerUrl}/api/v2/game/external/return`;
 
     console.log(`[GameBuddies] Requesting return-to-lobby for room ${roomCode}`, {
       game: gameId,
