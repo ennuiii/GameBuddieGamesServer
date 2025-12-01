@@ -105,12 +105,14 @@ export class RoomManager {
     const invite = this.inviteTokens.get(token);
     
     if (!invite) {
+      console.log(`[RoomManager] Resolve failed: Token ${token.substring(0, 8)}... not found`);
       return null;
     }
 
     // Check if room still exists
     const room = this.rooms.get(invite.roomCode);
     if (!room) {
+      console.log(`[RoomManager] Resolve failed: Room ${invite.roomCode} for token ${token.substring(0, 8)}... not found (orphaned)`);
       this.inviteTokens.delete(token);
       return null;
     }
