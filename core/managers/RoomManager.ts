@@ -18,6 +18,7 @@ import { validationService } from '../services/ValidationService.js';
 export class RoomManager {
   private rooms: Map<string, Room>;
   private playerRoomMap: Map<string, string>; // socketId -> roomCode
+  private inviteTokens: Map<string, { roomCode: string; createdAt: number }>; // inviteToken -> { roomCode, createdAt }
   private oldSocketCleanupTimers: Map<string, NodeJS.Timeout>; // Track cleanup timers for old socket IDs
   private cleanupInterval: NodeJS.Timeout;
 
@@ -31,11 +32,13 @@ export class RoomManager {
   constructor() {
     this.rooms = new Map();
     this.playerRoomMap = new Map();
+    this.inviteTokens = new Map();
     this.oldSocketCleanupTimers = new Map();
 
     // Auto-cleanup inactive rooms every 5 minutes
     this.cleanupInterval = setInterval(() => {
       this.cleanupInactiveRooms();
+      this.cleanupExpiredInvites();
     }, 5 * 60 * 1000);
 
     console.log('[RoomManager] Initialized');
@@ -74,6 +77,49 @@ export class RoomManager {
     console.log(`[RoomManager] Created room ${roomCode} for game ${gameId} (host: ${hostPlayer.name})`);
 
     return room;
+  }
+
+  /**
+   * Generate an invite token for a room
+   */
+  generateInviteToken(roomCode: string): string | null {
+    const room = this.rooms.get(roomCode);
+    if (!room) return null;
+
+    // Generate a secure random token (using UUID for now, could be shorter if needed)
+    const token = randomUUID();
+    
+    this.inviteTokens.set(token, {
+      roomCode,
+      createdAt: Date.now()
+    });
+
+    console.log(`[RoomManager] Generated invite token ${token.substring(0, 8)}... for room ${roomCode}`);
+    return token;
+  }
+
+  /**
+   * Resolve an invite token to a room code
+   */
+  resolveInviteToken(token: string): string | null {
+    const invite = this.inviteTokens.get(token);
+    
+    if (!invite) {
+      return null;
+    }
+
+    // Check if room still exists
+    const room = this.rooms.get(invite.roomCode);
+    if (!room) {
+      this.inviteTokens.delete(token);
+      return null;
+    }
+
+    // OPTIONAL: Delete token after use? 
+    // For now, let's keep it valid for multiple uses (shareable link) until expiration
+    // this.inviteTokens.delete(token);
+
+    return invite.roomCode;
   }
 
   /**
@@ -340,6 +386,33 @@ export class RoomManager {
     } while (this.rooms.has(code));
 
     return code;
+  }
+
+  /**
+   * Cleanup expired invite tokens (24 hours)
+   */
+  private cleanupExpiredInvites(): void {
+    const now = Date.now();
+    const expirationTime = 24 * 60 * 60 * 1000; // 24 hours
+
+    let cleanedCount = 0;
+
+    for (const [token, data] of this.inviteTokens.entries()) {
+      if (now - data.createdAt > expirationTime) {
+        this.inviteTokens.delete(token);
+        cleanedCount++;
+      }
+      
+      // Also clean up if room no longer exists
+      if (!this.rooms.has(data.roomCode)) {
+        this.inviteTokens.delete(token);
+        cleanedCount++;
+      }
+    }
+
+    if (cleanedCount > 0) {
+      console.log(`[RoomManager] Cleaned up ${cleanedCount} expired/orphan invite tokens`);
+    }
   }
 
   /**

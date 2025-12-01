@@ -351,6 +351,7 @@ class UnifiedGameServer {
         streamerMode?: boolean;
         hideRoomCode?: boolean;
       }) => {
+        // ... (existing create logic)
         console.log(`📥 [${plugin.id.toUpperCase()}] room:create received:`, {
           playerName: data.playerName,
           roomCode: data.roomCode,
@@ -424,10 +425,58 @@ class UnifiedGameServer {
         console.log(`✅ [${plugin.id.toUpperCase()}] Emitted room:created for ${room.code}`);
       });
 
+      // Common event: Create Invite Link (Host Only)
+      socket.on('room:create-invite', () => {
+        const room = this.roomManager.getRoomBySocket(socket.id);
+        const player = this.roomManager.getPlayer(socket.id);
+
+        if (!room || !player) {
+          socket.emit('error', { message: 'Not in a room' });
+          return;
+        }
+
+        if (!player.isHost) {
+          socket.emit('error', { message: 'Only the host can create invites' });
+          return;
+        }
+
+        const inviteToken = this.roomManager.generateInviteToken(room.code);
+        if (inviteToken) {
+          socket.emit('room:invite-created', { inviteToken });
+        } else {
+          socket.emit('error', { message: 'Failed to create invite token' });
+        }
+      });
+
       // Common event: Join room
-      socket.on('room:join', (data: { roomCode: string; playerName: string; sessionToken?: string; premiumTier?: string }) => {
+      socket.on('room:join', (data: { 
+        roomCode?: string; 
+        inviteToken?: string;
+        playerName: string; 
+        sessionToken?: string; 
+        premiumTier?: string;
+      }) => {
         console.log(`💎 [PREMIUM DEBUG] room:join premiumTier: ${data.premiumTier}`);
-        const codeValidation = validationService.validateRoomCode(data.roomCode);
+        
+        // Resolve room code if invite token provided
+        let roomCode = data.roomCode;
+        if (data.inviteToken) {
+          const resolvedCode = this.roomManager.resolveInviteToken(data.inviteToken);
+          if (resolvedCode) {
+            roomCode = resolvedCode;
+            console.log(`[Server] Resolved invite token ${data.inviteToken} -> ${roomCode}`);
+          } else {
+            socket.emit('error', { message: 'Invalid or expired invite link' });
+            return;
+          }
+        }
+
+        if (!roomCode) {
+           socket.emit('error', { message: 'Room code or invite token required' });
+           return;
+        }
+
+        const codeValidation = validationService.validateRoomCode(roomCode);
         const nameValidation = validationService.validatePlayerName(data.playerName);
 
         if (!codeValidation.isValid) {
@@ -440,7 +489,7 @@ class UnifiedGameServer {
           return;
         }
 
-        const room = this.roomManager.getRoomByCode(data.roomCode);
+        const room = this.roomManager.getRoomByCode(roomCode);
 
         if (!room) {
           // ✅ Emit specific error code so client can distinguish from other join errors
@@ -458,7 +507,7 @@ class UnifiedGameServer {
 
         if (data.sessionToken) {
           const session = this.sessionManager.validateSession(data.sessionToken);
-          if (session && session.roomCode === data.roomCode) {
+          if (session && session.roomCode === roomCode) {
             // Reconnecting player
             const existingPlayer = Array.from(room.players.values()).find(
               (p) => p.id === session.playerId
