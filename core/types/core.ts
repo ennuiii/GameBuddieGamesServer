@@ -31,6 +31,10 @@ export interface Room {
   createdAt: number;
   lastActivity: number;
 
+  // Display options
+  isStreamerMode?: boolean;
+  hideRoomCode?: boolean;
+
   // GameBuddies platform integration
   isGameBuddiesRoom: boolean;
   gameBuddiesRoomId?: string;

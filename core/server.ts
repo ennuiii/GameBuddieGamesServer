@@ -340,7 +340,17 @@ class UnifiedGameServer {
       console.log(`[${plugin.id.toUpperCase()}] Player connected: ${socket.id}`);
 
       // Common event: Create room
-      socket.on('room:create', (data: { playerName: string; roomCode?: string; isGameBuddiesRoom?: boolean; settings?: any; playerId?: string; sessionToken?: string; premiumTier?: string }) => {
+      socket.on('room:create', (data: { 
+        playerName: string; 
+        roomCode?: string; 
+        isGameBuddiesRoom?: boolean; 
+        settings?: any; 
+        playerId?: string; 
+        sessionToken?: string; 
+        premiumTier?: string;
+        streamerMode?: boolean;
+        hideRoomCode?: boolean;
+      }) => {
         console.log(`📥 [${plugin.id.toUpperCase()}] room:create received:`, {
           playerName: data.playerName,
           roomCode: data.roomCode,
@@ -348,7 +358,8 @@ class UnifiedGameServer {
           playerId: data.playerId,
           sessionToken: data.sessionToken?.substring(0, 8) + '...',
           premiumTier: data.premiumTier,
-          settings: data.settings
+          settings: data.settings,
+          streamerMode: data.streamerMode
         });
         console.log(`💎 [PREMIUM DEBUG] premiumTier received from client: ${data.premiumTier}`);
 
@@ -379,13 +390,18 @@ class UnifiedGameServer {
           code: room.code,
           playerId: player.id,
           playerName: player.name,
-          isGameBuddiesRoom: data.isGameBuddiesRoom
+          isGameBuddiesRoom: data.isGameBuddiesRoom,
+          streamerMode: data.streamerMode
         });
 
         // Preserve GameBuddies flag if provided
         if (data.isGameBuddiesRoom) {
           room.isGameBuddiesRoom = true;
         }
+
+        // Store streamer mode settings
+        if (data.streamerMode) room.isStreamerMode = true;
+        if (data.hideRoomCode) room.hideRoomCode = true;
 
         // Generate session token
         const sessionToken = this.sessionManager.createSession(player.id, room.code);

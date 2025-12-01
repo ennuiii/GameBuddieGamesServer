@@ -278,6 +278,10 @@ class ThinkAlikePlugin implements GamePlugin {
       // Spectator flag (am I a spectator?)
       isSpectator: isSpectator,
 
+      // Streamer Mode
+      isStreamerMode: room.isStreamerMode || false,
+      hideRoomCode: room.hideRoomCode || false,
+
       // GameBuddies integration
       isGameBuddiesRoom: room.isGameBuddiesRoom || false,
       gameBuddiesRoomId: room.gameBuddiesRoomId
