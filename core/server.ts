@@ -425,7 +425,7 @@ class UnifiedGameServer {
         console.log(`✅ [${plugin.id.toUpperCase()}] Emitted room:created for ${room.code}`);
       });
 
-      // Common event: Create Invite Link (Host Only)
+      // Common event: Create Invite Link (Anyone can create invite)
       socket.on('room:create-invite', () => {
         const room = this.roomManager.getRoomBySocket(socket.id);
         const player = this.roomManager.getPlayer(socket.id);
@@ -435,11 +435,7 @@ class UnifiedGameServer {
           return;
         }
 
-        if (!player.isHost) {
-          socket.emit('error', { message: 'Only the host can create invites' });
-          return;
-        }
-
+        // Removed host check: anyone in the room can create an invite link
         const inviteToken = this.roomManager.generateInviteToken(room.code);
         if (inviteToken) {
           socket.emit('room:invite-created', { inviteToken });
@@ -1204,6 +1200,8 @@ class UnifiedGameServer {
       gameState: room.gameState,
       settings: room.settings,
       messages: room.messages,
+      isStreamerMode: room.isStreamerMode,
+      hideRoomCode: room.hideRoomCode,
     };
   }
 
