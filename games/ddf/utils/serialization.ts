@@ -181,6 +181,8 @@ export function serializeRoomToDDF(room: Room, socketId: string): any {
     // Other room data
     messages: room.messages || [],
     isGameBuddiesRoom: room.isGameBuddiesRoom || false,
+    isStreamerMode: room.isStreamerMode || false,
+    hideRoomCode: room.hideRoomCode || false,
 
     // Critical for client-side socket operations
     mySocketId: socketId,

@@ -68,6 +68,12 @@ function serializeRoomToClient(room: Room, socketId: string) {
     autoStart: gameSettings.autoStart,
   };
 
+  if (room.isStreamerMode || room.hideRoomCode) {
+    console.log(
+      `[BingoBuddies] serializeRoom flags -> ${room.code}: streamerMode=${room.isStreamerMode} hideRoomCode=${room.hideRoomCode}`
+    );
+  }
+
   // Return complete Room object in client format
   return {
     id: room.code, // Client uses 'id' field
@@ -85,6 +91,8 @@ function serializeRoomToClient(room: Room, socketId: string) {
     settings,
     createdAt: Date.now(), // Room creation time
     lastActivity: Date.now(),
+    isStreamerMode: room.isStreamerMode || false,
+    hideRoomCode: room.hideRoomCode || false,
   };
 }
 

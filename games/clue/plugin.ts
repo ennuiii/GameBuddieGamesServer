@@ -95,6 +95,8 @@ function serializeRoomToLobby(room: Room, socketId: string) {
     mySocketId: socketId,
     myPlayerId,
     messages: room.messages,
+    isStreamerMode: room.isStreamerMode || false,
+    hideRoomCode: room.hideRoomCode || false,
   };
 }
 

@@ -1565,6 +1565,8 @@ class SUSDPlugin implements GamePlugin {
     const serialized = {
       ...susdRoom,
       players: uniqueSerializedPlayers,
+      isStreamerMode: room.isStreamerMode || false,
+      hideRoomCode: room.hideRoomCode || false,
       // Also serialize gamemaster if it exists
       gamemaster: (() => {
         const gmId = susdRoom.gamemaster?.id;
