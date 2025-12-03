@@ -44,6 +44,10 @@ export interface ThinkAlikeGameState {
   player1LiveWord: string | null;
   player2LiveWord: string | null;
 
+  // Player identity (stable across reconnections - set when game starts)
+  player1Name: string | null;
+  player2Name: string | null;
+
   // Round history
   rounds: RoundHistory[];
 
@@ -109,6 +113,8 @@ export function createInitialGameState(settings: ThinkAlikeSettings): ThinkAlike
     player2Submitted: false,
     player1LiveWord: null,  // For spectators to see real-time typing
     player2LiveWord: null,
+    player1Name: null,  // Set when game starts
+    player2Name: null,
     rounds: [],
     settings: settings,
   };

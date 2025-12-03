@@ -119,6 +119,30 @@ class ThinkAlikePlugin implements GamePlugin {
       }
     }
 
+    // Resume timer if reconnecting during active game phase
+    if (isReconnecting) {
+      const gameState = room.gameState.data as ThinkAlikeGameState;
+      const timerKey = `${room.code}:round-timer`;
+
+      // Check if all active players are connected again
+      const allActivePlayers = Array.from(room.players.values())
+        .filter(p => !(p.gameData as ThinkAlikePlayerData)?.isSpectator);
+      const allConnected = allActivePlayers.every(p => p.connected);
+
+      // Resume timer only if:
+      // 1. Game is in word_input phase
+      // 2. Time remaining > 0
+      // 3. Timer is not already running
+      // 4. All active players are connected
+      if (gameState.phase === 'word_input'
+          && gameState.timeRemaining > 0
+          && !this.intervals.has(timerKey)
+          && allConnected) {
+        console.log(`[${this.name}] Resuming timer after reconnection (${gameState.timeRemaining}s remaining)`);
+        this.startRoundTimer(room);
+      }
+    }
+
     // Broadcast updated state to all players
     this.broadcastRoomState(room);
 
@@ -205,17 +229,20 @@ class ThinkAlikePlugin implements GamePlugin {
       hostId: room.hostId,
 
       // Convert Map to Array for client (active players only)
-      players: activePlayers.map((p, index) => {
+      players: activePlayers.map((p) => {
         const playerData = p.gameData as ThinkAlikePlayerData;
+
+        // Determine which player slot by name (not array index) for stable reconnection
+        const isPlayer1 = p.name === gameState.player1Name;
 
         // Determine which word to show
         let currentWord = null;
         if (isSpectator) {
           // Spectators see LIVE words (real-time typing)
-          currentWord = index === 0 ? gameState.player1LiveWord : gameState.player2LiveWord;
+          currentWord = isPlayer1 ? gameState.player1LiveWord : gameState.player2LiveWord;
         } else if (p.socketId === socketId) {
           // Players see their own word
-          currentWord = index === 0 ? gameState.player1Word : gameState.player2Word;
+          currentWord = isPlayer1 ? gameState.player1Word : gameState.player2Word;
         }
         // Otherwise null (opponent's word hidden from opponent)
 
@@ -228,7 +255,7 @@ class ThinkAlikePlugin implements GamePlugin {
           isReady: playerData?.isReady || false,
           isSpectator: false,  // Active players, not spectators
           currentWord: currentWord,
-          hasSubmitted: index === 0 ? gameState.player1Submitted : gameState.player2Submitted,
+          hasSubmitted: isPlayer1 ? gameState.player1Submitted : gameState.player2Submitted,
           premiumTier: p.premiumTier
         };
       }),
@@ -356,6 +383,11 @@ class ThinkAlikePlugin implements GamePlugin {
         gameState.player1Submitted = false;
         gameState.player2Submitted = false;
 
+        // Store player identity (by name) for stable mapping across reconnections
+        gameState.player1Name = activePlayers[0]?.name || null;
+        gameState.player2Name = activePlayers[1]?.name || null;
+        console.log(`[${this.name}] Player slots assigned: P1=${gameState.player1Name}, P2=${gameState.player2Name}`);
+
         // Update phase
         room.gameState.phase = 'round_prep';
 
@@ -416,11 +448,10 @@ class ThinkAlikePlugin implements GamePlugin {
           return;
         }
 
-        // Determine which player (player1 or player2)
-        const players = Array.from(room.players.values());
-        const playerIndex = players.findIndex(p => p.socketId === socket.id);
+        // Determine which player slot by name (not array index) for stable reconnection
+        const isPlayer1 = player.name === gameState.player1Name;
 
-        if (playerIndex === 0) {
+        if (isPlayer1) {
           gameState.player1Word = word;
           gameState.player1Submitted = true;
         } else {
@@ -808,16 +839,11 @@ class ThinkAlikePlugin implements GamePlugin {
         // Only accept typing during WORD_INPUT phase
         if (gameState.phase !== 'word_input') return;
 
-        // Get all active players (non-spectators)
-        const activePlayers = Array.from(room.players.values())
-          .filter(p => !(p.gameData as ThinkAlikePlayerData)?.isSpectator);
-
-        // Find which player this is (0 or 1)
-        const playerIndex = activePlayers.findIndex(p => p.socketId === socket.id);
-        if (playerIndex === -1) return;
+        // Determine which player slot by name (not array index) for stable reconnection
+        const isPlayer1 = player.name === gameState.player1Name;
 
         // Update live word in game state
-        if (playerIndex === 0) {
+        if (isPlayer1) {
           gameState.player1LiveWord = data.word;
         } else {
           gameState.player2LiveWord = data.word;
@@ -831,7 +857,7 @@ class ThinkAlikePlugin implements GamePlugin {
           const namespace = this.io.of(this.namespace);
           spectators.forEach(spectator => {
             namespace.to(spectator.socketId).emit('spectator:typing-update', {
-              playerIndex,
+              playerIndex: isPlayer1 ? 0 : 1,
               playerName: player.name,
               word: data.word
             });
