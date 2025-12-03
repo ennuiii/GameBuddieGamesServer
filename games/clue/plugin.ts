@@ -70,6 +70,12 @@ function serializeRoomToLobby(room: Room, socketId: string) {
     categories: gameSpecificSettings.categories,
   };
 
+  if (room.isStreamerMode || room.hideRoomCode) {
+    console.log(
+      `[ClueScale] serializeRoom -> ${room.code}: streamerMode=${room.isStreamerMode} hideRoomCode=${room.hideRoomCode}`
+    );
+  }
+
   // Build round data if exists
   let round = null;
   if (gameState.round) {
@@ -179,7 +185,28 @@ class CluePlugin implements GamePlugin {
       player.gameData = initializePlayerData();
     }
 
-    if (!isReconnecting) {
+    if (isReconnecting) {
+      console.log(`[ClueScale] Player ${player.name} reconnected to room ${room.code}`);
+
+      // If reconnecting player is the clue giver during clue phase, re-send their secret data
+      const gameState = room.gameState.data as ClueGameState;
+      if (
+        gameState.round &&
+        room.gameState.phase === 'round_clue' &&
+        gameState.round.clueGiverId === player.id &&
+        !gameState.round.clueWord // Clue not yet submitted
+      ) {
+        // Re-send target number to reconnecting clue giver
+        if (this.io) {
+          const namespace = this.io.of('/clue');
+          namespace.to(player.socketId).emit('round:giver-data', {
+            targetNumber: gameState.round.targetNumber,
+            category: gameState.round.category,
+          });
+          console.log(`[ClueScale] Re-sent giver data to reconnected clue giver ${player.name}`);
+        }
+      }
+    } else {
       console.log(`[ClueScale] Player ${player.name} joined room ${room.code}`);
     }
 

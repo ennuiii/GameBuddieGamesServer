@@ -120,7 +120,13 @@ export function serializeRoomToDDF(room: Room, socketId: string): any {
       disconnectedAt: p.disconnectedAt, // Use the actual disconnect timestamp
       mediaState: playerData?.mediaState,
     };
-  });
+    });
+
+  if (room.isStreamerMode || room.hideRoomCode) {
+    console.log(
+      `[DDF Serialization] Room ${room.code} streamerMode=${room.isStreamerMode} hideRoomCode=${room.hideRoomCode}`
+    );
+  }
 
   // =========================================================================
   // 2. Ensure gamemaster has the correct actual name and premiumTier

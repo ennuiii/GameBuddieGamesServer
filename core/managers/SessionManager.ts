@@ -21,6 +21,14 @@ export class SessionManager {
   // Session expiry: 30 minutes of inactivity
   private readonly SESSION_EXPIRY_MS = 30 * 60 * 1000;
 
+  /**
+   * Truncate session token for safe logging (prevents token exposure in logs)
+   */
+  private truncateToken(token: string): string {
+    if (!token || token.length < 8) return '***';
+    return token.substring(0, 8) + '...';
+  }
+
   constructor() {
     this.sessions = new Map();
     this.playerSessions = new Map();
@@ -75,14 +83,14 @@ export class SessionManager {
     const session = this.sessions.get(sessionToken);
 
     if (!session) {
-      console.warn(`[SessionManager] Session not found: ${sessionToken}`);
+      console.warn(`[SessionManager] Session not found: ${this.truncateToken(sessionToken)}`);
       return null;
     }
 
     // Check if session expired
     const age = Date.now() - session.lastActivity;
     if (age > this.SESSION_EXPIRY_MS) {
-      console.warn(`[SessionManager] Session expired: ${sessionToken} (age: ${Math.floor(age / 1000)}s)`);
+      console.warn(`[SessionManager] Session expired: ${this.truncateToken(sessionToken)} (age: ${Math.floor(age / 1000)}s)`);
       this.deleteSession(sessionToken);
       return null;
     }

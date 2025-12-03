@@ -340,18 +340,25 @@ class UnifiedGameServer {
       console.log(`[${plugin.id.toUpperCase()}] Player connected: ${socket.id}`);
 
       // Common event: Create room
-      socket.on('room:create', (data: { 
-        playerName: string; 
-        roomCode?: string; 
-        isGameBuddiesRoom?: boolean; 
-        settings?: any; 
-        playerId?: string; 
-        sessionToken?: string; 
+      socket.on('room:create', (data: {
+        playerName: string;
+        roomCode?: string;
+        isGameBuddiesRoom?: boolean;
+        settings?: any;
+        playerId?: string;
+        sessionToken?: string;
         premiumTier?: string;
         streamerMode?: boolean;
         hideRoomCode?: boolean;
       }) => {
-        // ... (existing create logic)
+        // Rate limiting - max 5 room creates per minute per IP
+        const clientIp = socket.handshake.address || socket.id;
+        if (!validationService.checkRateLimit(`room:create:${clientIp}`, 5, 60000)) {
+          console.log(`⚠️ [${plugin.id.toUpperCase()}] Rate limit exceeded for room:create from ${clientIp}`);
+          socket.emit('error', { message: 'Too many room creation attempts. Please wait a moment.' });
+          return;
+        }
+
         console.log(`📥 [${plugin.id.toUpperCase()}] room:create received:`, {
           playerName: data.playerName,
           roomCode: data.roomCode,
@@ -445,15 +452,23 @@ class UnifiedGameServer {
       });
 
       // Common event: Join room
-      socket.on('room:join', (data: { 
-        roomCode?: string; 
+      socket.on('room:join', (data: {
+        roomCode?: string;
         inviteToken?: string;
-        playerName: string; 
-        sessionToken?: string; 
+        playerName: string;
+        sessionToken?: string;
         premiumTier?: string;
       }) => {
+        // Rate limiting - max 10 joins per minute per IP (higher than create since reconnections are common)
+        const clientIp = socket.handshake.address || socket.id;
+        if (!validationService.checkRateLimit(`room:join:${clientIp}`, 10, 60000)) {
+          console.log(`⚠️ [${plugin.id.toUpperCase()}] Rate limit exceeded for room:join from ${clientIp}`);
+          socket.emit('error', { message: 'Too many join attempts. Please wait a moment.' });
+          return;
+        }
+
         console.log(`💎 [PREMIUM DEBUG] room:join premiumTier: ${data.premiumTier}`);
-        
+
         // Resolve room code if invite token provided
         let roomCode = data.roomCode;
         if (data.inviteToken) {
@@ -1192,6 +1207,7 @@ class UnifiedGameServer {
     }
 
     // Default serialization (fallback)
+    console.log(`[CORE] sanitizeRoom(${room.code}) streamerMode=${room.isStreamerMode} hideRoomCode=${room.hideRoomCode}`);
     return {
       code: room.code,
       gameId: room.gameId,

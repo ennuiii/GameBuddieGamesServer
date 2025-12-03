@@ -1562,6 +1562,9 @@ class SUSDPlugin implements GamePlugin {
       uniqueSerializedPlayers.map((p: any) => `${p.name} (id: ${p.id}, gbId: ${p.gameBuddiesPlayerId})`));
 
     // ✅ Transform SUSD room with flattened player data
+    if (room.isStreamerMode || room.hideRoomCode) {
+      console.log(`[SUSD] serializeRoom -> ${room.code}: streamerMode=${room.isStreamerMode} hideRoomCode=${room.hideRoomCode}`);
+    }
     const serialized = {
       ...susdRoom,
       players: uniqueSerializedPlayers,

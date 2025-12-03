@@ -143,16 +143,33 @@ class DDFGamePlugin implements GamePlugin {
     console.log(`[DDF] Room ${room.code} created with initial game state`);
   }
 
-  onPlayerJoin(room: Room, player: Player): void {
-    // Initialize player game data
-    player.gameData = {
-      lives: 3,
-      isEliminated: false,
-      mediaState: {
-        isMicOn: false,
-        lastUpdated: Date.now(),
-      },
-    } as DDFPlayerData;
+  onPlayerJoin(room: Room, player: Player, isReconnecting?: boolean): void {
+    // Only initialize player game data for NEW players (not reconnections)
+    // Reconnecting players should keep their existing lives and eliminated status
+    if (!player.gameData) {
+      player.gameData = {
+        lives: 3,
+        isEliminated: false,
+        mediaState: {
+          isMicOn: false,
+          lastUpdated: Date.now(),
+        },
+      } as DDFPlayerData;
+    }
+
+    if (isReconnecting) {
+      console.log(`[DDF] Player ${player.name} reconnected to room ${room.code} (lives: ${(player.gameData as DDFPlayerData).lives})`);
+
+      // Broadcast updated game state to all players on reconnection
+      if (this.io) {
+        const namespace = this.io.of('/ddf');
+        const serialized = serializeRoomToDDF(room, player.socketId);
+        namespace.to(room.code).emit('ddf:game-state-update', { room: serialized });
+        console.log(`[DDF] Broadcast reconnection state for ${player.name} to room ${room.code}`);
+      }
+    } else {
+      console.log(`[DDF] Player ${player.name} joined room ${room.code}`);
+    }
   }
 
   serializeRoom(room: Room, socketId: string): any {
