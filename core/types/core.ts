@@ -101,6 +101,7 @@ export interface GamePlugin {
   onHostLeave?(room: Room): void; // Called when the host/gamemaster disconnects
   onGameStart?(room: Room): void;
   onGameEnd?(room: Room): void;
+  onRoomDestroy?(room: Room): void; // Called when room is deleted - cleanup timers, etc.
   onCleanup?(): Promise<void>;
 
   // Serialization hook - converts server Room to client-expected format
