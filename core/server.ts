@@ -480,6 +480,45 @@ class UnifiedGameServer {
         }
       });
 
+      // Session validation - check if session is still valid before attempting reconnection
+      socket.on('session:validate', (
+        data: { sessionToken: string; roomCode?: string },
+        callback?: (response: { valid: boolean; reason?: string; expiresIn?: number }) => void
+      ) => {
+        if (!data.sessionToken) {
+          callback?.({ valid: false, reason: 'no_token' });
+          return;
+        }
+
+        const session = this.sessionManager.validateSession(data.sessionToken);
+        if (!session) {
+          callback?.({ valid: false, reason: 'expired_or_invalid' });
+          return;
+        }
+
+        // Check if room still exists
+        if (data.roomCode && session.roomCode !== data.roomCode) {
+          callback?.({ valid: false, reason: 'room_mismatch' });
+          return;
+        }
+
+        const room = this.roomManager.getRoomByCode(session.roomCode);
+        if (!room) {
+          callback?.({ valid: false, reason: 'room_closed' });
+          return;
+        }
+
+        // Calculate time until expiry (30 min from last activity)
+        const SESSION_EXPIRY_MS = 30 * 60 * 1000;
+        const age = Date.now() - session.lastActivity;
+        const expiresIn = Math.max(0, SESSION_EXPIRY_MS - age);
+
+        callback?.({
+          valid: true,
+          expiresIn,
+        });
+      });
+
       // Common event: Join room
       socket.on('room:join', (data: {
         roomCode?: string;
@@ -585,12 +624,20 @@ class UnifiedGameServer {
               isReconnecting = true;
               console.log(`[${plugin.id.toUpperCase()}] Player reconnected: ${player.name}`);
             } else {
-              // Session valid but player not in room - join as new
+              // Session valid but player not in room - notify and join as new
+              socket.emit('reconnection:failed', {
+                reason: 'player_not_in_room',
+                message: 'Your previous session expired. Joining as new player.'
+              });
               player = this.createPlayer(socket.id, nameValidation.sanitizedValue!, data.premiumTier);
               sessionToken = this.sessionManager.createSession(player.id, room.code);
             }
           } else {
-            // Invalid session - join as new
+            // Invalid session - notify and join as new
+            socket.emit('reconnection:failed', {
+              reason: 'session_invalid',
+              message: 'Session expired or invalid. Joining as new player.'
+            });
             player = this.createPlayer(socket.id, nameValidation.sanitizedValue!, data.premiumTier);
             sessionToken = this.sessionManager.createSession(player.id, room.code);
           }
@@ -624,6 +671,26 @@ class UnifiedGameServer {
         });
 
         if (isReconnecting) {
+          const oldSocketId = player.oldSocketId;
+
+          // 🔄 Notify other clients about socket ID change for WebRTC reconnection
+          if (oldSocketId && oldSocketId !== socket.id) {
+            namespace.to(room.code).emit('webrtc:peer-reconnected', {
+              oldPeerId: oldSocketId,
+              newPeerId: socket.id,
+              playerId: player.id,
+              playerName: player.name
+            });
+
+            // Also emit player:reconnected for UI updates
+            namespace.to(room.code).emit('player:reconnected', {
+              player: this.sanitizePlayer(player),
+              oldSocketId: oldSocketId
+            });
+
+            console.log(`[WebRTC] Peer reconnected: ${player.name} (${oldSocketId} → ${socket.id})`);
+          }
+
           // ✅ Filter out duplicate sockets during grace period
           // When a player reconnects, both old and new sockets are in room.players for 2s
           // We must only broadcast to the NEWEST socket per unique player ID
