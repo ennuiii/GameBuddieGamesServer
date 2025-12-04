@@ -45,6 +45,9 @@ export interface ThinkAlikeGameState {
   player2LiveWord: string | null;
 
   // Player identity (stable across reconnections - set when game starts)
+  // Use IDs for game logic, names for display only
+  player1Id: string | null;
+  player2Id: string | null;
   player1Name: string | null;
   player2Name: string | null;
 
@@ -113,7 +116,9 @@ export function createInitialGameState(settings: ThinkAlikeSettings): ThinkAlike
     player2Submitted: false,
     player1LiveWord: null,  // For spectators to see real-time typing
     player2LiveWord: null,
-    player1Name: null,  // Set when game starts
+    player1Id: null,    // Set when game starts - stable ID for game logic
+    player2Id: null,
+    player1Name: null,  // Set when game starts - for display only
     player2Name: null,
     rounds: [],
     settings: settings,

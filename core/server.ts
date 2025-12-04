@@ -72,14 +72,13 @@ class UnifiedGameServer {
   // Limits broadcasts to 10/second per room to prevent event loop saturation
   private broadcastThrottleMs = 100; // Throttle to 10 broadcasts/sec per room
   private lastBroadcastTime = new Map<string, number>(); // Track last broadcast per room
-  private pendingBroadcasts = new Map<string, { event: string; data: any }>(); // Queue pending broadcasts
+  private pendingBroadcasts = new Map<string, Array<{ event: string; data: any }>>(); // Queue pending broadcasts
 
   // Using simple setInterval drift measurement instead of perf_hooks (more reliable)
 
-  // ⚡ OPTIMIZATION: Connection tracking (limit removed for testing)
-  // Track connection count for monitoring
+  // ⚡ OPTIMIZATION: Connection tracking with DoS protection
   private connectionCount = 0;
-  // MAX_CONNECTIONS limit removed - testing capacity
+  private readonly MAX_CONNECTIONS = 10000; // Prevent memory exhaustion
 
   constructor() {
     this.port = parseInt(process.env.PORT || '3001', 10);
@@ -136,19 +135,42 @@ class UnifiedGameServer {
     this.sessionManager = new SessionManager();
     this.gameRegistry = new GameRegistry();
 
-    // Register callback to notify Gamebuddies.io when rooms are deleted
+    // Register callback to notify plugins and Gamebuddies.io when rooms are deleted
     this.roomManager.onRoomDeleted = async (room, reason) => {
+      // CRITICAL: Call plugin's onRoomDestroy hook for cleanup (timers, intervals, maps)
+      const plugin = this.gameRegistry.getGame(room.gameId);
+      if (plugin?.onRoomDestroy) {
+        try {
+          plugin.onRoomDestroy(room);
+          console.log(`[Server] Called onRoomDestroy for room ${room.code} (plugin: ${plugin.id})`);
+        } catch (err) {
+          console.error(`[Server] Plugin onRoomDestroy failed for room ${room.code}:`, err);
+        }
+      }
+
+      // Clean up session tokens for this room
+      const cleanedSessions = this.sessionManager.deleteSessionsForRoom(room.code);
+      if (cleanedSessions > 0) {
+        console.log(`[Server] Cleaned up ${cleanedSessions} session(s) for room ${room.code}`);
+      }
+
+      // Notify Gamebuddies.io about room abandonment
       if (room.isGameBuddiesRoom) {
         console.log(`[Server] Room ${room.code} deleted (${reason}), notifying Gamebuddies.io...`);
         await gameBuddiesService.markRoomAbandoned(room.gameId, room.code, reason);
       }
     };
 
-    // ⚡ OPTIMIZATION: Connection tracking
+    // ⚡ OPTIMIZATION: Connection tracking with DoS protection
     // Note: TCP_NODELAY is already enabled by the WebSocket transport (ws library)
-    // No need to manually configure since we're using transports: ['websocket']
-    // Connection limit removed for capacity testing
     this.io.engine.on('connection', (engineSocket: any) => {
+      // Reject if over connection limit (DoS protection)
+      if (this.connectionCount >= this.MAX_CONNECTIONS) {
+        console.warn(`⚠️ [DoS Protection] Rejecting connection - at capacity (${this.connectionCount}/${this.MAX_CONNECTIONS})`);
+        engineSocket.close();
+        return;
+      }
+
       // Track connection count for monitoring
       this.connectionCount++;
 
@@ -288,6 +310,7 @@ class UnifiedGameServer {
     const createHelpers = (room: Room): GameHelpers => ({
       // ⚡ OPTIMIZED: Throttle broadcasts to 10/sec per room
       // Prevents event loop saturation from rapid state updates
+      // Uses array queue to ensure all broadcasts are delivered (not just the last one)
       sendToRoom: (roomCode: string, event: string, data: any) => {
         const now = Date.now();
         const lastBroadcast = this.lastBroadcastTime.get(roomCode) || 0;
@@ -298,10 +321,13 @@ class UnifiedGameServer {
           namespace.to(roomCode).emit(event, data);
           this.lastBroadcastTime.set(roomCode, now);
 
-          // Process any pending broadcast for this room
-          if (this.pendingBroadcasts.has(roomCode)) {
-            const pending = this.pendingBroadcasts.get(roomCode)!;
-            this.pendingBroadcasts.delete(roomCode);
+          // Process any pending broadcasts for this room (queue, not just one)
+          const pendingQueue = this.pendingBroadcasts.get(roomCode);
+          if (pendingQueue && pendingQueue.length > 0) {
+            const pending = pendingQueue.shift()!; // Get first in queue
+            if (pendingQueue.length === 0) {
+              this.pendingBroadcasts.delete(roomCode);
+            }
 
             // Schedule the pending broadcast for later
             setTimeout(() => {
@@ -310,8 +336,11 @@ class UnifiedGameServer {
             }, this.broadcastThrottleMs);
           }
         } else {
-          // Too soon - queue this broadcast as pending (overwrites previous pending)
-          this.pendingBroadcasts.set(roomCode, { event, data });
+          // Too soon - add to queue (preserves all pending broadcasts)
+          if (!this.pendingBroadcasts.has(roomCode)) {
+            this.pendingBroadcasts.set(roomCode, []);
+          }
+          this.pendingBroadcasts.get(roomCode)!.push({ event, data });
         }
       },
       sendToPlayer: (socketId: string, event: string, data: any) => {
@@ -742,6 +771,12 @@ class UnifiedGameServer {
       });
 
       socket.on('webrtc:offer', (data: { roomCode: string; toPeerId: string; offer: RTCSessionDescriptionInit }) => {
+        // Rate limiting - max 20 offers per minute per socket (covers renegotiations)
+        if (!validationService.checkRateLimit(`webrtc:offer:${socket.id}`, 20, 60000)) {
+          console.log(`⚠️ [WebRTC] Rate limit exceeded for offer from ${socket.id}`);
+          return;
+        }
+
         console.log(`[WebRTC] Relaying offer from ${socket.id} to ${data.toPeerId} in room ${data.roomCode}`);
 
         // Relay the offer to the target peer
@@ -752,6 +787,12 @@ class UnifiedGameServer {
       });
 
       socket.on('webrtc:answer', (data: { roomCode: string; toPeerId: string; answer: RTCSessionDescriptionInit }) => {
+        // Rate limiting - max 20 answers per minute per socket
+        if (!validationService.checkRateLimit(`webrtc:answer:${socket.id}`, 20, 60000)) {
+          console.log(`⚠️ [WebRTC] Rate limit exceeded for answer from ${socket.id}`);
+          return;
+        }
+
         console.log(`[WebRTC] Relaying answer from ${socket.id} to ${data.toPeerId} in room ${data.roomCode}`);
 
         // Relay the answer to the target peer
@@ -762,6 +803,12 @@ class UnifiedGameServer {
       });
 
       socket.on('webrtc:ice-candidate', (data: { roomCode: string; toPeerId: string; candidate: RTCIceCandidateInit }) => {
+        // Rate limiting - max 100 ICE candidates per minute per socket (ICE trickling can be bursty)
+        if (!validationService.checkRateLimit(`webrtc:ice:${socket.id}`, 100, 60000)) {
+          console.log(`⚠️ [WebRTC] Rate limit exceeded for ICE candidate from ${socket.id}`);
+          return;
+        }
+
         console.log(`[WebRTC] Relaying ICE candidate from ${socket.id} to ${data.toPeerId} in room ${data.roomCode}`);
 
         // Relay the ICE candidate to the target peer

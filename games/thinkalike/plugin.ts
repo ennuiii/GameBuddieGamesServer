@@ -28,6 +28,17 @@ import {
   createInitialPlayerData,
   DEFAULT_SETTINGS
 } from './types.js';
+import {
+  MAX_PLAYERS,
+  MIN_PLAYERS,
+  TYPING_UPDATE_INTERVAL_MS,
+  COUNTDOWN_DURATION_MS,
+  VOICE_VOTE_TIMEOUT_MS,
+  TIMER_UPDATE_INTERVAL_MS,
+  MAX_STORED_MESSAGES,
+  MIN_TIMER_DURATION_SECONDS,
+  MAX_TIMER_DURATION_SECONDS,
+} from './constants.js';
 
 // ============================================================================
 // PLUGIN CLASS
@@ -51,8 +62,8 @@ class ThinkAlikePlugin implements GamePlugin {
   // ============================================================================
 
   defaultSettings: RoomSettings = {
-    minPlayers: 2,  // Exactly 2 players required to start
-    maxPlayers: 999,  // Allow unlimited players (2 active + unlimited spectators)
+    minPlayers: MIN_PLAYERS,
+    maxPlayers: MAX_PLAYERS,
     gameSpecific: {
       ...DEFAULT_SETTINGS
     } as ThinkAlikeSettings
@@ -65,6 +76,12 @@ class ThinkAlikePlugin implements GamePlugin {
   private io: any;
   private timers = new Map<string, NodeJS.Timeout>();
   private intervals = new Map<string, NodeJS.Timeout>();
+  // Rate limiting for typing updates
+  private lastTypingUpdate = new Map<string, number>();
+  // Guard against race conditions - prevent double reveals
+  private revealInProgress = new Set<string>();
+  // Guard against double timeout handling
+  private timeoutInProgress = new Set<string>();
 
   // ============================================================================
   // LIFECYCLE HOOKS
@@ -183,11 +200,16 @@ class ThinkAlikePlugin implements GamePlugin {
   onPlayerLeave(room: Room, player: Player): void {
     console.log(`[${this.name}] Player ${player.name} removed from room ${room.code}`);
 
+    // Clean up typing rate limit entry for this player
+    const playerKey = `${room.code}:${player.id}`;
+    this.lastTypingUpdate.delete(playerKey);
+
     const gameState = room.gameState.data as ThinkAlikeGameState;
 
-    // Check if game should end (need exactly 2 players)
-    const connectedPlayers = Array.from(room.players.values()).filter(p => p.connected);
-    if (gameState.phase !== 'lobby' && connectedPlayers.length < 2) {
+    // Check if game should end (need exactly 2 ACTIVE players, not counting spectators)
+    const connectedActivePlayers = Array.from(room.players.values())
+      .filter(p => p.connected && !(p.gameData as ThinkAlikePlayerData)?.isSpectator);
+    if (gameState.phase !== 'lobby' && connectedActivePlayers.length < 2) {
       this.endGame(room, 'Player left the game');
     }
 
@@ -296,8 +318,8 @@ class ThinkAlikePlugin implements GamePlugin {
         voiceMode: gameState.settings.voiceMode
       },
 
-      // Messages (last 100)
-      messages: room.messages.slice(-100),
+      // Messages (most recent)
+      messages: room.messages.slice(-MAX_STORED_MESSAGES),
 
       // CRITICAL: Client needs to identify themselves
       mySocketId: socketId,
@@ -383,10 +405,14 @@ class ThinkAlikePlugin implements GamePlugin {
         gameState.player1Submitted = false;
         gameState.player2Submitted = false;
 
-        // Store player identity (by name) for stable mapping across reconnections
+        // Store player identity for stable mapping across reconnections
+        // Use player.id for game logic (stable, unique), name for display only
+        // NOTE: Assignment order depends on Map iteration order (insertion order in JS).
+        gameState.player1Id = activePlayers[0]?.id || null;
+        gameState.player2Id = activePlayers[1]?.id || null;
         gameState.player1Name = activePlayers[0]?.name || null;
         gameState.player2Name = activePlayers[1]?.name || null;
-        console.log(`[${this.name}] Player slots assigned: P1=${gameState.player1Name}, P2=${gameState.player2Name}`);
+        console.log(`[${this.name}] Player slots assigned: P1=${gameState.player1Name} (${gameState.player1Id}), P2=${gameState.player2Name} (${gameState.player2Id})`);
 
         // Update phase
         room.gameState.phase = 'round_prep';
@@ -412,7 +438,7 @@ class ThinkAlikePlugin implements GamePlugin {
           
           console.log(`[${this.name}] Round prep countdown complete, transitioning to word input in room ${room.code}`);
           this.startWordInputPhase(room);
-        }, 3500);
+        }, COUNTDOWN_DURATION_MS);
         this.timers.set(timerKey, timeout);
 
       } catch (error) {
@@ -438,7 +464,8 @@ class ThinkAlikePlugin implements GamePlugin {
         }
 
         // Validate word
-        const word = data.word.trim().toUpperCase();
+        // Normalize: trim, uppercase, strip punctuation (keep letters, numbers, spaces)
+        const word = data.word.trim().toUpperCase().replace(/[^A-Z0-9 ]/g, '');
         if (!word || word.length === 0) {
           socket.emit('error', { message: 'Word cannot be empty' });
           return;
@@ -448,8 +475,8 @@ class ThinkAlikePlugin implements GamePlugin {
           return;
         }
 
-        // Determine which player slot by name (not array index) for stable reconnection
-        const isPlayer1 = player.name === gameState.player1Name;
+        // Determine which player slot by ID (not array index or name) for stable reconnection
+        const isPlayer1 = player.id === gameState.player1Id;
 
         if (isPlayer1) {
           gameState.player1Word = word;
@@ -463,6 +490,8 @@ class ThinkAlikePlugin implements GamePlugin {
 
         // Check if both players have submitted
         if (gameState.player1Submitted && gameState.player2Submitted) {
+          // RACE CONDITION FIX: Clear timer BEFORE reveal to prevent timeout race
+          this.clearTimer(`${room.code}:round-timer`);
           // Both submitted - move to reveal phase
           this.revealWords(room);
         } else {
@@ -506,9 +535,15 @@ class ThinkAlikePlugin implements GamePlugin {
           // After 3.5 seconds, start word input (matches client countdown: 3→2→1→GO!)
           const timerKey = `${room.code}:next-round-transition`;
           const timeout = setTimeout(() => {
+            // RACE CONDITION CHECK: Ensure phase hasn't changed (e.g. by restart/end game)
+            if (room.gameState.phase !== 'round_prep') {
+              console.log(`[${this.name}] Timer expired but phase changed to ${room.gameState.phase}, aborting transition`);
+              return;
+            }
+
             console.log(`[${this.name}] Round prep countdown complete in next-round, transitioning to word input in room ${room.code}`);
             this.startWordInputPhase(room);
-          }, 3500);
+          }, COUNTDOWN_DURATION_MS);
           this.timers.set(timerKey, timeout);
         } else {
           // No lives left - game over
@@ -575,14 +610,38 @@ class ThinkAlikePlugin implements GamePlugin {
           return;
         }
 
-        // Validate settings
-        if (data.settings.timerDuration && (data.settings.timerDuration < 30 || data.settings.timerDuration > 180)) {
-          socket.emit('error', { message: 'Timer must be between 30 and 180 seconds' });
+        // Validate settings object exists
+        if (!data || !data.settings || typeof data.settings !== 'object') {
+          socket.emit('error', { message: 'Invalid settings data' });
           return;
         }
 
-        if (data.settings.maxLives && (data.settings.maxLives < 1 || data.settings.maxLives > 10)) {
-          socket.emit('error', { message: 'Lives must be between 1 and 10' });
+        // Validate timerDuration if provided
+        if (data.settings.timerDuration !== undefined) {
+          if (typeof data.settings.timerDuration !== 'number' ||
+              Number.isNaN(data.settings.timerDuration) ||
+              data.settings.timerDuration < MIN_TIMER_DURATION_SECONDS ||
+              data.settings.timerDuration > MAX_TIMER_DURATION_SECONDS) {
+            socket.emit('error', { message: `Timer must be a number between ${MIN_TIMER_DURATION_SECONDS} and ${MAX_TIMER_DURATION_SECONDS} seconds` });
+            return;
+          }
+        }
+
+        // Validate maxLives if provided
+        if (data.settings.maxLives !== undefined) {
+          if (typeof data.settings.maxLives !== 'number' ||
+              Number.isNaN(data.settings.maxLives) ||
+              !Number.isInteger(data.settings.maxLives) ||
+              data.settings.maxLives < 1 ||
+              data.settings.maxLives > 10) {
+            socket.emit('error', { message: 'Lives must be an integer between 1 and 10' });
+            return;
+          }
+        }
+
+        // Validate voiceMode if provided
+        if (data.settings.voiceMode !== undefined && typeof data.settings.voiceMode !== 'boolean') {
+          socket.emit('error', { message: 'Voice mode must be a boolean' });
           return;
         }
 
@@ -630,8 +689,8 @@ class ThinkAlikePlugin implements GamePlugin {
         }
 
         // Store vote (reusing player word fields for vote storage)
-        // Player 1 is first to join, Player 2 is second
-        const isPlayer1 = Array.from(room.players.values())[0]?.id === player.id;
+        // Use ID-based identification for stable reconnection
+        const isPlayer1 = player.id === gameState.player1Id;
         if (isPlayer1) {
           gameState.player1Word = data.vote; // Store vote in word field temporarily
           gameState.player1Submitted = true;
@@ -642,8 +701,9 @@ class ThinkAlikePlugin implements GamePlugin {
 
         console.log(`[${this.name}] Voice vote from ${player.name}: ${data.vote}`);
 
-        // Notify opponent of the vote
-        const opponentPlayer = Array.from(room.players.values()).find(p => p.id !== player.id);
+        // Notify opponent of the vote (use ID-based matching to avoid targeting spectators)
+        const opponentId = isPlayer1 ? gameState.player2Id : gameState.player1Id;
+        const opponentPlayer = Array.from(room.players.values()).find(p => p.id === opponentId);
         if (opponentPlayer && this.io) {
           const namespace = this.io.of(this.namespace);
           namespace.to(opponentPlayer.socketId).emit('game:opponent-vote', {
@@ -653,8 +713,49 @@ class ThinkAlikePlugin implements GamePlugin {
           });
         }
 
+        // Start timeout for second vote (prevent infinite wait if player disconnects)
+        const voiceVoteTimeoutKey = `${room.code}:voice-vote-timeout`;
+        if (!this.timers.has(voiceVoteTimeoutKey)) {
+          const timeout = setTimeout(() => {
+            const currentGameState = room.gameState.data as ThinkAlikeGameState;
+            // Only auto-submit if still waiting for a vote
+            if (currentGameState.phase === 'word_input' &&
+                (!currentGameState.player1Submitted || !currentGameState.player2Submitted)) {
+              console.log(`[${this.name}] Voice vote timeout in room ${room.code}`);
+
+              // Clear round timer to prevent duplicate timer events
+              this.clearTimer(`${room.code}:round-timer`);
+
+              // Auto-submit no-match for missing votes
+              if (!currentGameState.player1Submitted) {
+                currentGameState.player1Word = 'no-match';
+                currentGameState.player1Submitted = true;
+              }
+              if (!currentGameState.player2Submitted) {
+                currentGameState.player2Word = 'no-match';
+                currentGameState.player2Submitted = true;
+              }
+
+              // Process as no-match
+              currentGameState.livesRemaining--;
+              if (currentGameState.livesRemaining > 0) {
+                currentGameState.phase = 'reveal';
+                room.gameState.phase = 'reveal';
+                this.broadcastRoomState(room);
+              } else {
+                this.endGame(room, 'all-lives-lost');
+              }
+            }
+            this.timers.delete(voiceVoteTimeoutKey);
+          }, VOICE_VOTE_TIMEOUT_MS);
+          this.timers.set(voiceVoteTimeoutKey, timeout);
+        }
+
         // Check if both players voted
         if (gameState.player1Submitted && gameState.player2Submitted) {
+          // Clear the timeout since both players voted
+          this.clearTimer(`${room.code}:voice-vote-timeout`);
+
           const vote1 = gameState.player1Word as string;
           const vote2 = gameState.player2Word as string;
 
@@ -743,20 +844,22 @@ class ThinkAlikePlugin implements GamePlugin {
 
         const gameState = room.gameState.data as ThinkAlikeGameState;
 
-        // Reset opponent's vote to allow revoting
-        const isPlayer1 = Array.from(room.players.values())[0]?.id === player.id;
+        // Store this player's revote and mark them as submitted
+        // Use ID-based identification for stable reconnection
+        const isPlayer1 = player.id === gameState.player1Id;
         if (isPlayer1) {
           gameState.player1Word = data.vote;
-          gameState.player2Submitted = false; // Reset opponent's submission flag
+          gameState.player1Submitted = true; // Mark this player as submitted
         } else {
           gameState.player2Word = data.vote;
-          gameState.player1Submitted = false; // Reset opponent's submission flag
+          gameState.player2Submitted = true; // Mark this player as submitted
         }
 
         console.log(`[${this.name}] Voice mode revote from ${player.name}: ${data.vote}`);
 
-        // Notify opponent of the revote
-        const opponentPlayer = Array.from(room.players.values()).find(p => p.id !== player.id);
+        // Notify opponent of the revote (use ID-based matching to avoid targeting spectators)
+        const opponentId = isPlayer1 ? gameState.player2Id : gameState.player1Id;
+        const opponentPlayer = Array.from(room.players.values()).find(p => p.id === opponentId);
         if (opponentPlayer && this.io) {
           const namespace = this.io.of(this.namespace);
           namespace.to(opponentPlayer.socketId).emit('game:opponent-vote', {
@@ -766,8 +869,48 @@ class ThinkAlikePlugin implements GamePlugin {
           });
         }
 
+        // Start/restart timeout for dispute revote (prevent infinite wait if player disconnects)
+        const disputeTimeoutKey = `${room.code}:voice-dispute-timeout`;
+        this.clearTimer(disputeTimeoutKey); // Clear any existing timeout
+        const timeout = setTimeout(() => {
+          const currentGameState = room.gameState.data as ThinkAlikeGameState;
+          // Only auto-submit if still waiting for a vote during word_input phase
+          if (currentGameState.phase === 'word_input' &&
+              (!currentGameState.player1Submitted || !currentGameState.player2Submitted)) {
+            console.log(`[${this.name}] Voice dispute timeout in room ${room.code}`);
+
+            // Clear round timer to prevent duplicate timer events
+            this.clearTimer(`${room.code}:round-timer`);
+
+            // Auto-submit no-match for missing votes
+            if (!currentGameState.player1Submitted) {
+              currentGameState.player1Word = 'no-match';
+              currentGameState.player1Submitted = true;
+            }
+            if (!currentGameState.player2Submitted) {
+              currentGameState.player2Word = 'no-match';
+              currentGameState.player2Submitted = true;
+            }
+
+            // Process as no-match
+            currentGameState.livesRemaining--;
+            if (currentGameState.livesRemaining > 0) {
+              currentGameState.phase = 'reveal';
+              room.gameState.phase = 'reveal';
+              this.broadcastRoomState(room);
+            } else {
+              this.endGame(room, 'all-lives-lost');
+            }
+          }
+          this.timers.delete(disputeTimeoutKey);
+        }, VOICE_VOTE_TIMEOUT_MS);
+        this.timers.set(disputeTimeoutKey, timeout);
+
         // Check if both players have voted again
         if (gameState.player1Submitted && gameState.player2Submitted) {
+          // Clear the timeout since both players voted
+          this.clearTimer(`${room.code}:voice-dispute-timeout`);
+
           const vote1 = gameState.player1Word as string;
           const vote2 = gameState.player2Word as string;
 
@@ -839,8 +982,17 @@ class ThinkAlikePlugin implements GamePlugin {
         // Only accept typing during WORD_INPUT phase
         if (gameState.phase !== 'word_input') return;
 
-        // Determine which player slot by name (not array index) for stable reconnection
-        const isPlayer1 = player.name === gameState.player1Name;
+        // Rate limiting: max 10 updates per second per player
+        const playerKey = `${room.code}:${player.id}`;
+        const now = Date.now();
+        const lastUpdate = this.lastTypingUpdate.get(playerKey) || 0;
+        if (now - lastUpdate < TYPING_UPDATE_INTERVAL_MS) {
+          return; // Too soon, skip this update
+        }
+        this.lastTypingUpdate.set(playerKey, now);
+
+        // Determine which player slot by ID (not array index or name) for stable reconnection
+        const isPlayer1 = player.id === gameState.player1Id;
 
         // Update live word in game state
         if (isPlayer1) {
@@ -875,17 +1027,108 @@ class ThinkAlikePlugin implements GamePlugin {
   // ============================================================================
 
   /**
-   * Broadcast room state to all players
+   * Broadcast room state to all players with optimized serialization.
+   * Pre-computes common state and only personalizes per-player fields.
    */
   private broadcastRoomState(room: Room): void {
     if (!this.io) return;
 
     const namespace = this.io.of(this.namespace);
+    const gameState = room.gameState.data as ThinkAlikeGameState;
+    const allPlayers = Array.from(room.players.values());
+
+    // Pre-compute common data once
+    const activePlayers = allPlayers.filter(p => !(p.gameData as ThinkAlikePlayerData)?.isSpectator);
+    const spectators = allPlayers.filter(p => (p.gameData as ThinkAlikePlayerData)?.isSpectator);
+
+    // Pre-serialize spectators (same for all viewers)
+    const serializedSpectators = spectators.map(s => ({
+      socketId: s.socketId,
+      name: s.name,
+      isHost: s.isHost,
+      connected: s.connected,
+      isSpectator: true,
+      premiumTier: s.premiumTier
+    }));
+
+    // Pre-serialize base player info (without currentWord)
+    const basePlayerInfo = activePlayers.map(p => {
+      const playerData = p.gameData as ThinkAlikePlayerData;
+      const isPlayer1 = p.id === gameState.player1Id;
+      return {
+        socketId: p.socketId,
+        name: p.name,
+        isHost: p.isHost,
+        connected: p.connected,
+        disconnectedAt: p.disconnectedAt,
+        isReady: playerData?.isReady || false,
+        isSpectator: false,
+        hasSubmitted: isPlayer1 ? gameState.player1Submitted : gameState.player2Submitted,
+        premiumTier: p.premiumTier,
+        // Store for word lookup
+        _isPlayer1: isPlayer1
+      };
+    });
+
+    // Pre-compute common state once
+    const baseState = {
+      code: room.code,
+      hostId: room.hostId,
+      spectators: serializedSpectators,
+      state: this.mapPhaseToClientState(gameState.phase),
+      gameData: {
+        currentRound: gameState.currentRound,
+        maxRounds: gameState.maxRounds,
+        livesRemaining: gameState.livesRemaining,
+        maxLives: gameState.maxLives,
+        timeRemaining: gameState.timeRemaining,
+        rounds: gameState.rounds,
+        settings: {
+          timerDuration: gameState.settings.timerDuration,
+          maxLives: gameState.settings.maxLives
+        }
+      },
+      settings: {
+        minPlayers: room.settings.minPlayers,
+        maxPlayers: room.settings.maxPlayers,
+        timerDuration: gameState.settings.timerDuration,
+        maxLives: gameState.settings.maxLives,
+        voiceMode: gameState.settings.voiceMode
+      },
+      messages: room.messages.slice(-MAX_STORED_MESSAGES),
+      isStreamerMode: room.isStreamerMode || false,
+      hideRoomCode: room.hideRoomCode || false,
+      isGameBuddiesRoom: room.isGameBuddiesRoom || false,
+      gameBuddiesRoomId: room.gameBuddiesRoomId
+    };
 
     // Send personalized state to each player
     room.players.forEach(player => {
-      const serialized = this.serializeRoom(room, player.socketId);
-      namespace.to(player.socketId).emit('roomStateUpdated', serialized);
+      const isViewerSpectator = (player.gameData as ThinkAlikePlayerData)?.isSpectator || false;
+
+      // Create player-specific players array with appropriate words
+      const personalizedPlayers = basePlayerInfo.map(p => {
+        let currentWord = null;
+        if (isViewerSpectator) {
+          // Spectators see LIVE words
+          currentWord = p._isPlayer1 ? gameState.player1LiveWord : gameState.player2LiveWord;
+        } else if (p.socketId === player.socketId) {
+          // Players see their own word
+          currentWord = p._isPlayer1 ? gameState.player1Word : gameState.player2Word;
+        }
+
+        // Return without internal _isPlayer1 field
+        const { _isPlayer1, ...cleanPlayer } = p;
+        return { ...cleanPlayer, currentWord };
+      });
+
+      // Send personalized state
+      namespace.to(player.socketId).emit('roomStateUpdated', {
+        ...baseState,
+        players: personalizedPlayers,
+        mySocketId: player.socketId,
+        isSpectator: isViewerSpectator
+      });
     });
   }
 
@@ -944,25 +1187,32 @@ class ThinkAlikePlugin implements GamePlugin {
     // Clear existing timer
     this.clearTimer(timerKey);
 
-    // Start countdown
+    // Start countdown with try-catch to prevent timer crashes
     const interval = setInterval(() => {
-      gameState.timeRemaining--;
+      try {
+        gameState.timeRemaining--;
 
-      // Broadcast timer update
-      if (this.io) {
-        const namespace = this.io.of(this.namespace);
-        namespace.to(room.code).emit('timer:update', {
-          timeRemaining: gameState.timeRemaining
-        });
-      }
+        // Broadcast timer update
+        if (this.io) {
+          const namespace = this.io.of(this.namespace);
+          namespace.to(room.code).emit('timer:update', {
+            timeRemaining: gameState.timeRemaining
+          });
+        }
 
-      // Check if time is up
-      if (gameState.timeRemaining <= 0) {
+        // Check if time is up
+        if (gameState.timeRemaining <= 0) {
+          clearInterval(interval);
+          this.intervals.delete(timerKey);
+          this.onRoundTimeout(room);
+        }
+      } catch (error) {
+        console.error(`[${this.name}] Error in timer callback for room ${room.code}:`, error);
+        // Clear interval on error to prevent further issues
         clearInterval(interval);
         this.intervals.delete(timerKey);
-        this.onRoundTimeout(room);
       }
-    }, 1000);
+    }, TIMER_UPDATE_INTERVAL_MS);
 
     this.intervals.set(timerKey, interval);
   }
@@ -971,103 +1221,140 @@ class ThinkAlikePlugin implements GamePlugin {
    * Handle round timeout
    */
   private onRoundTimeout(room: Room): void {
-    const gameState = room.gameState.data as ThinkAlikeGameState;
-
-    console.log(`[${this.name}] Round timeout in room ${room.code}`);
-
-    // If both players haven't submitted, auto-submit empty words
-    if (!gameState.player1Submitted) {
-      gameState.player1Word = '';
-      gameState.player1Submitted = true;
+    // RACE CONDITION GUARD: Prevent double timeout handling
+    if (this.timeoutInProgress.has(room.code)) {
+      console.log(`[${this.name}] Timeout already in progress for room ${room.code}, skipping`);
+      return;
     }
-    if (!gameState.player2Submitted) {
-      gameState.player2Word = '';
-      gameState.player2Submitted = true;
-    }
+    this.timeoutInProgress.add(room.code);
 
-    // Reveal words
-    this.revealWords(room);
+    try {
+      const gameState = room.gameState.data as ThinkAlikeGameState;
+
+      // Skip if not in word_input phase (game may have ended or moved on)
+      if (gameState.phase !== 'word_input') {
+        console.log(`[${this.name}] Timeout fired but phase is ${gameState.phase}, skipping`);
+        return;
+      }
+
+      console.log(`[${this.name}] Round timeout in room ${room.code}`);
+
+      // If both players haven't submitted, auto-submit empty words
+      if (!gameState.player1Submitted) {
+        gameState.player1Word = '';
+        gameState.player1Submitted = true;
+      }
+      if (!gameState.player2Submitted) {
+        gameState.player2Word = '';
+        gameState.player2Submitted = true;
+      }
+
+      // Reveal words
+      this.revealWords(room);
+    } finally {
+      this.timeoutInProgress.delete(room.code);
+    }
   }
 
   /**
    * Reveal words and check for match
    */
   private revealWords(room: Room): void {
-    const gameState = room.gameState.data as ThinkAlikeGameState;
+    // RACE CONDITION GUARD: Prevent double reveal
+    if (this.revealInProgress.has(room.code)) {
+      console.log(`[${this.name}] Reveal already in progress for room ${room.code}, skipping`);
+      return;
+    }
+    this.revealInProgress.add(room.code);
 
-    // Stop timer
-    this.clearTimer(`${room.code}:round-timer`);
+    try {
+      const gameState = room.gameState.data as ThinkAlikeGameState;
 
-    // Calculate time taken
-    const timeTaken = gameState.timerStartedAt
-      ? Math.floor((Date.now() - gameState.timerStartedAt) / 1000)
-      : gameState.settings.timerDuration - gameState.timeRemaining;
-
-    // Check if words match (case-insensitive, trimmed)
-    const word1 = (gameState.player1Word || '').trim().toUpperCase();
-    const word2 = (gameState.player2Word || '').trim().toUpperCase();
-    const isMatch = word1.length > 0 && word1 === word2;
-
-    console.log(`[${this.name}] Reveal: "${word1}" vs "${word2}" - Match: ${isMatch}`);
-
-    // Add to history
-    const roundHistory: RoundHistory = {
-      number: gameState.currentRound,
-      player1Word: gameState.player1Word || '',
-      player2Word: gameState.player2Word || '',
-      wasMatch: isMatch,
-      timeTaken,
-      timestamp: Date.now()
-    };
-    gameState.rounds.push(roundHistory);
-
-    if (isMatch) {
-      // Victory! First match wins
-      gameState.phase = 'victory';
-      room.gameState.phase = 'victory';
-
-      // Broadcast final state
-      this.broadcastRoomState(room);
-
-      // Notify players
-      if (this.io) {
-        const namespace = this.io.of(this.namespace);
-        namespace.to(room.code).emit('game:victory', {
-          matchedWord: word1,
-          round: gameState.currentRound,
-          timeTaken
-        });
+      // Skip if already in reveal or later phase
+      if (gameState.phase !== 'word_input') {
+        console.log(`[${this.name}] Reveal called but phase is ${gameState.phase}, skipping`);
+        return;
       }
 
-      console.log(`[${this.name}] VICTORY in room ${room.code}! Word: ${word1}`);
+      // Stop timer
+      this.clearTimer(`${room.code}:round-timer`);
 
-    } else {
-      // No match - lose a life
-      gameState.livesRemaining--;
+      // Calculate time taken
+      const timeTaken = gameState.timerStartedAt
+        ? Math.floor((Date.now() - gameState.timerStartedAt) / 1000)
+        : gameState.settings.timerDuration - gameState.timeRemaining;
 
-      if (gameState.livesRemaining <= 0) {
-        // Game over - all lives lost
-        this.endGame(room, 'all-lives-lost');
-      } else {
-        // Move to reveal phase
-        gameState.phase = 'reveal';
-        room.gameState.phase = 'reveal';
+      // Check if words match (case-insensitive, trimmed)
+      // Normalize words for comparison: trim, uppercase, strip punctuation
+      const word1 = (gameState.player1Word || '').trim().toUpperCase().replace(/[^A-Z0-9 ]/g, '');
+      const word2 = (gameState.player2Word || '').trim().toUpperCase().replace(/[^A-Z0-9 ]/g, '');
+      const isMatch = word1.length > 0 && word1 === word2;
 
-        // Broadcast state
+      // Log word lengths, not actual words (privacy protection)
+      console.log(`[${this.name}] Reveal: ${word1.length} chars vs ${word2.length} chars - Match: ${isMatch}`);
+
+      // Add to history
+      const roundHistory: RoundHistory = {
+        number: gameState.currentRound,
+        player1Word: gameState.player1Word || '',
+        player2Word: gameState.player2Word || '',
+        wasMatch: isMatch,
+        timeTaken,
+        timestamp: Date.now()
+      };
+      gameState.rounds.push(roundHistory);
+
+      if (isMatch) {
+        // Victory! First match wins
+        gameState.phase = 'victory';
+        room.gameState.phase = 'victory';
+
+        // Broadcast final state
         this.broadcastRoomState(room);
 
         // Notify players
         if (this.io) {
           const namespace = this.io.of(this.namespace);
-          namespace.to(room.code).emit('game:no-match', {
-            player1Word: gameState.player1Word,
-            player2Word: gameState.player2Word,
-            livesRemaining: gameState.livesRemaining
+          namespace.to(room.code).emit('game:victory', {
+            matchedWord: word1,
+            round: gameState.currentRound,
+            timeTaken
           });
         }
 
-        console.log(`[${this.name}] No match in room ${room.code}. Lives: ${gameState.livesRemaining}`);
+        console.log(`[${this.name}] VICTORY in room ${room.code}! Word length: ${word1.length}`);
+
+      } else {
+        // No match - lose a life
+        gameState.livesRemaining--;
+
+        if (gameState.livesRemaining <= 0) {
+          // Game over - all lives lost
+          this.endGame(room, 'all-lives-lost');
+        } else {
+          // Move to reveal phase
+          gameState.phase = 'reveal';
+          room.gameState.phase = 'reveal';
+
+          // Broadcast state
+          this.broadcastRoomState(room);
+
+          // Notify players
+          if (this.io) {
+            const namespace = this.io.of(this.namespace);
+            namespace.to(room.code).emit('game:no-match', {
+              player1Word: gameState.player1Word,
+              player2Word: gameState.player2Word,
+              livesRemaining: gameState.livesRemaining
+            });
+          }
+
+          console.log(`[${this.name}] No match in room ${room.code}. Lives: ${gameState.livesRemaining}`);
+        }
       }
+    } finally {
+      // Always clear the guard when done
+      this.revealInProgress.delete(room.code);
     }
   }
 
@@ -1131,6 +1418,17 @@ class ThinkAlikePlugin implements GamePlugin {
         this.intervals.delete(key);
       }
     });
+
+    // Clear typing rate limit entries for this room
+    this.lastTypingUpdate.forEach((_, key) => {
+      if (key.startsWith(roomCode)) {
+        this.lastTypingUpdate.delete(key);
+      }
+    });
+
+    // Clear race condition guards for this room
+    this.revealInProgress.delete(roomCode);
+    this.timeoutInProgress.delete(roomCode);
   }
 }
 
