@@ -521,6 +521,7 @@ class ThinkAlikePlugin implements GamePlugin {
         if (gameState.livesRemaining > 0) {
           // Continue to next round
           gameState.phase = 'round_prep';
+          room.gameState.phase = 'round_prep';  // CRITICAL: Must set both for timer check
           gameState.currentRound++;
           gameState.player1Word = null;
           gameState.player2Word = null;
