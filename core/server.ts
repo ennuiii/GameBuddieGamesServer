@@ -31,6 +31,8 @@ import bingoPlugin from '../games/bingo/plugin.js';
 import DDFGamePlugin from '../games/ddf/plugin.js';
 import thinkAlikePlugin from '../games/thinkalike/plugin.js';
 import templatePlugin from '../games/template/plugin.js';
+import tronPlugin from '../games/tron/plugin.js';
+import bombermanPlugin from '../games/bomberman/plugin.js';
 
 /**
  * Global error handlers to prevent server crashes
@@ -369,7 +371,7 @@ class UnifiedGameServer {
       console.log(`[${plugin.id.toUpperCase()}] Player connected: ${socket.id}`);
 
       // Common event: Create room
-      socket.on('room:create', (data: {
+      socket.on('room:create', async (data: {
         playerName: string;
         roomCode?: string;
         isGameBuddiesRoom?: boolean;
@@ -408,6 +410,18 @@ class UnifiedGameServer {
           return;
         }
 
+        // SECURITY: Validate premium from Gamebuddies.io API instead of trusting client
+        let validatedPremiumTier = data.premiumTier || 'free';
+        if (data.sessionToken && data.isGameBuddiesRoom) {
+          try {
+            validatedPremiumTier = await gameBuddiesService.validatePremiumStatus(data.sessionToken);
+            console.log(`💎 [PREMIUM] Server-validated: ${validatedPremiumTier} (client: ${data.premiumTier})`);
+          } catch (err) {
+            console.error('[PREMIUM] Validation failed:', err);
+            validatedPremiumTier = 'free';
+          }
+        }
+        
         const player: Player = {
           socketId: socket.id,
           id: randomUUID(),
@@ -416,7 +430,7 @@ class UnifiedGameServer {
           connected: true,
           joinedAt: Date.now(),
           lastActivity: Date.now(),
-          premiumTier: data.premiumTier,
+          premiumTier: validatedPremiumTier,
         };
         console.log(`💎 [PREMIUM DEBUG] Player created with premiumTier: ${player.premiumTier}`);
 
@@ -520,7 +534,7 @@ class UnifiedGameServer {
       });
 
       // Common event: Join room
-      socket.on('room:join', (data: {
+      socket.on('room:join', async (data: {
         roomCode?: string;
         inviteToken?: string;
         playerName: string;
@@ -643,7 +657,18 @@ class UnifiedGameServer {
           }
         } else {
           // New player
-          player = this.createPlayer(socket.id, nameValidation.sanitizedValue!, data.premiumTier);
+          // SECURITY: Validate premium for new players
+          let newPlayerTier = data.premiumTier || 'free';
+          if (data.sessionToken && room.isGameBuddiesRoom) {
+            try {
+              newPlayerTier = await gameBuddiesService.validatePremiumStatus(data.sessionToken);
+              console.log(`💎 [PREMIUM] New player validated: ${newPlayerTier}`);
+            } catch (err) {
+              console.error('[PREMIUM] Validation failed:', err);
+              newPlayerTier = 'free';
+            }
+          }
+          player = this.createPlayer(socket.id, nameValidation.sanitizedValue!, newPlayerTier);
           sessionToken = this.sessionManager.createSession(player.id, room.code);
         }
 
@@ -1284,6 +1309,22 @@ class UnifiedGameServer {
       console.log('[Server] ✓ Template game registered');
     } else {
       console.error('[Server] ✗ Failed to register Template game');
+    }
+
+    // Register Tron game
+    const tronRegistered = await this.registerGame(tronPlugin);
+    if (tronRegistered) {
+      console.log('[Server] ✓ Tron game registered');
+    } else {
+      console.error('[Server] ✗ Failed to register Tron game');
+    }
+
+    // Register Bomberman game
+    const bombermanRegistered = await this.registerGame(bombermanPlugin);
+    if (bombermanRegistered) {
+      console.log('[Server] ✓ Bomberman game registered');
+    } else {
+      console.error('[Server] ✗ Failed to register Bomberman game');
     }
 
     // TODO: Load games dynamically from games/ directory

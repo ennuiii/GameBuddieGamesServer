@@ -437,6 +437,60 @@ export class GameBuddiesService {
       return false;
     }
   }
+  /**
+   * SECURITY: Validate premium status server-side
+   *
+   * Calls the GameBuddies.io API to get the REAL premium tier for a session.
+   * This prevents clients from spoofing their premium status via DevTools.
+   *
+   * @param sessionToken - The session token from Gamebuddies.io
+   * @returns The validated premium tier ('free', 'monthly', 'yearly', 'lifetime')
+   */
+  async validatePremiumStatus(sessionToken: string): Promise<string> {
+    if (!sessionToken) {
+      console.log('[GameBuddies] No session token provided, defaulting to free');
+      return 'free';
+    }
+
+    const url = `${this.centralServerUrl}/api/game-sessions/${sessionToken}`;
+
+    try {
+      console.log(`[GameBuddies] 💎 Validating premium status for session ${sessionToken.substring(0, 8)}...`);
+
+      const response = await axios.get(url, {
+        timeout: this.apiTimeout,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.data?.success && response.data?.session) {
+        const validatedTier = response.data.session.premiumTier || 'free';
+        console.log(`[GameBuddies] 💎 Premium validation result: ${validatedTier}`);
+        return validatedTier;
+      }
+
+      console.log('[GameBuddies] ⚠️ Invalid API response, defaulting to free');
+      return 'free';
+
+    } catch (error: any) {
+      if (error.code === 'ECONNABORTED') {
+        console.error(`[GameBuddies] ❌ Premium validation timeout (${this.apiTimeout}ms)`);
+      } else if (error.response?.status === 404) {
+        console.log('[GameBuddies] ⚠️ Session not found or expired, defaulting to free');
+      } else if (error.response) {
+        console.error(`[GameBuddies] ❌ Premium validation API error:`, {
+          status: error.response.status,
+          data: error.response.data,
+        });
+      } else {
+        console.error(`[GameBuddies] ❌ Premium validation network error:`, error.message);
+      }
+
+      // On error, default to free for security (fail closed)
+      return 'free';
+    }
+  }
 }
 
 // Singleton instance
