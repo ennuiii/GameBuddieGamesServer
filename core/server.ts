@@ -377,6 +377,7 @@ class UnifiedGameServer {
         isGameBuddiesRoom?: boolean;
         settings?: any;
         playerId?: string;
+        userId?: string;
         sessionToken?: string;
         premiumTier?: string;
         streamerMode?: boolean;
@@ -425,6 +426,8 @@ class UnifiedGameServer {
         const player: Player = {
           socketId: socket.id,
           id: randomUUID(),
+          userId: data.userId,
+          isGuest: !data.userId,
           name: nameValidation.sanitizedValue!,
           isHost: true,
           connected: true,
@@ -538,6 +541,7 @@ class UnifiedGameServer {
         roomCode?: string;
         inviteToken?: string;
         playerName: string;
+        userId?: string;
         sessionToken?: string;
         premiumTier?: string;
       }) => {
@@ -643,7 +647,7 @@ class UnifiedGameServer {
                 reason: 'player_not_in_room',
                 message: 'Your previous session expired. Joining as new player.'
               });
-              player = this.createPlayer(socket.id, nameValidation.sanitizedValue!, data.premiumTier);
+              player = this.createPlayer(socket.id, nameValidation.sanitizedValue!, data.premiumTier, data.userId);
               sessionToken = this.sessionManager.createSession(player.id, room.code);
             }
           } else {
@@ -652,7 +656,7 @@ class UnifiedGameServer {
               reason: 'session_invalid',
               message: 'Session expired or invalid. Joining as new player.'
             });
-            player = this.createPlayer(socket.id, nameValidation.sanitizedValue!, data.premiumTier);
+            player = this.createPlayer(socket.id, nameValidation.sanitizedValue!, data.premiumTier, data.userId);
             sessionToken = this.sessionManager.createSession(player.id, room.code);
           }
         } else {
@@ -668,7 +672,7 @@ class UnifiedGameServer {
               newPlayerTier = 'free';
             }
           }
-          player = this.createPlayer(socket.id, nameValidation.sanitizedValue!, newPlayerTier);
+          player = this.createPlayer(socket.id, nameValidation.sanitizedValue!, newPlayerTier, data.userId);
           sessionToken = this.sessionManager.createSession(player.id, room.code);
         }
 
@@ -1336,10 +1340,12 @@ class UnifiedGameServer {
   /**
    * Helper: Create new player
    */
-  private createPlayer(socketId: string, name: string, premiumTier?: string): Player {
+  private createPlayer(socketId: string, name: string, premiumTier?: string, userId?: string): Player {
     return {
       socketId,
       id: randomUUID(),
+      userId,
+      isGuest: !userId,
       name,
       isHost: false,
       connected: true,

@@ -491,6 +491,69 @@ export class GameBuddiesService {
       return 'free';
     }
   }
+
+
+  /**
+   * Get premium status by user ID (direct lookup)
+   *
+   * Use this when you have the user's Supabase ID and need their premium status
+   * without a session token.
+   *
+   * @param userId - The Supabase user UUID
+   * @param gameId - The game making the request (for API key lookup)
+   * @returns Premium status object or null on error
+   */
+  async getUserPremiumStatus(userId: string, gameId: string): Promise<{
+    premium_tier: string;
+    premium_expires_at: string | null;
+    is_active: boolean;
+  } | null> {
+    const apiKey = this.gameApiKeys.get(gameId);
+
+    if (!apiKey) {
+      console.warn(`[GameBuddies] No API key for ${gameId}, cannot lookup premium by userId`);
+      return null;
+    }
+
+    const url = `${this.centralServerUrl}/api/auth/users/${userId}/premium`;
+
+    try {
+      console.log(`[GameBuddies] 💎 Looking up premium for user ${userId.substring(0, 8)}...`);
+
+      const response = await axios.get(url, {
+        timeout: this.apiTimeout,
+        headers: {
+          'Content-Type': 'application/json',
+          'X-API-Key': apiKey,
+        },
+      });
+
+      if (response.data?.success) {
+        console.log(`[GameBuddies] 💎 Premium lookup result: ${response.data.premium_tier} (active: ${response.data.is_active})`);
+        return {
+          premium_tier: response.data.premium_tier,
+          premium_expires_at: response.data.premium_expires_at,
+          is_active: response.data.is_active,
+        };
+      }
+
+      console.log('[GameBuddies] ⚠️ Invalid API response for premium lookup');
+      return null;
+
+    } catch (error: any) {
+      if (error.code === 'ECONNABORTED') {
+        console.error(`[GameBuddies] ❌ Premium lookup timeout (${this.apiTimeout}ms)`);
+      } else if (error.response?.status === 404) {
+        console.log(`[GameBuddies] ⚠️ User ${userId} not found`);
+      } else if (error.response?.status === 401) {
+        console.error('[GameBuddies] ❌ Invalid API key for premium lookup');
+      } else {
+        console.error('[GameBuddies] ❌ Premium lookup error:', error.message);
+      }
+
+      return null;
+    }
+  }
 }
 
 // Singleton instance

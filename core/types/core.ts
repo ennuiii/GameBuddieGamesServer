@@ -7,6 +7,8 @@ import { Server as SocketIOServer, Socket } from 'socket.io';
 export interface Player {
   socketId: string;
   id: string; // GameBuddies player ID (if from platform)
+  userId?: string; // Supabase User ID (for authenticated users)
+  isGuest: boolean; // true if no userId (anonymous/guest player)
   name: string;
   isHost: boolean;
   connected: boolean;

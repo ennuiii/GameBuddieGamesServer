@@ -18,6 +18,7 @@ import { validationService } from '../services/ValidationService.js';
 export class RoomManager {
   private rooms: Map<string, Room>;
   private playerRoomMap: Map<string, string>; // socketId -> roomCode
+  private socketToPlayerId: Map<string, string>; // socketId -> playerId (for player.id lookup)
   private inviteTokens: Map<string, { roomCode: string; createdAt: number }>; // inviteToken -> { roomCode, createdAt }
   private oldSocketCleanupTimers: Map<string, NodeJS.Timeout>; // Track cleanup timers for old socket IDs
   private cleanupInterval: NodeJS.Timeout;
@@ -32,6 +33,7 @@ export class RoomManager {
   constructor() {
     this.rooms = new Map();
     this.playerRoomMap = new Map();
+    this.socketToPlayerId = new Map();
     this.inviteTokens = new Map();
     this.oldSocketCleanupTimers = new Map();
 
@@ -68,8 +70,9 @@ export class RoomManager {
       messages: [],
     };
     
-    // Add host as the first player
-    room.players.set(hostPlayer.socketId, hostPlayer);
+    // Add host as the first player (keyed by player.id, not socketId)
+    room.players.set(hostPlayer.id, hostPlayer);
+    this.socketToPlayerId.set(hostPlayer.socketId, hostPlayer.id);
 
     this.rooms.set(roomCode, room);
     this.playerRoomMap.set(hostPlayer.socketId, roomCode);
@@ -147,7 +150,8 @@ export class RoomManager {
       return false;
     }
 
-    room.players.set(player.socketId, player);
+    room.players.set(player.id, player);
+    this.socketToPlayerId.set(player.socketId, player.id);
     this.playerRoomMap.set(player.socketId, roomCode);
     room.lastActivity = Date.now();
 
@@ -171,8 +175,12 @@ export class RoomManager {
       return { room: undefined, player: undefined };
     }
 
-    const player = room.players.get(socketId);
-    room.players.delete(socketId);
+    const playerId = this.socketToPlayerId.get(socketId);
+    const player = playerId ? room.players.get(playerId) : undefined;
+    if (playerId) {
+      room.players.delete(playerId);
+      this.socketToPlayerId.delete(socketId);
+    }
     this.playerRoomMap.delete(socketId);
     room.lastActivity = Date.now();
 
@@ -230,8 +238,17 @@ export class RoomManager {
    * Get player by socket ID
    */
   getPlayer(socketId: string): Player | undefined {
+    const playerId = this.socketToPlayerId.get(socketId);
+    if (!playerId) return undefined;
     const room = this.getRoomBySocket(socketId);
-    return room?.players.get(socketId);
+    return room?.players.get(playerId);
+  }
+
+  /**
+   * Get player ID by socket ID
+   */
+  getPlayerIdBySocket(socketId: string): string | undefined {
+    return this.socketToPlayerId.get(socketId);
   }
 
   /**
@@ -241,7 +258,9 @@ export class RoomManager {
     const room = this.getRoomBySocket(socketId);
     if (!room) return false;
 
-    const player = room.players.get(socketId);
+    const playerId = this.socketToPlayerId.get(socketId);
+    if (!playerId) return false;
+    const player = room.players.get(playerId);
     if (!player) return false;
 
     Object.assign(player, updates);
@@ -344,9 +363,10 @@ export class RoomManager {
     player.connected = true;
     player.lastActivity = Date.now();
 
-    // Swap socket IDs in room.players immediately to prevent duplicates
-    room.players.delete(oldSocketId);
-    room.players.set(newSocketId, player);
+    // No need to swap keys in room.players - it's keyed by player.id!
+    // Just update the socketToPlayerId map
+    this.socketToPlayerId.delete(oldSocketId);
+    this.socketToPlayerId.set(newSocketId, player.id);
 
     // Update mappings
     this.playerRoomMap.delete(oldSocketId);
@@ -476,6 +496,7 @@ export class RoomManager {
 
     this.rooms.clear();
     this.playerRoomMap.clear();
+    this.socketToPlayerId.clear();
     console.log('[RoomManager] Destroyed');
   }
 }
