@@ -397,6 +397,7 @@ class UnifiedGameServer {
           roomCode: data.roomCode,
           isGameBuddiesRoom: data.isGameBuddiesRoom,
           playerId: data.playerId,
+          userId: data.userId,
           sessionToken: data.sessionToken?.substring(0, 8) + '...',
           premiumTier: data.premiumTier,
           settings: data.settings,
@@ -546,6 +547,13 @@ class UnifiedGameServer {
         sessionToken?: string;
         premiumTier?: string;
       }) => {
+        console.log(`📥 [${plugin.id.toUpperCase()}] room:join received:`, {
+           roomCode: data.roomCode,
+           playerName: data.playerName,
+           userId: data.userId,
+           hasSessionToken: !!data.sessionToken
+        });
+
         // Rate limiting - max 10 joins per minute per IP (higher than create since reconnections are common)
         const clientIp = socket.handshake.address || socket.id;
         if (!validationService.checkRateLimit(`room:join:${clientIp}`, 10, 60000)) {
