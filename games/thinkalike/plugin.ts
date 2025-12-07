@@ -1379,17 +1379,26 @@ class ThinkAlikePlugin implements GamePlugin {
       const activePlayers = Array.from(room.players.values())
         .filter(p => !(p.gameData as ThinkAlikePlayerData)?.isSpectator && p.userId);
 
-      activePlayers.forEach(player => {
+      activePlayers.forEach(async player => {
         if (player.userId) {
-          gameBuddiesService.grantReward(this.id, player.userId, {
-            won: false,
-            durationSeconds,
-            score: (room.gameState.data as ThinkAlikeGameState).currentRound * 2, // Reduced score for loss
-            metadata: {
-              reason: 'all-lives-lost',
-              totalRounds: (room.gameState.data as ThinkAlikeGameState).currentRound
+          try {
+            const reward = await gameBuddiesService.grantReward(this.id, player.userId, {
+              won: false,
+              durationSeconds,
+              score: (room.gameState.data as ThinkAlikeGameState).currentRound * 2, // Reduced score for loss
+              metadata: {
+                reason: 'all-lives-lost',
+                totalRounds: (room.gameState.data as ThinkAlikeGameState).currentRound
+              }
+            });
+
+            if (reward && this.io) {
+              const namespace = this.io.of(this.namespace);
+              namespace.to(player.socketId).emit('player:reward', reward);
             }
-          }).catch(err => console.error(`[${this.name}] Failed to grant loss reward to ${player.name}:`, err));
+          } catch (err) {
+            console.error(`[${this.name}] Failed to grant loss reward to ${player.name}:`, err);
+          }
         }
       });
     }
@@ -1426,18 +1435,27 @@ class ThinkAlikePlugin implements GamePlugin {
     const activePlayers = Array.from(room.players.values())
       .filter(p => !(p.gameData as ThinkAlikePlayerData)?.isSpectator && p.userId);
 
-    activePlayers.forEach(player => {
+    activePlayers.forEach(async player => {
       if (player.userId) {
-        gameBuddiesService.grantReward(this.id, player.userId, {
-          won: true,
-          durationSeconds,
-          score: 30 + (gameState.livesRemaining * 2), // Base 30 + 2 per life (Max 40)
-          metadata: {
-            totalRounds: gameState.currentRound,
-            livesRemaining: gameState.livesRemaining,
-            matchedWord: matchedWord
+        try {
+          const reward = await gameBuddiesService.grantReward(this.id, player.userId, {
+            won: true,
+            durationSeconds,
+            score: 30 + (gameState.livesRemaining * 2), // Base 30 + 2 per life (Max 40)
+            metadata: {
+              totalRounds: gameState.currentRound,
+              livesRemaining: gameState.livesRemaining,
+              matchedWord: matchedWord
+            }
+          });
+
+          if (reward && this.io) {
+            const namespace = this.io.of(this.namespace);
+            namespace.to(player.socketId).emit('player:reward', reward);
           }
-        }).catch(err => console.error(`[${this.name}] Failed to grant reward to ${player.name}:`, err));
+        } catch (err) {
+          console.error(`[${this.name}] Failed to grant reward to ${player.name}:`, err);
+        }
       }
     });
   }
