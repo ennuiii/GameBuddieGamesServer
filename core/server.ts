@@ -362,6 +362,9 @@ class UnifiedGameServer {
       removePlayerFromRoom: (roomCode: string, socketId: string) => {
         this.roomManager.removePlayerFromRoom(socketId);
       },
+      grantReward: async (gameId: string, userId: string, data: any) => {
+        return await gameBuddiesService.grantReward(gameId, userId, data);
+      },
     });
 
     // Socket connection handler

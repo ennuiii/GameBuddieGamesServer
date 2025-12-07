@@ -18,6 +18,7 @@ import type {
   RoomSettings
 } from '../../core/types/core';
 import type { Socket } from 'socket.io';
+import { gameBuddiesService } from '../../core/services/GameBuddiesService.js';
 import {
   ThinkAlikeGameState,
   ThinkAlikePlayerData,
@@ -791,6 +792,9 @@ class ThinkAlikePlugin implements GamePlugin {
                 });
               }
 
+              // GRANT REWARDS - Victory
+              this.grantVictoryRewards(room, gameState, 'VOICE_MODE_MATCH');
+
               console.log(`[${this.name}] VOICE MODE VICTORY in room ${room.code}!`);
             } else {
               // No match, lose a life
@@ -934,6 +938,9 @@ class ThinkAlikePlugin implements GamePlugin {
                   timeTaken: 0
                 });
               }
+
+              // GRANT REWARDS - Victory
+              this.grantVictoryRewards(room, gameState, 'VOICE_MODE_MATCH');
 
               console.log(`[${this.name}] VOICE MODE VICTORY (after dispute) in room ${room.code}!`);
             } else {
@@ -1323,6 +1330,9 @@ class ThinkAlikePlugin implements GamePlugin {
           });
         }
 
+        // GRANT REWARDS - Victory
+        this.grantVictoryRewards(room, gameState, word1);
+
         console.log(`[${this.name}] VICTORY in room ${room.code}! Word length: ${word1.length}`);
 
       } else {
@@ -1363,6 +1373,27 @@ class ThinkAlikePlugin implements GamePlugin {
    * End the game
    */
   private endGame(room: Room, reason: 'all-lives-lost' | 'player-left' | string): void {
+    // Grant rewards for completed game (Loss)
+    if (reason === 'all-lives-lost') {
+      const durationSeconds = Math.floor((Date.now() - room.createdAt) / 1000);
+      const activePlayers = Array.from(room.players.values())
+        .filter(p => !(p.gameData as ThinkAlikePlayerData)?.isSpectator && p.userId);
+
+      activePlayers.forEach(player => {
+        if (player.userId) {
+          gameBuddiesService.grantReward(this.id, player.userId, {
+            won: false,
+            durationSeconds,
+            score: (room.gameState.data as ThinkAlikeGameState).currentRound * 2, // Reduced score for loss
+            metadata: {
+              reason: 'all-lives-lost',
+              totalRounds: (room.gameState.data as ThinkAlikeGameState).currentRound
+            }
+          }).catch(err => console.error(`[${this.name}] Failed to grant loss reward to ${player.name}:`, err));
+        }
+      });
+    }
+
     // Clear all timers
     this.clearRoomTimers(room.code);
 
@@ -1385,6 +1416,30 @@ class ThinkAlikePlugin implements GamePlugin {
     }
 
     console.log(`[${this.name}] Game ended in room ${room.code}. Reason: ${reason}`);
+  }
+
+  /**
+   * Grant rewards to winners
+   */
+  private grantVictoryRewards(room: Room, gameState: ThinkAlikeGameState, matchedWord: string): void {
+    const durationSeconds = Math.floor((Date.now() - room.createdAt) / 1000);
+    const activePlayers = Array.from(room.players.values())
+      .filter(p => !(p.gameData as ThinkAlikePlayerData)?.isSpectator && p.userId);
+
+    activePlayers.forEach(player => {
+      if (player.userId) {
+        gameBuddiesService.grantReward(this.id, player.userId, {
+          won: true,
+          durationSeconds,
+          score: 30 + (gameState.livesRemaining * 2), // Base 30 + 2 per life (Max 40)
+          metadata: {
+            totalRounds: gameState.currentRound,
+            livesRemaining: gameState.livesRemaining,
+            matchedWord: matchedWord
+          }
+        }).catch(err => console.error(`[${this.name}] Failed to grant reward to ${player.name}:`, err));
+      }
+    });
   }
 
   /**

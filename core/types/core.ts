@@ -134,6 +134,16 @@ export interface GameHelpers {
   updatePlayerStatus: (roomCode: string, playerId: string, status: string, data?: any) => Promise<void>;
   getRoomByCode: (code: string) => Room | undefined;
   removePlayerFromRoom: (roomCode: string, socketId: string) => void;
+  grantReward: (
+    gameId: string,
+    userId: string,
+    data: {
+      won: boolean;
+      durationSeconds: number;
+      score?: number;
+      metadata?: Record<string, any>;
+    }
+  ) => Promise<any>;
 }
 
 // ========================================
