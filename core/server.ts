@@ -31,7 +31,6 @@ import bingoPlugin from '../games/bingo/plugin.js';
 import DDFGamePlugin from '../games/ddf/plugin.js';
 import thinkAlikePlugin from '../games/thinkalike/plugin.js';
 import templatePlugin from '../games/template/plugin.js';
-import tronPlugin from '../games/tron/plugin.js';
 import bombermanPlugin from '../games/bomberman/plugin.js';
 
 /**
@@ -110,10 +109,9 @@ class UnifiedGameServer {
       pingTimeout: 300000, // 5 minutes (was 60s - too short for backgrounded tabs)
       pingInterval: 25000, // Keep ping interval at 25s to detect actual disconnects quickly
 
-      // ⚡ OPTIMIZATION 1: Force WebSocket-only transport (skip polling)
-      // WebSockets are more efficient than HTTP long-polling
-      // Result: 35% lower latency, no polling overhead
-      transports: ['websocket'],
+      // ⚡ OPTIMIZATION 1: Prefer WebSocket, but allow polling fallback so
+      // clients still connect if the initial upgrade fails or proxies block it.
+      transports: ['websocket', 'polling'],
 
       // ⚡ OPTIMIZATION 2: Disable message compression (save CPU/memory)
       // Compression adds CPU overhead with marginal benefit for quiz games
@@ -129,7 +127,7 @@ class UnifiedGameServer {
       // Lower timeouts for faster connection establishment
       connectTimeout: 45000, // 45s to complete connection (default: 45s)
       upgradeTimeout: 10000, // 10s for WebSocket upgrade (default: 10s)
-      allowUpgrades: false, // ⚡ Disable upgrades (we're WebSocket-only anyway)
+      allowUpgrades: true, // allow polling -> websocket upgrade when available
     });
 
     // Initialize managers
@@ -1313,14 +1311,6 @@ class UnifiedGameServer {
       console.log('[Server] ✓ Template game registered');
     } else {
       console.error('[Server] ✗ Failed to register Template game');
-    }
-
-    // Register Tron game
-    const tronRegistered = await this.registerGame(tronPlugin);
-    if (tronRegistered) {
-      console.log('[Server] ✓ Tron game registered');
-    } else {
-      console.error('[Server] ✗ Failed to register Tron game');
     }
 
     // Register Bomberman game
