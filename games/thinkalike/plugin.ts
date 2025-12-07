@@ -1379,7 +1379,10 @@ class ThinkAlikePlugin implements GamePlugin {
       const activePlayers = Array.from(room.players.values())
         .filter(p => !(p.gameData as ThinkAlikePlayerData)?.isSpectator && p.userId);
 
+      console.log(`[${this.name}] 🎁 Attempting to grant DEFEAT rewards. Room: ${room.code}, Active players with userId: ${activePlayers.length}`);
+
       activePlayers.forEach(async player => {
+        console.log(`[${this.name}] 👤 Processing loss reward for ${player.name} (ID: ${player.userId}, Socket: ${player.socketId})`);
         if (player.userId) {
           try {
             const reward = await gameBuddiesService.grantReward(this.id, player.userId, {
@@ -1392,13 +1395,20 @@ class ThinkAlikePlugin implements GamePlugin {
               }
             });
 
+            console.log(`[${this.name}] 🔙 Reward API response for ${player.name}:`, reward ? 'Success' : 'Failed/Null');
+
             if (reward && this.io) {
               const namespace = this.io.of(this.namespace);
+              console.log(`[${this.name}] 📡 Emitting player:reward to socket ${player.socketId}`);
               namespace.to(player.socketId).emit('player:reward', reward);
+            } else {
+              console.warn(`[${this.name}] ⚠️ Cannot emit reward: Reward is null or io is missing`);
             }
           } catch (err) {
-            console.error(`[${this.name}] Failed to grant loss reward to ${player.name}:`, err);
+            console.error(`[${this.name}] ❌ Failed to grant loss reward to ${player.name}:`, err);
           }
+        } else {
+          console.warn(`[${this.name}] ⚠️ Player ${player.name} skipped (no userId)`);
         }
       });
     }
@@ -1435,7 +1445,10 @@ class ThinkAlikePlugin implements GamePlugin {
     const activePlayers = Array.from(room.players.values())
       .filter(p => !(p.gameData as ThinkAlikePlayerData)?.isSpectator && p.userId);
 
+    console.log(`[${this.name}] 🎁 Attempting to grant VICTORY rewards. Room: ${room.code}, Active players with userId: ${activePlayers.length}`);
+
     activePlayers.forEach(async player => {
+      console.log(`[${this.name}] 👤 Processing reward for ${player.name} (ID: ${player.userId}, Socket: ${player.socketId})`);
       if (player.userId) {
         try {
           const reward = await gameBuddiesService.grantReward(this.id, player.userId, {
@@ -1449,13 +1462,20 @@ class ThinkAlikePlugin implements GamePlugin {
             }
           });
 
+          console.log(`[${this.name}] 🔙 Reward API response for ${player.name}:`, reward ? 'Success' : 'Failed/Null');
+
           if (reward && this.io) {
             const namespace = this.io.of(this.namespace);
+            console.log(`[${this.name}] 📡 Emitting player:reward to socket ${player.socketId}`);
             namespace.to(player.socketId).emit('player:reward', reward);
+          } else {
+            console.warn(`[${this.name}] ⚠️ Cannot emit reward: Reward is null or io is missing`);
           }
         } catch (err) {
-          console.error(`[${this.name}] Failed to grant reward to ${player.name}:`, err);
+          console.error(`[${this.name}] ❌ Failed to grant reward to ${player.name}:`, err);
         }
+      } else {
+        console.warn(`[${this.name}] ⚠️ Player ${player.name} skipped (no userId)`);
       }
     });
   }
