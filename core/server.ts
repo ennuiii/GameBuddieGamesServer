@@ -464,11 +464,12 @@ class UnifiedGameServer {
               );
             }
           } else {
+            const allRooms = this.roomManager.getAllRooms().map(r => `${r.code}:${r.gameId}`).join(', ');
             const roomSummary = this.roomManager.getRoomByCode(data.roomCode)
               ? `${data.roomCode} exists but gameId=${this.roomManager.getRoomByCode(data.roomCode)?.gameId}`
               : 'not found in RoomManager';
             console.warn(
-              `[${plugin.id.toUpperCase()}] Rejoin shortcut skipped: room ${data.roomCode} not found or wrong game (${existingRoom?.gameId}). Summary: ${roomSummary}`
+              `[${plugin.id.toUpperCase()}] Rejoin shortcut skipped: room ${data.roomCode} not found or wrong game (${existingRoom?.gameId}). Summary: ${roomSummary}. All rooms snapshot: [${allRooms}]`
             );
           }
         }

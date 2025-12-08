@@ -351,7 +351,10 @@ export class RoomManager {
    */
   deleteRoom(roomCode: string, reason: string = 'room_deleted'): boolean {
     const room = this.rooms.get(roomCode);
-    if (!room) return false;
+    if (!room) {
+      console.warn(`[RoomManager] Cannot delete room ${roomCode}: not found (reason: ${reason})`);
+      return false;
+    }
 
     // Call onRoomDeleted callback before deleting (fire-and-forget)
     if (this.onRoomDeleted && room.isGameBuddiesRoom) {
