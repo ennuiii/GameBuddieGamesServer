@@ -519,7 +519,7 @@ export class GameBuddiesService {
     try {
       console.log(`[GameBuddies] 🎁 Granting reward for ${userId} in ${gameId}`);
 
-      const response = await axios.post(url, { userId, ...data }, {
+      const response = await axios.post(url, { userId, gameId, ...data }, {
         timeout: this.apiTimeout,
         headers: {
           'Content-Type': 'application/json',
