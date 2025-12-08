@@ -31,11 +31,8 @@ import bingoPlugin from '../games/bingo/plugin.js';
 import DDFGamePlugin from '../games/ddf/plugin.js';
 import thinkAlikePlugin from '../games/thinkalike/plugin.js';
 import templatePlugin from '../games/template/plugin.js';
-<<<<<<< HEAD
 import bombermanPlugin from '../games/bomberman/plugin.js';
-=======
 import tronPlugin from '../games/tron/plugin.js';
->>>>>>> a7823b8 (Refactor: Unify GameBuddieGamesServer session management with Gamebuddies.Io)
 
 /**
  * Global error handlers to prevent server crashes
@@ -366,9 +363,6 @@ class UnifiedGameServer {
       removePlayerFromRoom: (roomCode: string, socketId: string) => {
         this.roomManager.removePlayerFromRoom(socketId);
       },
-      grantReward: async (gameId: string, userId: string, data: any) => {
-        return await gameBuddiesService.grantReward(gameId, userId, data);
-      },
     });
 
     // Socket connection handler
@@ -382,7 +376,6 @@ class UnifiedGameServer {
         isGameBuddiesRoom?: boolean;
         settings?: any;
         playerId?: string;
-        userId?: string;
         sessionToken?: string;
         premiumTier?: string;
         streamerMode?: boolean;
@@ -401,7 +394,6 @@ class UnifiedGameServer {
           roomCode: data.roomCode,
           isGameBuddiesRoom: data.isGameBuddiesRoom,
           playerId: data.playerId,
-          userId: data.userId,
           sessionToken: data.sessionToken?.substring(0, 8) + '...',
           premiumTier: data.premiumTier,
           settings: data.settings,
@@ -417,29 +409,15 @@ class UnifiedGameServer {
           return;
         }
 
-        // SECURITY: Validate premium from Gamebuddies.io API instead of trusting client
-        let validatedPremiumTier = data.premiumTier || 'free';
-        if (data.sessionToken && data.isGameBuddiesRoom) {
-          try {
-            validatedPremiumTier = await gameBuddiesService.validatePremiumStatus(data.sessionToken);
-            console.log(`💎 [PREMIUM] Server-validated: ${validatedPremiumTier} (client: ${data.premiumTier})`);
-          } catch (err) {
-            console.error('[PREMIUM] Validation failed:', err);
-            validatedPremiumTier = 'free';
-          }
-        }
-        
         const player: Player = {
           socketId: socket.id,
           id: randomUUID(),
-          userId: data.userId,
-          isGuest: !data.userId,
           name: nameValidation.sanitizedValue!,
           isHost: true,
           connected: true,
           joinedAt: Date.now(),
           lastActivity: Date.now(),
-          premiumTier: validatedPremiumTier,
+          premiumTier: data.premiumTier,
         };
         console.log(`💎 [PREMIUM DEBUG] Player created with premiumTier: ${player.premiumTier}`);
 
@@ -547,12 +525,8 @@ class UnifiedGameServer {
         roomCode?: string;
         inviteToken?: string;
         playerName: string;
-<<<<<<< HEAD
-        userId?: string;
-=======
         userId?: string; // Added userId
         playerId?: string; // Added playerId
->>>>>>> a7823b8 (Refactor: Unify GameBuddieGamesServer session management with Gamebuddies.Io)
         sessionToken?: string;
         premiumTier?: string;
       }) => {
@@ -560,10 +534,7 @@ class UnifiedGameServer {
            roomCode: data.roomCode,
            playerName: data.playerName,
            userId: data.userId,
-<<<<<<< HEAD
-=======
            playerId: data.playerId,
->>>>>>> a7823b8 (Refactor: Unify GameBuddieGamesServer session management with Gamebuddies.Io)
            hasSessionToken: !!data.sessionToken
         });
 
@@ -674,25 +645,16 @@ class UnifiedGameServer {
               console.log(`[${plugin.id.toUpperCase()}] Player reconnected: ${player.name}`);
             } else {
               // Session valid but player not in room - notify and join as new
-<<<<<<< HEAD
-              socket.emit('reconnection:failed', {
-                reason: 'player_not_in_room',
-                message: 'Your previous session expired. Joining as new player.'
-              });
-              player = this.createPlayer(socket.id, nameValidation.sanitizedValue!, data.premiumTier, data.userId);
-              sessionToken = this.sessionManager.createSession(player.id, room.code);
-=======
               // But if it's a valid platform token, we should probably respect it and create the player with that ID?
               console.log(`[CORE] Session valid but player not in room. Creating new player with ID ${session.playerId}`);
               
               // Use the ID from the session/data if available
               const playerId = session.playerId || data.playerId || randomUUID();
-              player = this.createPlayer(socket.id, nameValidation.sanitizedValue!, data.premiumTier, data.userId);
+              player = this.createPlayer(socket.id, nameValidation.sanitizedValue!, data.premiumTier);
               player.id = playerId; // Force ID match
               
               // Register session again just in case
               sessionToken = this.sessionManager.createSession(player.id, room.code, data.sessionToken);
->>>>>>> a7823b8 (Refactor: Unify GameBuddieGamesServer session management with Gamebuddies.Io)
             }
           } else {
             // Invalid session - notify and join as new
@@ -700,35 +662,22 @@ class UnifiedGameServer {
               reason: 'session_invalid',
               message: 'Session expired or invalid. Joining as new player.'
             });
-            player = this.createPlayer(socket.id, nameValidation.sanitizedValue!, data.premiumTier, data.userId);
+            player = this.createPlayer(socket.id, nameValidation.sanitizedValue!, data.premiumTier);
             sessionToken = this.sessionManager.createSession(player.id, room.code);
           }
         } else {
           // New player
           // SECURITY: Validate premium for new players
           let newPlayerTier = data.premiumTier || 'free';
-<<<<<<< HEAD
-          if (data.sessionToken && room.isGameBuddiesRoom) {
-            try {
-              newPlayerTier = await gameBuddiesService.validatePremiumStatus(data.sessionToken);
-              console.log(`💎 [PREMIUM] New player validated: ${newPlayerTier}`);
-            } catch (err) {
-              console.error('[PREMIUM] Validation failed:', err);
-              newPlayerTier = 'free';
-            }
-          }
-          player = this.createPlayer(socket.id, nameValidation.sanitizedValue!, newPlayerTier, data.userId);
-=======
           // (Skip API validation for now to avoid async delay, trust client for initial join, server validates later)
           
-          player = this.createPlayer(socket.id, nameValidation.sanitizedValue!, newPlayerTier, data.userId);
+          player = this.createPlayer(socket.id, nameValidation.sanitizedValue!, newPlayerTier);
           
           // Use provided playerId if available (e.g. from Platform room creation)
           if (data.playerId) {
              player.id = data.playerId;
           }
           
->>>>>>> a7823b8 (Refactor: Unify GameBuddieGamesServer session management with Gamebuddies.Io)
           sessionToken = this.sessionManager.createSession(player.id, room.code);
         }
 
@@ -1371,21 +1320,20 @@ class UnifiedGameServer {
       console.error('[Server] ✗ Failed to register Template game');
     }
 
-<<<<<<< HEAD
     // Register Bomberman game
     const bombermanRegistered = await this.registerGame(bombermanPlugin);
     if (bombermanRegistered) {
       console.log('[Server] ✓ Bomberman game registered');
     } else {
       console.error('[Server] ✗ Failed to register Bomberman game');
-=======
+    }
+
     // Register Tron game
     const tronRegistered = await this.registerGame(tronPlugin);
     if (tronRegistered) {
       console.log('[Server] ✓ Tron game registered');
     } else {
       console.error('[Server] ✗ Failed to register Tron game');
->>>>>>> a7823b8 (Refactor: Unify GameBuddieGamesServer session management with Gamebuddies.Io)
     }
 
     // TODO: Load games dynamically from games/ directory
@@ -1400,9 +1348,7 @@ class UnifiedGameServer {
   private createPlayer(socketId: string, name: string, premiumTier?: string, userId?: string): Player {
     return {
       socketId,
-      id: randomUUID(),
-      userId,
-      isGuest: !userId,
+      id: userId || randomUUID(),
       name,
       isHost: false,
       connected: true,
