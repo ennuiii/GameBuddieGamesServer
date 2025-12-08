@@ -427,6 +427,7 @@ class UnifiedGameServer {
             );
 
             if (existingPlayer) {
+              console.log(`[${plugin.id.toUpperCase()}] Rejoin found player ${existingPlayer.id}, updating socket`);
               // Update socket + session
               existingPlayer.socketId = socket.id;
               existingPlayer.connected = true;
@@ -457,7 +458,15 @@ class UnifiedGameServer {
                 `[${plugin.id.toUpperCase()}] ✅ Rejoined existing room ${existingRoom.code} with existing player ${existingPlayer.id}`
               );
               return;
+            } else {
+              console.warn(
+                `[${plugin.id.toUpperCase()}] Rejoin shortcut: room ${data.roomCode} found but player ${data.playerId} missing; proceeding to create new player`
+              );
             }
+          } else {
+            console.warn(
+              `[${plugin.id.toUpperCase()}] Rejoin shortcut skipped: room ${data.roomCode} not found or wrong game (${existingRoom?.gameId})`
+            );
           }
         }
 

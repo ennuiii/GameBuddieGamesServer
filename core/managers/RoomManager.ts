@@ -21,6 +21,7 @@ export class RoomManager {
   private socketToPlayerId: Map<string, string>; // socketId -> playerId (for player.id lookup)
   private inviteTokens: Map<string, { roomCode: string; createdAt: number }>; // inviteToken -> { roomCode, createdAt }
   private oldSocketCleanupTimers: Map<string, NodeJS.Timeout>; // Track cleanup timers for old socket IDs
+  private roomDeletionTimers: Map<string, NodeJS.Timeout>; // Graceful deletion timers for empty rooms
   private cleanupInterval: NodeJS.Timeout;
 
   /**
@@ -36,6 +37,7 @@ export class RoomManager {
     this.socketToPlayerId = new Map();
     this.inviteTokens = new Map();
     this.oldSocketCleanupTimers = new Map();
+    this.roomDeletionTimers = new Map();
 
     // Auto-cleanup inactive rooms every 5 minutes
     this.cleanupInterval = setInterval(() => {
@@ -150,6 +152,14 @@ export class RoomManager {
       return false;
     }
 
+    // Cancel any pending deletion timer if room was scheduled for cleanup
+    const pendingDeletion = this.roomDeletionTimers.get(roomCode);
+    if (pendingDeletion) {
+      clearTimeout(pendingDeletion);
+      this.roomDeletionTimers.delete(roomCode);
+      console.log(`[RoomManager] Cancelled scheduled deletion for room ${roomCode} (player rejoined)`);
+    }
+
     room.players.set(player.id, player);
     this.socketToPlayerId.set(player.socketId, player.id);
     this.playerRoomMap.set(player.socketId, roomCode);
@@ -195,7 +205,19 @@ export class RoomManager {
 
     // If room is empty, delete it
     if (room.players.size === 0) {
-      this.deleteRoom(roomCode, 'all_players_left');
+      // For GameBuddies rooms, defer deletion to allow reconnection
+      if (room.isGameBuddiesRoom) {
+        if (!this.roomDeletionTimers.has(roomCode)) {
+          const timer = setTimeout(() => {
+            this.roomDeletionTimers.delete(roomCode);
+            this.deleteRoom(roomCode, 'all_players_left');
+          }, 2 * 60 * 1000); // 2 minutes grace period for reconnection
+          this.roomDeletionTimers.set(roomCode, timer);
+          console.log(`[RoomManager] Scheduled deletion for GameBuddies room ${roomCode} in 2m (all players left)`);
+        }
+      } else {
+        this.deleteRoom(roomCode, 'all_players_left');
+      }
     }
     // If host left, transfer host to another player
     else if (player && player.isHost) {
