@@ -353,7 +353,9 @@ export class RoomManager {
       return { room: undefined, player: undefined };
     }
 
-    const player = room.players.get(oldSocketId);
+    // Players are keyed by playerId, not socketId
+    const playerId = this.socketToPlayerId.get(oldSocketId);
+    const player = playerId ? room.players.get(playerId) : undefined;
     if (!player) {
       return { room: undefined, player: undefined };
     }

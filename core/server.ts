@@ -411,17 +411,18 @@ class UnifiedGameServer {
           return;
         }
 
-        const player: Player = {
-          socketId: socket.id,
-          id: randomUUID(),
-          name: nameValidation.sanitizedValue!,
-          isHost: true,
-          connected: true,
-          joinedAt: Date.now(),
-          lastActivity: Date.now(),
-          premiumTier: data.premiumTier,
-          isGuest: true, // Host created directly via socket is guest initially
-        };
+        const isGameBuddiesRoom = !!data.isGameBuddiesRoom;
+        const resolvedPlayerId = data.playerId || randomUUID();
+
+        const player: Player = this.createPlayer(
+          socket.id,
+          nameValidation.sanitizedValue!,
+          data.premiumTier,
+          resolvedPlayerId
+        );
+        player.isHost = true;
+        player.isGuest = !(isGameBuddiesRoom || data.playerId);
+        player.userId = data.playerId || player.userId;
         console.log(`💎 [PREMIUM DEBUG] Player created with premiumTier: ${player.premiumTier}`);
 
         const settings = { ...plugin.defaultSettings, ...data.settings };
@@ -436,8 +437,13 @@ class UnifiedGameServer {
         });
 
         // Preserve GameBuddies flag if provided
-        if (data.isGameBuddiesRoom) {
+        if (isGameBuddiesRoom) {
           room.isGameBuddiesRoom = true;
+          room.gameBuddiesData = {
+            ...(room.gameBuddiesData || {}),
+            sessionToken: data.sessionToken,
+            premiumTier: data.premiumTier,
+          };
         }
 
         // Store streamer mode settings
@@ -445,7 +451,12 @@ class UnifiedGameServer {
         if (data.hideRoomCode) room.hideRoomCode = true;
 
         // Generate session token
-        const sessionToken = this.sessionManager.createSession(player.id, room.code);
+        const sessionToken = this.sessionManager.createSession(player.id, room.code, data.sessionToken);
+        if (isGameBuddiesRoom && !data.sessionToken) {
+          console.warn(
+            `[${plugin.id.toUpperCase()}] GameBuddies room ${room.code} missing platform sessionToken; created local token ${sessionToken}`
+          );
+        }
         player.sessionToken = sessionToken;
 
         // Join Socket.io room
@@ -635,10 +646,19 @@ class UnifiedGameServer {
                 existingPlayer.socketId = socket.id;
                 existingPlayer.connected = true;
                 existingPlayer.lastActivity = Date.now();
+                room.players.set(existingPlayer.id, existingPlayer);
 
-                // Update room players Map: remove old key, add with new key
-                room.players.delete(oldSocketId);
-                room.players.set(socket.id, existingPlayer);
+                const managerAny = this.roomManager as any;
+                managerAny.playerRoomMap?.delete(oldSocketId);
+                managerAny.playerRoomMap?.set(socket.id, room.code);
+                managerAny.socketToPlayerId?.delete(oldSocketId);
+                managerAny.socketToPlayerId?.set(socket.id, existingPlayer.id);
+
+                const cleanupTimer = managerAny.oldSocketCleanupTimers?.get(oldSocketId);
+                if (cleanupTimer) {
+                  clearTimeout(cleanupTimer);
+                  managerAny.oldSocketCleanupTimers.delete(oldSocketId);
+                }
               }
 
               player = existingPlayer;
@@ -653,8 +673,9 @@ class UnifiedGameServer {
               
               // Use the ID from the session/data if available
               const playerId = session.playerId || data.playerId || randomUUID();
-              player = this.createPlayer(socket.id, nameValidation.sanitizedValue!, data.premiumTier);
-              player.id = playerId; // Force ID match
+              player = this.createPlayer(socket.id, nameValidation.sanitizedValue!, data.premiumTier, playerId);
+              player.isGuest = !(data.playerId || session.playerId);
+              player.userId = data.playerId || session.playerId || player.userId;
               
               // Register session again just in case
               sessionToken = this.sessionManager.createSession(player.id, room.code, data.sessionToken);
@@ -665,7 +686,14 @@ class UnifiedGameServer {
               reason: 'session_invalid',
               message: 'Session expired or invalid. Joining as new player.'
             });
-            player = this.createPlayer(socket.id, nameValidation.sanitizedValue!, data.premiumTier);
+            player = this.createPlayer(
+              socket.id,
+              nameValidation.sanitizedValue!,
+              data.premiumTier,
+              data.playerId || session?.playerId
+            );
+            player.isGuest = !(data.playerId || session?.playerId);
+            player.userId = data.playerId || session?.playerId || player.userId;
             sessionToken = this.sessionManager.createSession(player.id, room.code);
           }
         } else {
@@ -674,14 +702,16 @@ class UnifiedGameServer {
           let newPlayerTier = data.premiumTier || 'free';
           // (Skip API validation for now to avoid async delay, trust client for initial join, server validates later)
           
-          player = this.createPlayer(socket.id, nameValidation.sanitizedValue!, newPlayerTier);
+          player = this.createPlayer(
+            socket.id,
+            nameValidation.sanitizedValue!,
+            newPlayerTier,
+            data.playerId
+          );
+          player.isGuest = !data.playerId;
+          player.userId = data.playerId || player.userId;
           
-          // Use provided playerId if available (e.g. from Platform room creation)
-          if (data.playerId) {
-             player.id = data.playerId;
-          }
-          
-          sessionToken = this.sessionManager.createSession(player.id, room.code);
+          sessionToken = this.sessionManager.createSession(player.id, room.code, data.sessionToken);
         }
 
         // Only add to room if NOT reconnecting (reconnectPlayer already updated the room)

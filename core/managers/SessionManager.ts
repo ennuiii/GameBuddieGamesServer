@@ -87,8 +87,8 @@ export class SessionManager {
     }
 
     // Fallback: Create local session (Warning: Won't work with Platform API)
-    console.warn(`[SessionManager] ⚠️ Creating LOCAL session for ${playerId}. This player will fail platform API validation!`);
-    
+    console.warn(`[SessionManager] Creating LOCAL session for ${playerId}. This player will fail platform API validation!`);
+
     const sessionToken = randomUUID();
     const session: PlayerSession = {
       playerId,
