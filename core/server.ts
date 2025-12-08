@@ -32,7 +32,6 @@ import DDFGamePlugin from '../games/ddf/plugin.js';
 import thinkAlikePlugin from '../games/thinkalike/plugin.js';
 import templatePlugin from '../games/template/plugin.js';
 import bombermanPlugin from '../games/bomberman/plugin.js';
-import tronPlugin from '../games/tron/plugin.js';
 
 /**
  * Global error handlers to prevent server crashes
@@ -1330,14 +1329,6 @@ class UnifiedGameServer {
       console.log('[Server] ✓ Bomberman game registered');
     } else {
       console.error('[Server] ✗ Failed to register Bomberman game');
-    }
-
-    // Register Tron game
-    const tronRegistered = await this.registerGame(tronPlugin);
-    if (tronRegistered) {
-      console.log('[Server] ✓ Tron game registered');
-    } else {
-      console.error('[Server] ✗ Failed to register Tron game');
     }
 
     // TODO: Load games dynamically from games/ directory
