@@ -140,6 +140,54 @@ export class RoomManager {
       return false;
     }
 
+    // Cancel any pending deletion timer if room was scheduled for cleanup
+    const pendingDeletion = this.roomDeletionTimers.get(roomCode);
+    if (pendingDeletion) {
+      clearTimeout(pendingDeletion);
+      this.roomDeletionTimers.delete(roomCode);
+      console.log(`[RoomManager] Cancelled scheduled deletion for room ${roomCode} (player rejoined)`);
+    }
+
+    // If player already exists in room, treat as reconnection and update mappings even if game has started
+    const existingPlayer = room.players.get(player.id);
+    if (existingPlayer) {
+      const oldSocketId = existingPlayer.socketId;
+      const socketChanged = oldSocketId !== player.socketId;
+
+      existingPlayer.socketId = player.socketId;
+      existingPlayer.connected = true;
+      existingPlayer.disconnectedAt = undefined;
+      existingPlayer.lastActivity = Date.now();
+      // Preserve host flag/premium tier if already set; fall back to incoming values
+      existingPlayer.isHost = existingPlayer.isHost || player.isHost;
+      existingPlayer.premiumTier = existingPlayer.premiumTier || player.premiumTier;
+      // Preserve existing gameData; if missing, adopt incoming
+      if (!existingPlayer.gameData && player.gameData) {
+        existingPlayer.gameData = player.gameData;
+      }
+
+      // Update socket ↔ player mappings
+      this.socketToPlayerId.set(player.socketId, existingPlayer.id);
+      this.playerRoomMap.set(player.socketId, roomCode);
+
+      if (socketChanged && oldSocketId) {
+        this.socketToPlayerId.delete(oldSocketId);
+        this.playerRoomMap.delete(oldSocketId);
+
+        const cleanupTimer = this.oldSocketCleanupTimers.get(oldSocketId);
+        if (cleanupTimer) {
+          clearTimeout(cleanupTimer);
+          this.oldSocketCleanupTimers.delete(oldSocketId);
+        }
+      }
+
+      console.log(
+        `[RoomManager] Updated existing player ${existingPlayer.name} in room ${roomCode} (reconnection${socketChanged ? ` ${oldSocketId} -> ${player.socketId}` : ''})`
+      );
+
+      return true;
+    }
+
     // Check if room is full
     if (room.players.size >= room.settings.maxPlayers) {
       console.warn(`[RoomManager] Cannot add player: Room ${roomCode} is full`);
@@ -150,14 +198,6 @@ export class RoomManager {
     if (room.gameState.phase !== 'lobby' && room.gameState.phase !== 'waiting') {
       console.warn(`[RoomManager] Cannot add player: Room ${roomCode} already started`);
       return false;
-    }
-
-    // Cancel any pending deletion timer if room was scheduled for cleanup
-    const pendingDeletion = this.roomDeletionTimers.get(roomCode);
-    if (pendingDeletion) {
-      clearTimeout(pendingDeletion);
-      this.roomDeletionTimers.delete(roomCode);
-      console.log(`[RoomManager] Cancelled scheduled deletion for room ${roomCode} (player rejoined)`);
     }
 
     room.players.set(player.id, player);

@@ -114,23 +114,76 @@ class ThinkAlikePlugin implements GamePlugin {
   onPlayerJoin(room: Room, player: Player, isReconnecting?: boolean): void {
     console.log(`[${this.name}] Player ${player.name} ${isReconnecting ? 'reconnected to' : 'joined'} room ${room.code}`);
 
-    // Always initialize player data if missing (handles both new joins and reconnections)
-    if (!player.gameData) {
-      player.gameData = createInitialPlayerData();
+    const namespace = this.io?.of(this.namespace);
+    const existingPlayer = room.players.get(player.id);
+    const resolvedPlayer = existingPlayer || player;
+    const socketChanged = existingPlayer ? existingPlayer.socketId !== player.socketId : false;
+    const shouldTreatAsReconnect = isReconnecting || !!existingPlayer;
+
+    // Merge basic fields if the core provided a fresh Player instance while one already exists in the room
+    if (existingPlayer && existingPlayer !== player) {
+      existingPlayer.premiumTier = existingPlayer.premiumTier || player.premiumTier;
+      if (!existingPlayer.gameData && player.gameData) {
+        existingPlayer.gameData = player.gameData;
+      }
     }
 
-    const playerData = player.gameData as ThinkAlikePlayerData;
+    // Always initialize player data if missing (handles both new joins and reconnections)
+    if (!resolvedPlayer.gameData) {
+      resolvedPlayer.gameData = createInitialPlayerData();
+    }
+
+    const playerData = resolvedPlayer.gameData as ThinkAlikePlayerData;
+
+    // Handle reconnection: reuse existing player slot, refresh socket mapping, and sync state
+    if (shouldTreatAsReconnect) {
+      const oldSocketId = (player as any).oldSocketId || (socketChanged ? existingPlayer?.socketId : undefined);
+
+      resolvedPlayer.connected = true;
+      resolvedPlayer.disconnectedAt = undefined;
+      resolvedPlayer.socketId = player.socketId;
+      resolvedPlayer.lastActivity = Date.now();
+
+      // Resume timer if appropriate (same logic as prior reconnection block)
+      const gameState = room.gameState.data as ThinkAlikeGameState;
+      const timerKey = `${room.code}:round-timer`;
+      const allActivePlayers = Array.from(room.players.values())
+        .filter(p => !(p.gameData as ThinkAlikePlayerData)?.isSpectator);
+      const allConnected = allActivePlayers.every(p => p.connected);
+
+      if (gameState.phase === 'word_input'
+          && gameState.timeRemaining > 0
+          && !this.intervals.has(timerKey)
+          && allConnected) {
+        console.log(`[${this.name}] Resuming timer after reconnection (${gameState.timeRemaining}s remaining)`);
+        this.startRoundTimer(room);
+      }
+
+      // Sync state to everyone and to the reconnecting client
+      this.broadcastRoomState(room);
+      if (namespace) {
+        namespace.to(resolvedPlayer.socketId).emit('room:updated', {
+          room: this.serializeRoom(room, resolvedPlayer.socketId)
+        });
+      }
+
+      console.log(
+        `[${this.name}] Reconnection handled for ${resolvedPlayer.name} in ${room.code}` +
+        (oldSocketId ? ` (oldSocketId: ${oldSocketId} -> ${resolvedPlayer.socketId})` : '')
+      );
+      return;
+    }
 
     // Auto-assign spectator role: first 2 players are active, 3+ are spectators
     if (!isReconnecting) {
       const activePlayers = Array.from(room.players.values())
         .filter(p => !(p.gameData as ThinkAlikePlayerData)?.isSpectator)
-        .filter(p => p.socketId !== player.socketId); // Don't count the player joining
+        .filter(p => p.socketId !== resolvedPlayer.socketId); // Don't count the player joining
 
       if (activePlayers.length >= 2) {
         // This is the 3rd+ player, make them a spectator
         playerData.isSpectator = true;
-        console.log(`[${this.name}] Player ${player.name} joined as SPECTATOR`);
+        console.log(`[${this.name}] Player ${resolvedPlayer.name} joined as SPECTATOR`);
       } else {
         // This is the 1st or 2nd player, they're active
         playerData.isSpectator = false;
