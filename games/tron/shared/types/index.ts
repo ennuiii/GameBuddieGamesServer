@@ -3,7 +3,7 @@
  */
 
 // Core types and utilities
-export type { Coord, Direction, TurnDir } from './Core';
+export type { Coord, Direction, TurnDir } from './Core.js';
 export {
   DIR_UP,
   DIR_DOWN,
@@ -25,43 +25,43 @@ export {
   copyCoord,
   getGridKey,
   snapToGrid,
-} from './Core';
+} from './Core.js';
 
 // Destination types
-export type { Destination } from './Destination';
+export type { Destination } from './Destination.js';
 export {
   createSpawnDestination,
   destinationBefore,
   findDestinationInsertIndex,
   hasDestination,
-} from './Destination';
+} from './Destination.js';
 
 // Wall types
-export type { WallSegment, PlayerWall } from './Wall';
+export type { WallSegment, PlayerWall } from './Wall.js';
 export {
   createPlayerWall,
   dropWallSegment,
   updateWallHead,
   getWallVertices,
   clearWall,
-} from './Wall';
+} from './Wall.js';
 
 // Cycle types
-export type { CycleState, CycleSyncData, CycleRenderData } from './Cycle';
+export type { CycleState, CycleSyncData, CycleRenderData } from './Cycle.js';
 export {
   createCycle,
   getCycleSyncData,
   applySyncCorrection,
   applyHardSync,
   getCycleRenderData,
-} from './Cycle';
+} from './Cycle.js';
 
 // Config types
-export type { SimulationConfig } from './Config';
+export type { SimulationConfig } from './Config.js';
 export {
   DEFAULT_CONFIG,
   SPEED_PRESETS,
   ARENA_PRESETS,
   getActualSpeed,
   validateConfig,
-} from './Config';
+} from './Config.js';
