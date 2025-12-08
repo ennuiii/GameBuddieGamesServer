@@ -363,6 +363,9 @@ class UnifiedGameServer {
       removePlayerFromRoom: (roomCode: string, socketId: string) => {
         this.roomManager.removePlayerFromRoom(socketId);
       },
+      grantReward: async (gameId: string, userId: string, data: any) => {
+        return await gameBuddiesService.grantReward(gameId, userId, data);
+      },
     });
 
     // Socket connection handler
@@ -418,6 +421,7 @@ class UnifiedGameServer {
           joinedAt: Date.now(),
           lastActivity: Date.now(),
           premiumTier: data.premiumTier,
+          isGuest: true, // Host created directly via socket is guest initially
         };
         console.log(`💎 [PREMIUM DEBUG] Player created with premiumTier: ${player.premiumTier}`);
 
@@ -1355,6 +1359,7 @@ class UnifiedGameServer {
       joinedAt: Date.now(),
       lastActivity: Date.now(),
       premiumTier,
+      isGuest: !userId,
     };
   }
 

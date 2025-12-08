@@ -492,6 +492,47 @@ export class GameBuddiesService {
       return 'free';
     }
   }
+
+  /**
+   * Grant XP reward to a player
+   */
+  async grantReward(
+    gameId: string,
+    userId: string,
+    data: {
+      won: boolean;
+      durationSeconds: number;
+      score?: number;
+      winStreak?: number;
+      metadata?: Record<string, any>;
+    }
+  ): Promise<any> {
+    const apiKey = this.gameApiKeys.get(gameId);
+
+    if (!apiKey) {
+      console.warn(`[GameBuddies] No API key for ${gameId}, cannot grant reward`);
+      return null;
+    }
+
+    const url = `${this.centralServerUrl}/api/v2/game/reward`;
+
+    try {
+      console.log(`[GameBuddies] 🎁 Granting reward for ${userId} in ${gameId}`);
+
+      const response = await axios.post(url, { userId, ...data }, {
+        timeout: this.apiTimeout,
+        headers: {
+          'Content-Type': 'application/json',
+          'X-API-Key': apiKey,
+        },
+      });
+
+      return response.data;
+    } catch (error: any) {
+      console.error(`[GameBuddies] ❌ Grant reward failed:`, error.message);
+      return null;
+    }
+  }
 }
 
 // Singleton instance
