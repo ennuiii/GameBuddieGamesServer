@@ -595,6 +595,91 @@ class UnifiedGameServer {
         });
       });
 
+      // Common event: Reconnect to an existing GameBuddies session using the platform token
+      socket.on(
+        'session:reconnect',
+        (
+          data: { sessionToken: string },
+          callback?: (response: { success: boolean; lobby?: Room; sessionToken?: string; reason?: string }) => void
+        ) => {
+          const token = data?.sessionToken;
+          if (!token) {
+            callback?.({ success: false, reason: 'missing_token' });
+            return;
+          }
+
+          const session = this.sessionManager.validateSession(token);
+          if (!session) {
+            console.warn(
+              `[${plugin.id.toUpperCase()}] session:reconnect failed - invalid/expired token ${token.substring(0, 8)}...`
+            );
+            callback?.({ success: false, reason: 'session_invalid' });
+            return;
+          }
+
+          const room = this.roomManager.getRoomByCode(session.roomCode);
+          if (!room) {
+            console.warn(
+              `[${plugin.id.toUpperCase()}] session:reconnect failed - room ${session.roomCode} not found for token ${token.substring(0, 8)}...`
+            );
+            callback?.({ success: false, reason: 'room_closed' });
+            return;
+          }
+
+          const existingPlayer = room.players.get(session.playerId);
+          if (!existingPlayer) {
+            console.warn(
+              `[${plugin.id.toUpperCase()}] session:reconnect failed - player ${session.playerId} missing in room ${room.code}`
+            );
+            callback?.({ success: false, reason: 'player_not_found' });
+            return;
+          }
+
+          const oldSocketId = existingPlayer.socketId;
+
+          // Update player/socket mappings in RoomManager
+          const reconnectResult = this.roomManager.reconnectPlayer(oldSocketId, socket.id);
+          const player = reconnectResult.player || existingPlayer;
+
+          // Ensure player flags are correct after reconnect
+          player.connected = true;
+          player.disconnectedAt = undefined;
+          player.lastActivity = Date.now();
+
+          socket.join(room.code);
+          this.sessionManager.refreshSession(token);
+
+          // Notify plugin so it can re-sync timers/state
+          if (plugin.onPlayerJoin) {
+            plugin.onPlayerJoin(room, player, true);
+          }
+
+          // Emit reconnection events to others (mirrors room:join reconnection branch)
+          if (oldSocketId && oldSocketId !== socket.id) {
+            namespace.to(room.code).emit('player:reconnected', {
+              player: this.sanitizePlayer(player),
+              oldSocketId,
+            });
+            namespace.to(room.code).emit('webrtc:peer-reconnected', {
+              oldPeerId: oldSocketId,
+              newPeerId: socket.id,
+              playerId: player.id,
+              playerName: player.name,
+            });
+          }
+
+          const serializedRoom = plugin.serializeRoom
+            ? plugin.serializeRoom(room, socket.id)
+            : this.sanitizeRoom(room, socket.id);
+
+          callback?.({
+            success: true,
+            lobby: serializedRoom,
+            sessionToken: token,
+          });
+        }
+      );
+
       // Common event: Join room
       socket.on('room:join', async (data: {
         roomCode?: string;
