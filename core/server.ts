@@ -414,6 +414,54 @@ class UnifiedGameServer {
         const isGameBuddiesRoom = !!data.isGameBuddiesRoom;
         const resolvedPlayerId = data.playerId || randomUUID();
 
+        // REJOIN PATH: If this is a GameBuddies room with session + roomCode, try to reuse existing room instead of creating a new one.
+        if (isGameBuddiesRoom && data.roomCode && data.sessionToken && data.playerId) {
+          const existingRoom = this.roomManager.getRoomByCode(data.roomCode);
+          if (existingRoom && existingRoom.gameId === plugin.id) {
+            console.log(
+              `[${plugin.id.toUpperCase()}] Rejoin shortcut: existing room ${data.roomCode} with session ${data.sessionToken.substring(0, 8)}...`
+            );
+
+            const existingPlayer = Array.from(existingRoom.players.values()).find(
+              (p) => p.id === data.playerId
+            );
+
+            if (existingPlayer) {
+              // Update socket + session
+              existingPlayer.socketId = socket.id;
+              existingPlayer.connected = true;
+              existingPlayer.lastActivity = Date.now();
+              existingPlayer.isHost = true;
+              existingPlayer.isGuest = false;
+              existingPlayer.userId = data.playerId;
+
+              // Refresh session tracking
+              const sessionToken = this.sessionManager.createSession(
+                existingPlayer.id,
+                existingRoom.code,
+                data.sessionToken
+              );
+              existingPlayer.sessionToken = sessionToken;
+
+              // Update room manager mappings
+              this.roomManager.addPlayerToRoom(existingRoom.code, existingPlayer);
+              socket.join(existingRoom.code);
+
+              const sanitizedRoom = this.sanitizeRoom(existingRoom, socket.id);
+              socket.emit('room:created', {
+                room: sanitizedRoom,
+                sessionToken,
+              });
+
+              console.log(
+                `[${plugin.id.toUpperCase()}] ✅ Rejoined existing room ${existingRoom.code} with existing player ${existingPlayer.id}`
+              );
+              return;
+            }
+          }
+        }
+
+        // NORMAL CREATE PATH
         const player: Player = this.createPlayer(
           socket.id,
           nameValidation.sanitizedValue!,
