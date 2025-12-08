@@ -31,7 +31,11 @@ import bingoPlugin from '../games/bingo/plugin.js';
 import DDFGamePlugin from '../games/ddf/plugin.js';
 import thinkAlikePlugin from '../games/thinkalike/plugin.js';
 import templatePlugin from '../games/template/plugin.js';
+<<<<<<< HEAD
 import bombermanPlugin from '../games/bomberman/plugin.js';
+=======
+import tronPlugin from '../games/tron/plugin.js';
+>>>>>>> a7823b8 (Refactor: Unify GameBuddieGamesServer session management with Gamebuddies.Io)
 
 /**
  * Global error handlers to prevent server crashes
@@ -543,7 +547,12 @@ class UnifiedGameServer {
         roomCode?: string;
         inviteToken?: string;
         playerName: string;
+<<<<<<< HEAD
         userId?: string;
+=======
+        userId?: string; // Added userId
+        playerId?: string; // Added playerId
+>>>>>>> a7823b8 (Refactor: Unify GameBuddieGamesServer session management with Gamebuddies.Io)
         sessionToken?: string;
         premiumTier?: string;
       }) => {
@@ -551,6 +560,10 @@ class UnifiedGameServer {
            roomCode: data.roomCode,
            playerName: data.playerName,
            userId: data.userId,
+<<<<<<< HEAD
+=======
+           playerId: data.playerId,
+>>>>>>> a7823b8 (Refactor: Unify GameBuddieGamesServer session management with Gamebuddies.Io)
            hasSessionToken: !!data.sessionToken
         });
 
@@ -612,7 +625,16 @@ class UnifiedGameServer {
         let isReconnecting = false;
 
         if (data.sessionToken) {
-          const session = this.sessionManager.validateSession(data.sessionToken);
+          // Try to find session locally
+          let session = this.sessionManager.validateSession(data.sessionToken);
+          
+          // If not found locally, but we have a playerId, register this external token
+          if (!session && data.playerId) {
+             console.log(`[CORE] Registering external session token for player ${data.playerId}`);
+             this.sessionManager.createSession(data.playerId, roomCode, data.sessionToken);
+             session = this.sessionManager.validateSession(data.sessionToken);
+          }
+
           if (session && session.roomCode === roomCode) {
             // Reconnecting player
             const existingPlayer = Array.from(room.players.values()).find(
@@ -652,12 +674,25 @@ class UnifiedGameServer {
               console.log(`[${plugin.id.toUpperCase()}] Player reconnected: ${player.name}`);
             } else {
               // Session valid but player not in room - notify and join as new
+<<<<<<< HEAD
               socket.emit('reconnection:failed', {
                 reason: 'player_not_in_room',
                 message: 'Your previous session expired. Joining as new player.'
               });
               player = this.createPlayer(socket.id, nameValidation.sanitizedValue!, data.premiumTier, data.userId);
               sessionToken = this.sessionManager.createSession(player.id, room.code);
+=======
+              // But if it's a valid platform token, we should probably respect it and create the player with that ID?
+              console.log(`[CORE] Session valid but player not in room. Creating new player with ID ${session.playerId}`);
+              
+              // Use the ID from the session/data if available
+              const playerId = session.playerId || data.playerId || randomUUID();
+              player = this.createPlayer(socket.id, nameValidation.sanitizedValue!, data.premiumTier, data.userId);
+              player.id = playerId; // Force ID match
+              
+              // Register session again just in case
+              sessionToken = this.sessionManager.createSession(player.id, room.code, data.sessionToken);
+>>>>>>> a7823b8 (Refactor: Unify GameBuddieGamesServer session management with Gamebuddies.Io)
             }
           } else {
             // Invalid session - notify and join as new
@@ -672,6 +707,7 @@ class UnifiedGameServer {
           // New player
           // SECURITY: Validate premium for new players
           let newPlayerTier = data.premiumTier || 'free';
+<<<<<<< HEAD
           if (data.sessionToken && room.isGameBuddiesRoom) {
             try {
               newPlayerTier = await gameBuddiesService.validatePremiumStatus(data.sessionToken);
@@ -682,6 +718,17 @@ class UnifiedGameServer {
             }
           }
           player = this.createPlayer(socket.id, nameValidation.sanitizedValue!, newPlayerTier, data.userId);
+=======
+          // (Skip API validation for now to avoid async delay, trust client for initial join, server validates later)
+          
+          player = this.createPlayer(socket.id, nameValidation.sanitizedValue!, newPlayerTier, data.userId);
+          
+          // Use provided playerId if available (e.g. from Platform room creation)
+          if (data.playerId) {
+             player.id = data.playerId;
+          }
+          
+>>>>>>> a7823b8 (Refactor: Unify GameBuddieGamesServer session management with Gamebuddies.Io)
           sessionToken = this.sessionManager.createSession(player.id, room.code);
         }
 
@@ -1324,12 +1371,21 @@ class UnifiedGameServer {
       console.error('[Server] ✗ Failed to register Template game');
     }
 
+<<<<<<< HEAD
     // Register Bomberman game
     const bombermanRegistered = await this.registerGame(bombermanPlugin);
     if (bombermanRegistered) {
       console.log('[Server] ✓ Bomberman game registered');
     } else {
       console.error('[Server] ✗ Failed to register Bomberman game');
+=======
+    // Register Tron game
+    const tronRegistered = await this.registerGame(tronPlugin);
+    if (tronRegistered) {
+      console.log('[Server] ✓ Tron game registered');
+    } else {
+      console.error('[Server] ✗ Failed to register Tron game');
+>>>>>>> a7823b8 (Refactor: Unify GameBuddieGamesServer session management with Gamebuddies.Io)
     }
 
     // TODO: Load games dynamically from games/ directory

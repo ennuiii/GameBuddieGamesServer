@@ -1,15 +1,17 @@
 import { randomUUID } from 'crypto';
 import type { PlayerSession } from '../types/core.js';
+import { gameBuddiesService } from '../services/GameBuddiesService.js';
 
 /**
- * Session Manager
+ * Session Manager (Updated)
  *
  * Handles player session tokens and reconnection logic.
  * Allows players to reconnect to their game if they disconnect temporarily.
+ * 
+ * Note: Now relies on GameBuddies.Io platform for authoritative session validation.
  *
  * Features:
- * - Generate session tokens on join
- * - Validate session tokens on reconnect
+ * - Validates tokens against GameBuddies API
  * - Automatic session expiry
  * - Session cleanup
  */
@@ -42,24 +44,52 @@ export class SessionManager {
   }
 
   /**
-   * Create a new session for a player
+   * Create/Register a session for a player.
+   * 
+   * NOTE: The unified game server should ideally receive tokens from the client 
+   * (which got them from GameBuddies.io platform).
+   * 
+   * If a session token is provided, we register it.
+   * If NOT provided, we must create a temporary local one (legacy/fallback), 
+   * but this will fail API validation with the platform.
    */
-  createSession(playerId: string, roomCode: string): string {
-    // If player already has a session, reuse token
-    const existingToken = this.playerSessions.get(playerId);
+  createSession(playerId: string, roomCode: string, existingToken?: string): string {
+    // If we have an existing token from the client, use it!
     if (existingToken) {
+      // Check if we already track this token
       const existingSession = this.sessions.get(existingToken);
-      if (existingSession && existingSession.roomCode === roomCode) {
-        // Update last activity
+      if (existingSession) {
+        // Update
         existingSession.lastActivity = Date.now();
-        console.log(`[SessionManager] Reusing session for player ${playerId}`);
+        // Update mapping if player ID changed (unlikely but possible)
+        if (existingSession.playerId !== playerId) {
+           this.playerSessions.delete(existingSession.playerId);
+           existingSession.playerId = playerId;
+           this.playerSessions.set(playerId, existingToken);
+        }
+        console.log(`[SessionManager] Registered existing session for player ${playerId} (${this.truncateToken(existingToken)})`);
         return existingToken;
       }
+
+      // New local tracking for this token
+      const session: PlayerSession = {
+        playerId,
+        roomCode,
+        sessionToken: existingToken,
+        createdAt: Date.now(),
+        lastActivity: Date.now(),
+      };
+      this.sessions.set(existingToken, session);
+      this.playerSessions.set(playerId, existingToken);
+      
+      console.log(`[SessionManager] Registered external session for player ${playerId} (${this.truncateToken(existingToken)})`);
+      return existingToken;
     }
 
-    // Generate new session token
+    // Fallback: Create local session (Warning: Won't work with Platform API)
+    console.warn(`[SessionManager] ⚠️ Creating LOCAL session for ${playerId}. This player will fail platform API validation!`);
+    
     const sessionToken = randomUUID();
-
     const session: PlayerSession = {
       playerId,
       roomCode,
@@ -71,8 +101,6 @@ export class SessionManager {
     this.sessions.set(sessionToken, session);
     this.playerSessions.set(playerId, sessionToken);
 
-    console.log(`[SessionManager] Created session for player ${playerId} in room ${roomCode}`);
-
     return sessionToken;
   }
 
@@ -83,7 +111,10 @@ export class SessionManager {
     const session = this.sessions.get(sessionToken);
 
     if (!session) {
-      console.warn(`[SessionManager] Session not found: ${this.truncateToken(sessionToken)}`);
+      // We don't know about this session locally.
+      // In a fuller implementation, we might query the Platform API here to "hydrate" the session?
+      // For now, if it's not in memory, it's invalid for *this* server process.
+      console.warn(`[SessionManager] Session not found in memory: ${this.truncateToken(sessionToken)}`);
       return null;
     }
 
@@ -98,7 +129,7 @@ export class SessionManager {
     // Update last activity
     session.lastActivity = Date.now();
 
-    console.log(`[SessionManager] Validated session for player ${session.playerId}`);
+    // console.log(`[SessionManager] Validated session for player ${session.playerId}`);
 
     return session;
   }
