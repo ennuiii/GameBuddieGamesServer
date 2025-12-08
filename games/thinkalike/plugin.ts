@@ -112,13 +112,22 @@ class ThinkAlikePlugin implements GamePlugin {
    * Called when a player joins (or reconnects)
    */
   onPlayerJoin(room: Room, player: Player, isReconnecting?: boolean): void {
-    console.log(`[${this.name}] Player ${player.name} ${isReconnecting ? 'reconnected to' : 'joined'} room ${room.code}`);
+    console.log(
+      `[${this.name}] Player ${player.name} ${isReconnecting ? 'reconnected to' : 'joined'} room ${room.code} | players:`,
+      Array.from(room.players.keys())
+    );
 
     const namespace = this.io?.of(this.namespace);
     const existingPlayer = room.players.get(player.id);
     const resolvedPlayer = existingPlayer || player;
     const socketChanged = existingPlayer ? existingPlayer.socketId !== player.socketId : false;
     const shouldTreatAsReconnect = isReconnecting || !!existingPlayer;
+
+    if (existingPlayer) {
+      console.log(
+        `[${this.name}] ⚠️ existing player detected for ${player.name} in ${room.code} | existingSocket=${existingPlayer.socketId} newSocket=${player.socketId} socketChanged=${socketChanged}`
+      );
+    }
 
     // Merge basic fields if the core provided a fresh Player instance while one already exists in the room
     if (existingPlayer && existingPlayer !== player) {
@@ -170,6 +179,9 @@ class ThinkAlikePlugin implements GamePlugin {
       console.log(
         `[${this.name}] Reconnection handled for ${resolvedPlayer.name} in ${room.code}` +
         (oldSocketId ? ` (oldSocketId: ${oldSocketId} -> ${resolvedPlayer.socketId})` : '')
+      );
+      console.log(
+        `[${this.name}] Reconnect state snapshot ${room.code}: players=${Array.from(room.players.values()).map(p => `${p.name}:${p.socketId}:${p.connected}`)} phase=${(room.gameState.data as ThinkAlikeGameState).phase}`
       );
       return;
     }
