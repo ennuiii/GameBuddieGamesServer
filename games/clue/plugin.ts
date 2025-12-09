@@ -119,8 +119,8 @@ class CluePlugin implements GamePlugin {
   id = 'clue-scale';
   name = 'ClueScale';
   version = '1.0.0';
-  namespace = '/clue';
-  basePath = '/clue';
+  namespace = '/cluescale';
+  basePath = '/cluescale';
 
   // Configuration
   defaultSettings = {
@@ -166,7 +166,7 @@ class CluePlugin implements GamePlugin {
    */
   private sendLobbyUpdate(room: Room): void {
     if (this.io) {
-      const namespace = this.io.of('/clue');
+      const namespace = this.io.of('/cluescale');
 
       // Send to each player with their personalized socketId
       room.players.forEach((p) => {
@@ -198,7 +198,7 @@ class CluePlugin implements GamePlugin {
       ) {
         // Re-send target number to reconnecting clue giver
         if (this.io) {
-          const namespace = this.io.of('/clue');
+          const namespace = this.io.of('/cluescale');
           namespace.to(player.socketId).emit('round:giver-data', {
             targetNumber: gameState.round.targetNumber,
             category: gameState.round.category,
@@ -213,7 +213,7 @@ class CluePlugin implements GamePlugin {
     // Send properly serialized lobby data to ALL players in the room
     // This ensures everyone has the correct state, mySocketId, and player list
     if (this.io) {
-      const namespace = this.io.of('/clue');
+      const namespace = this.io.of('/cluescale');
 
       // Send to each player with their personalized socketId
       room.players.forEach((p) => {

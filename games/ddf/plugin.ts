@@ -20,8 +20,8 @@ class DDFGamePlugin implements GamePlugin {
   id = 'ddf';
   name = 'DDF Quiz Game';
   version = '1.0.0';
-  namespace = '/ddf';
-  basePath = '/ddf';
+  namespace = '/lastbrainstanding';
+  basePath = '/lastbrainstanding';
 
   defaultSettings = {
     minPlayers: 2,
@@ -162,7 +162,7 @@ class DDFGamePlugin implements GamePlugin {
 
       // Broadcast updated game state to all players on reconnection
       if (this.io) {
-        const namespace = this.io.of('/ddf');
+        const namespace = this.io.of('/lastbrainstanding');
         const serialized = serializeRoomToDDF(room, player.socketId);
         namespace.to(room.code).emit('ddf:game-state-update', { room: serialized });
         console.log(`[DDF] Broadcast reconnection state for ${player.name} to room ${room.code}`);
@@ -1621,7 +1621,7 @@ class DDFGamePlugin implements GamePlugin {
 
     if (this.io) {
       // Get the /ddf namespace and emit to the room
-      const namespace = this.io.of('/ddf');
+      const namespace = this.io.of('/lastbrainstanding');
       namespace.to(room.code).emit('ddf:game-state-update', { room: serialized });
       console.log(`[DDF] Broadcast disconnect status for ${player.name} to room ${room.code}`);
     } else {

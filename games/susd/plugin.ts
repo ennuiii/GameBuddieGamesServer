@@ -22,8 +22,8 @@ class SUSDPlugin implements GamePlugin {
   id = 'susd';
   name = 'SUS Game';
   version = '1.0.0';
-  namespace = '/susd';
-  basePath = '/susd';
+  namespace = '/badactor';
+  basePath = '/badactor';
 
   // Configuration
   defaultSettings = {
@@ -1421,7 +1421,7 @@ class SUSDPlugin implements GamePlugin {
 
     // Broadcast updated room state so other players see disconnected status (use proper serialization with premiumTier)
     if (this.io) {
-      const namespace = this.io.of('/susd');
+      const namespace = this.io.of('/badactor');
       namespace.to(room.code).emit('room:updated', { room: this.serializeRoom(room, '') });
       console.log(`[SUSD] Broadcast disconnect status for ${player.name} to room ${room.code}`);
     }
@@ -1444,7 +1444,7 @@ class SUSDPlugin implements GamePlugin {
 
     // Broadcast updated room state so other players see removal (use proper serialization with premiumTier)
     if (this.io) {
-      const namespace = this.io.of('/susd');
+      const namespace = this.io.of('/badactor');
       namespace.to(room.code).emit('room:updated', { room: this.serializeRoom(room, '') });
       console.log(`[SUSD] Broadcast player removal for ${player.name} to room ${room.code}`);
     }
