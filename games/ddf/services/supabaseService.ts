@@ -37,7 +37,7 @@ interface GameContentRow {
 // Legacy DDF question format for backward compatibility
 interface DDFQuestion {
   id: string;
-  question_text: string;
+  question: string;
   answer: string;
   category: string;
   difficulty?: string;
@@ -58,7 +58,7 @@ function convertToDDFQuestion(row: GameContentRow): DDFQuestion {
 
   return {
     id: row.id,
-    question_text: row.text_content,
+    question: row.text_content,
     answer: (row.data?.answer as string) || '',
     category,
     difficulty: difficultyMap[row.difficulty_level] || 'medium',
