@@ -1,15 +1,67 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 /**
- * SupabaseService - Optional database integration for DDF
+ * SupabaseService - Database integration for DDF (LastBrainStanding)
  *
+ * Now uses the unified game_content table for questions.
  * Provides READ capability for:
- * - Questions (read from Supabase if available)
+ * - Questions (read from game_content table where 'ddf' is in game_ids)
  * - Game state persistence (save/load game progress)
  * - Event logging (track game activities)
  *
  * Falls back gracefully to local storage if Supabase credentials not provided.
  */
+
+// Unified game_content row interface
+interface GameContentRow {
+  id: string;
+  game_ids: string[];
+  text_content: string;
+  media_url?: string;
+  language: string;
+  difficulty_level: number;
+  is_premium: boolean;
+  is_verified: boolean;
+  tags: string[];
+  data: {
+    answer?: string;
+    category?: string;
+    bad_mark_count?: number;
+    source_table?: string;
+    [key: string]: unknown;
+  };
+  created_at: string;
+  updated_at: string;
+}
+
+// Legacy DDF question format for backward compatibility
+interface DDFQuestion {
+  id: string;
+  question_text: string;
+  answer: string;
+  category: string;
+  difficulty?: string;
+  is_bad: boolean;
+  created_at: string;
+  updated_at?: string;
+}
+
+// Helper to convert game_content row to legacy DDF question format
+function convertToDDFQuestion(row: GameContentRow): DDFQuestion {
+  const difficultyMap: Record<number, string> = { 1: 'easy', 2: 'medium', 3: 'hard' };
+
+  return {
+    id: row.id,
+    question_text: row.text_content,
+    answer: (row.data?.answer as string) || '',
+    category: (row.data?.category as string) || row.tags.find(t => !['trivia', 'ddf'].includes(t.toLowerCase())) || 'general',
+    difficulty: difficultyMap[row.difficulty_level] || 'medium',
+    is_bad: !row.is_verified,
+    created_at: row.created_at,
+    updated_at: row.updated_at
+  };
+}
+
 export class SupabaseService {
   private supabase: SupabaseClient | null = null;
   private isAvailable: boolean = false;
@@ -41,19 +93,9 @@ export class SupabaseService {
   }
 
   /**
-   * Fetch all questions from Supabase
-   *
-   * Expected table schema:
-   * - id: UUID
-   * - question_text: string
-   * - answer: string
-   * - category: string
-   * - difficulty: string (optional)
-   * - is_bad: boolean (default: false)
-   * - created_at: timestamp
-   * - updated_at: timestamp
+   * Fetch all questions from game_content table where 'ddf' is in game_ids
    */
-  async getQuestions(): Promise<any[]> {
+  async getQuestions(): Promise<DDFQuestion[]> {
     if (!this.isAvailable || !this.supabase) {
       console.log('[Supabase] Supabase not available, returning empty array');
       return [];
@@ -61,9 +103,10 @@ export class SupabaseService {
 
     try {
       const { data, error } = await this.supabase
-        .from('questions')
+        .from('game_content')
         .select('*')
-        .eq('is_bad', false) // Only fetch valid questions
+        .contains('game_ids', ['ddf'])
+        .eq('is_verified', true) // Only fetch valid questions
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -71,8 +114,9 @@ export class SupabaseService {
         return [];
       }
 
-      console.log(`[Supabase] Fetched ${data?.length || 0} questions from database`);
-      return data || [];
+      const questions = (data as GameContentRow[] || []).map(convertToDDFQuestion);
+      console.log(`[Supabase] Fetched ${questions.length} questions from game_content table`);
+      return questions;
     } catch (error) {
       console.error('[Supabase] Exception fetching questions:', error);
       return [];
@@ -80,19 +124,21 @@ export class SupabaseService {
   }
 
   /**
-   * Fetch questions by category from Supabase
+   * Fetch questions by category from game_content table
    */
-  async getQuestionsByCategory(category: string): Promise<any[]> {
+  async getQuestionsByCategory(category: string): Promise<DDFQuestion[]> {
     if (!this.isAvailable || !this.supabase) {
       return [];
     }
 
     try {
+      // First try filtering by data->>'category', then fallback to tags
       const { data, error } = await this.supabase
-        .from('questions')
+        .from('game_content')
         .select('*')
-        .eq('category', category)
-        .eq('is_bad', false)
+        .contains('game_ids', ['ddf'])
+        .eq('is_verified', true)
+        .or(`data->>category.eq.${category},tags.cs.{${category.toLowerCase()}}`)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -100,7 +146,7 @@ export class SupabaseService {
         return [];
       }
 
-      return data || [];
+      return (data as GameContentRow[] || []).map(convertToDDFQuestion);
     } catch (error) {
       console.error('[Supabase] Exception fetching questions by category:', error);
       return [];
@@ -112,7 +158,7 @@ export class SupabaseService {
    */
   async saveGameState(
     roomCode: string,
-    gameState: any,
+    gameState: unknown,
     playerId: string
   ): Promise<boolean> {
     if (!this.isAvailable || !this.supabase) {
@@ -145,7 +191,7 @@ export class SupabaseService {
   /**
    * Load latest game state from Supabase (for reconnection)
    */
-  async loadGameState(roomCode: string): Promise<any | null> {
+  async loadGameState(roomCode: string): Promise<unknown | null> {
     if (!this.isAvailable || !this.supabase) {
       return null;
     }
@@ -179,7 +225,7 @@ export class SupabaseService {
     roomCode: string,
     playerId: string,
     eventType: string,
-    eventData: any
+    eventData: unknown
   ): Promise<boolean> {
     if (!this.isAvailable || !this.supabase) {
       return false;
@@ -209,7 +255,7 @@ export class SupabaseService {
   }
 
   /**
-   * Mark question as bad in Supabase
+   * Mark question as bad in game_content table (set is_verified to false)
    */
   async markQuestionAsBad(questionId: string): Promise<boolean> {
     if (!this.isAvailable || !this.supabase) {
@@ -217,9 +263,27 @@ export class SupabaseService {
     }
 
     try {
+      // First, get the current data to increment bad_mark_count
+      const { data: existing } = await this.supabase
+        .from('game_content')
+        .select('data')
+        .eq('id', questionId)
+        .single();
+
+      const currentBadCount = (existing?.data as { bad_mark_count?: number })?.bad_mark_count || 0;
+      const newBadCount = currentBadCount + 1;
+
+      // Update the question
       const { error } = await this.supabase
-        .from('questions')
-        .update({ is_bad: true })
+        .from('game_content')
+        .update({
+          is_verified: false,
+          data: {
+            ...(existing?.data || {}),
+            bad_mark_count: newBadCount
+          },
+          updated_at: new Date().toISOString()
+        })
         .eq('id', questionId);
 
       if (error) {
@@ -227,7 +291,7 @@ export class SupabaseService {
         return false;
       }
 
-      console.log(`[Supabase] Marked question ${questionId} as bad`);
+      console.log(`[Supabase] Marked question ${questionId} as bad (count: ${newBadCount})`);
       return true;
     } catch (error) {
       console.error('[Supabase] Exception marking question as bad:', error);
@@ -236,7 +300,7 @@ export class SupabaseService {
   }
 
   /**
-   * Get unique categories from Supabase questions
+   * Get unique categories from game_content table for DDF
    */
   async getCategories(): Promise<string[]> {
     if (!this.isAvailable || !this.supabase) {
@@ -245,21 +309,34 @@ export class SupabaseService {
 
     try {
       const { data, error } = await this.supabase
-        .from('questions')
-        .select('category')
-        .eq('is_bad', false)
-        .order('category');
+        .from('game_content')
+        .select('data, tags')
+        .contains('game_ids', ['ddf'])
+        .eq('is_verified', true);
 
       if (error) {
         console.error('[Supabase] Error fetching categories:', error);
         return [];
       }
 
-      // Extract unique categories
-      const categories = data?.map((q: any) => q.category).filter(Boolean) || [];
-      const uniqueCategories = Array.from(new Set(categories)) as string[];
+      // Extract categories from data.category and tags
+      const categories = new Set<string>();
 
-      return uniqueCategories;
+      (data as GameContentRow[] || []).forEach(row => {
+        // Try data.category first
+        if (row.data?.category) {
+          categories.add(row.data.category as string);
+        }
+        // Also check tags (excluding common ones)
+        (row.tags || []).forEach(tag => {
+          const lowerTag = tag.toLowerCase();
+          if (!['trivia', 'ddf', 'question'].includes(lowerTag)) {
+            categories.add(tag);
+          }
+        });
+      });
+
+      return Array.from(categories).sort();
     } catch (error) {
       console.error('[Supabase] Exception fetching categories:', error);
       return [];

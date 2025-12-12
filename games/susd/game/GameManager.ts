@@ -1,6 +1,7 @@
 import { Room, Player, GameMode, GamePhase, Word, WordPair, TurnData, VoteData, RoundResult, Question, AnswerData, GameSettings, SkipControls } from '../types/types.js';
 import { WordManager } from './WordManager.js';
 import { QuestionManager } from './QuestionManager.js';
+import { supabaseService } from '../services/supabaseService.js';
 import { randomUUID as uuidv4 } from 'crypto';
 import fs from 'fs/promises';
 import path from 'path';
@@ -24,20 +25,39 @@ export class GameManager {
 
   private async initializeContent() {
     try {
-      // Content file is in games/susd/content.json (relative to GameManager location)
+      // Try to load from Supabase first
+      if (supabaseService.isSupabaseAvailable()) {
+        console.log('[GameManager] Loading content from Supabase...');
+        const content = await supabaseService.getAllContent();
+
+        if (content.wordPairs.length > 0 || content.personalQuestions.length > 0) {
+          // Load words from Supabase
+          this.wordManager.loadWords(content.wordPairs, content.classicWords);
+
+          // Load questions from Supabase
+          this.questionManager.loadQuestions(content.personalQuestions, content.comparativeQuestions);
+
+          console.log('[GameManager] Content loaded from Supabase successfully');
+          return;
+        }
+        console.log('[GameManager] Supabase returned empty content, falling back to local file');
+      }
+
+      // Fallback: Load from local content.json file
+      console.log('[GameManager] Loading content from local content.json...');
       const contentPath = path.join(__dirname, '..', 'content.json');
       const contentData = await fs.readFile(contentPath, 'utf-8');
       const content = JSON.parse(contentData);
-      
+
       // Load words
       const { wordPairs, classicWords } = content.words;
       this.wordManager.loadWords(wordPairs, classicWords);
-      
+
       // Load questions
       const { personalQuestions, comparativeQuestions } = content.questions;
       this.questionManager.loadQuestions(personalQuestions, comparativeQuestions);
-      
-      console.log('[GameManager] Content data loaded successfully');
+
+      console.log('[GameManager] Content data loaded from local file successfully');
     } catch (error) {
       console.error('[GameManager] Failed to load content data:', error);
     }
