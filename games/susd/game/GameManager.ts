@@ -1974,6 +1974,16 @@ export class GameManager {
       room.settings.maxPlayers = settings.maxPlayers;
     }
 
+    // Allow language update in lobby
+    if (settings.language !== undefined) {
+      const validLanguages = ['en', 'de'];
+      if (!validLanguages.includes(settings.language)) {
+        return { success: false, error: 'Invalid language. Must be "en" or "de"' };
+      }
+      room.settings.language = settings.language;
+      console.log(`[GameManager] Room language changed to ${settings.language} in room ${room.code}`);
+    }
+
     room.lastActivity = Date.now();
 
     console.log(`[GameManager] Room settings updated in room ${room.code}:`, settings);

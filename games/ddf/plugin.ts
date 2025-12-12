@@ -581,6 +581,35 @@ class DDFGamePlugin implements GamePlugin {
       }
     },
 
+    'ddf:update-language': async (socket: Socket, data: any, room: Room, helpers: GameHelpers) => {
+      try {
+        const gameState = room.gameState.data as DDFGameState;
+        const { language } = data;
+
+        // Only allow in lobby
+        if (gameState.gameState !== 'lobby') {
+          socket.emit('error', { message: 'Cannot change language during game' });
+          return;
+        }
+
+        // Validate language
+        if (language !== 'en' && language !== 'de') {
+          socket.emit('error', { message: 'Invalid language. Must be "en" or "de"' });
+          return;
+        }
+
+        // Update room settings language
+        room.settings.language = language;
+        console.log(`[DDF] 🌐 Room language updated to: ${language} for room ${room.code}`);
+
+        const serialized = serializeRoomToDDF(room, socket.id);
+        helpers.sendToRoom(room.code, 'ddf:game-state-update', { room: serialized });
+      } catch (error) {
+        console.error('[DDF] Error in ddf:update-language:', error);
+        socket.emit('error', { message: 'Failed to update language' });
+      }
+    },
+
     // =====================================================================
     // TIMER (1 handler)
     // =====================================================================
