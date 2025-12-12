@@ -587,7 +587,7 @@ class DDFGamePlugin implements GamePlugin {
         const { language } = data;
 
         // Only allow in lobby
-        if (gameState.gameState !== 'lobby') {
+        if (gameState.phase !== 'lobby') {
           socket.emit('error', { message: 'Cannot change language during game' });
           return;
         }
