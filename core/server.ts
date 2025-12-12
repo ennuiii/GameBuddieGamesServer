@@ -306,7 +306,7 @@ class UnifiedGameServer {
         // Convert to admin format
         const adminQuestions = questions.map(q => ({
           id: q.id,
-          question: q.question_text,
+          question: q.question,
           answer: q.answer,
           category: q.category,
           difficulty: q.difficulty,
