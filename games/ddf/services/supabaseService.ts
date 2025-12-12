@@ -315,6 +315,52 @@ export class SupabaseService {
   }
 
   /**
+   * Get all questions for admin (includes unverified, supports language filter)
+   */
+  async getAllQuestionsForAdmin(language?: 'en' | 'de'): Promise<DDFQuestion[]> {
+    if (!this.isAvailable || !this.supabase) {
+      console.log('[Supabase] Supabase not available, returning empty array');
+      return [];
+    }
+
+    try {
+      let query = this.supabase
+        .from('game_content')
+        .select('*')
+        .contains('game_ids', ['ddf'])
+        .order('created_at', { ascending: false });
+
+      // Apply language filter if specified
+      if (language) {
+        query = query.eq('language', language);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error('[Supabase] Error fetching all questions:', error);
+        return [];
+      }
+
+      const questions = (data as GameContentRow[] || []).map(row => {
+        const q = convertToDDFQuestion(row);
+        // Add language and badMarkCount for admin view
+        return {
+          ...q,
+          language: row.language as 'en' | 'de',
+          badMarkCount: (row.data?.bad_mark_count as number) || 0
+        };
+      });
+
+      console.log(`[Supabase] Fetched ${questions.length} questions for admin (language: ${language || 'all'})`);
+      return questions;
+    } catch (error) {
+      console.error('[Supabase] Exception fetching all questions:', error);
+      return [];
+    }
+  }
+
+  /**
    * Get unique categories from game_content table for DDF
    */
   async getCategories(): Promise<string[]> {
