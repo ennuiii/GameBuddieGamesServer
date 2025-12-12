@@ -4,6 +4,14 @@ import { QuestionManager } from './QuestionManager.js';
 import { supabaseService } from '../services/supabaseService.js';
 import { randomUUID as uuidv4 } from 'crypto';
 
+// Cached content structure per language
+interface CachedContent {
+  wordPairs: WordPair[];
+  classicWords: string[];
+  personalQuestions: Question[];
+  comparativeQuestions: Question[];
+}
+
 export class GameManager {
   private rooms: Map<string, Room> = new Map();
   private playerToRoom: Map<string, string> = new Map(); // socketId -> roomId
@@ -11,41 +19,87 @@ export class GameManager {
   private wordManager: WordManager;
   private questionManager: QuestionManager;
 
+  // Content caching per language
+  private contentCache: Map<'en' | 'de', CachedContent> = new Map();
+  private currentLoadedLanguage: 'en' | 'de' | null = null;
+
   constructor() {
     this.wordManager = new WordManager();
     this.questionManager = new QuestionManager();
-    this.initializeContent();
+    // Initialize with default English content
+    this.initializeContent('en');
   }
 
-  private async initializeContent() {
+  private async initializeContent(language: 'en' | 'de' = 'en') {
     try {
-      console.log('[GameManager] Loading content from Supabase...');
-      const content = await supabaseService.getAllContent();
+      console.log(`[GameManager] Loading content from Supabase for language: ${language}...`);
+      const content = await supabaseService.getAllContent(language);
 
-      // Load words from Supabase
-      this.wordManager.loadWords(content.wordPairs, content.classicWords);
+      // Cache content for this language
+      this.contentCache.set(language, {
+        wordPairs: content.wordPairs,
+        classicWords: content.classicWords,
+        personalQuestions: content.personalQuestions,
+        comparativeQuestions: content.comparativeQuestions
+      });
 
-      // Load questions from Supabase
-      this.questionManager.loadQuestions(content.personalQuestions, content.comparativeQuestions);
+      // Load into managers if this is the current language
+      if (this.currentLoadedLanguage === null || this.currentLoadedLanguage === language) {
+        this.wordManager.loadWords(content.wordPairs, content.classicWords);
+        this.questionManager.loadQuestions(content.personalQuestions, content.comparativeQuestions);
+        this.currentLoadedLanguage = language;
+      }
 
-      console.log('[GameManager] Content loaded from Supabase successfully');
+      console.log(`[GameManager] Content loaded from Supabase successfully (language: ${language})`);
     } catch (error) {
-      console.error('[GameManager] Failed to load content data:', error);
+      console.error(`[GameManager] Failed to load content data for language ${language}:`, error);
+    }
+  }
+
+  /**
+   * Ensure content is loaded for a specific language
+   * Loads from cache if available, otherwise fetches from Supabase
+   */
+  private async ensureContentForLanguage(language: 'en' | 'de'): Promise<void> {
+    // Check if we need to load this language
+    if (!this.contentCache.has(language)) {
+      console.log(`[GameManager] 🌐 Content for '${language}' not cached, loading...`);
+      await this.initializeContent(language);
+    }
+
+    // Switch managers to this language if not already loaded
+    if (this.currentLoadedLanguage !== language) {
+      const content = this.contentCache.get(language);
+      if (content) {
+        this.wordManager.loadWords(content.wordPairs, content.classicWords);
+        this.questionManager.loadQuestions(content.personalQuestions, content.comparativeQuestions);
+        this.currentLoadedLanguage = language;
+        console.log(`[GameManager] 🌐 Switched content managers to language: ${language}`);
+      }
     }
   }
 
   // Public method to reload all content after admin panel updates
-  public async reloadContent() {
-    await this.initializeContent();
+  public async reloadContent(language?: 'en' | 'de') {
+    if (language) {
+      // Clear cache for specific language and reload
+      this.contentCache.delete(language);
+      await this.initializeContent(language);
+    } else {
+      // Reload all cached languages
+      this.contentCache.clear();
+      this.currentLoadedLanguage = null;
+      await this.initializeContent('en');
+    }
   }
 
   // Keep these for backward compatibility if needed
   public async reloadWordsData() {
-    await this.initializeContent();
+    await this.reloadContent();
   }
 
   public async reloadQuestionsData() {
-    await this.initializeContent();
+    await this.reloadContent();
   }
 
   // Room Management
@@ -191,7 +245,7 @@ export class GameManager {
   }
 
   // Game Logic
-  startGame(roomId: string): { success: boolean; error?: string; room?: Room } {
+  async startGame(roomId: string): Promise<{ success: boolean; error?: string; room?: Room }> {
     const room = this.rooms.get(roomId);
     if (!room) return { success: false, error: 'Room not found' };
 
@@ -203,9 +257,14 @@ export class GameManager {
       return { success: false, error: 'Need at least 3 players to start' };
     }
 
+    // Ensure content is loaded for room's language
+    const roomLanguage = (room.settings.language as 'en' | 'de') || 'en';
+    await this.ensureContentForLanguage(roomLanguage);
+    console.log(`[GameManager] 🌐 Starting game with language: ${roomLanguage}`);
+
     // Initialize game
     this.initializeGame(room);
-    
+
     if (room.gameMode === 'truth') {
       this.assignQuestion(room);
       this.startQuestionRound(room);

@@ -251,20 +251,19 @@ class DDFGamePlugin implements GamePlugin {
 
         console.log(`[DDF] ✅ Phase set to 'playing', round: 1`);
 
-        // Get available questions - use cache if available
-        let allQuestions: any[] = this.cachedQuestions;
-        
-        // If cache is empty, try to fetch/reload
-        if (allQuestions.length === 0) {
-            if (supabaseService.isSupabaseAvailable()) {
-                console.log('[DDF] Cache empty, fetching questions from Supabase...');
-                allQuestions = await supabaseService.getQuestions();
-                this.cachedQuestions = allQuestions; // Update cache
-            } else {
-                console.log('[DDF] Cache empty, fetching from local JSON...');
-                allQuestions = this.questionManager.getAllQuestions();
-                this.cachedQuestions = allQuestions;
-            }
+        // Get room language setting (default to 'en')
+        const roomLanguage = (room.settings.language as 'en' | 'de') || 'en';
+        console.log(`[DDF] 🌐 Room language: ${roomLanguage}`);
+
+        // Get available questions - fetch from Supabase with language filter
+        let allQuestions: any[] = [];
+
+        if (supabaseService.isSupabaseAvailable()) {
+            console.log(`[DDF] Fetching questions from Supabase (language: ${roomLanguage})...`);
+            allQuestions = await supabaseService.getQuestions(roomLanguage);
+        } else {
+            console.log('[DDF] Supabase not available, fetching from local JSON...');
+            allQuestions = this.questionManager.getAllQuestions();
         }
 
         // RACE CONDITION CHECK: Ensure game wasn't reset while we were awaiting

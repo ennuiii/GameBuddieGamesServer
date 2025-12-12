@@ -74,6 +74,7 @@ export interface GameSettings {
   roundsBeforeVoting: number; // How many word rounds before voting (classic mode)
   inputMode: 'text' | 'voice'; // Text input boxes vs voice mode
   gameType: 'online' | 'pass-play'; // Online multiplayer vs pass & play single device
+  language?: 'en' | 'de'; // Language for question/word content filtering
 }
 
 export interface Question {

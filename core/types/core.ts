@@ -63,6 +63,7 @@ export interface GameState {
 export interface RoomSettings {
   minPlayers: number;
   maxPlayers: number;
+  language?: 'en' | 'de'; // Language for question content filtering
   gameSpecific?: any; // Game-specific settings
 }
 

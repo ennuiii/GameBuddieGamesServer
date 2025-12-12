@@ -201,6 +201,11 @@ class SUSDPlugin implements GamePlugin {
           Object.assign(susdRoom.settings, settings);
         }
 
+        // Apply language from core room settings
+        const roomLanguage = (coreRoom.settings.language as 'en' | 'de') || 'en';
+        susdRoom.settings.language = roomLanguage;
+        console.log(`[SUSD] 🌐 Room ${coreRoom.code} created with language: ${roomLanguage}`);
+
         // Store mapping
         this.roomMapping.set(coreRoom.code, susdRoom.id);
 
@@ -257,7 +262,7 @@ class SUSDPlugin implements GamePlugin {
         }
 
         console.log('[SUSD] 🎮 Calling gameManager.startGame for room:', coreRoom.code, 'with susdRoomId:', susdRoomId);
-        const result = this.gameManager.startGame(susdRoomId);
+        const result = await this.gameManager.startGame(susdRoomId);
 
         if (!result.success) {
           console.log('[SUSD] ❌ Failed to start game:', result.error);

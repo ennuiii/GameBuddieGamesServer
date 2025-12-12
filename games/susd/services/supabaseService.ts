@@ -64,12 +64,15 @@ export class SupabaseService {
   /**
    * Fetch word pairs from game_content table
    * Returns { wordPairs, classicWords } for backward compatibility
+   * @param language - Optional language filter ('en' | 'de'). Defaults to 'en' if not provided.
    */
-  async getWordPairs(): Promise<{ wordPairs: WordPair[]; classicWords: string[] }> {
+  async getWordPairs(language?: 'en' | 'de'): Promise<{ wordPairs: WordPair[]; classicWords: string[] }> {
     if (!this.isAvailable || !this.supabase) {
       console.log('[SUSD Supabase] Supabase not available for word pairs');
       return { wordPairs: [], classicWords: [] };
     }
+
+    const lang = language || 'en'; // Default to English
 
     try {
       const { data, error } = await this.supabase
@@ -77,7 +80,8 @@ export class SupabaseService {
         .select('*')
         .contains('game_ids', ['badactor'])
         .contains('tags', ['word_pair'])
-        .eq('is_verified', true);
+        .eq('is_verified', true)
+        .eq('language', lang); // Filter by language
 
       if (error) {
         console.error('[SUSD Supabase] Error fetching word pairs:', error);
@@ -93,7 +97,7 @@ export class SupabaseService {
       // Classic words are just the "normal" words from word pairs
       const classicWords = wordPairs.map(wp => wp.normal);
 
-      console.log(`[SUSD Supabase] Fetched ${wordPairs.length} word pairs from game_content`);
+      console.log(`[SUSD Supabase] Fetched ${wordPairs.length} word pairs from game_content (language: ${lang})`);
       return { wordPairs, classicWords };
     } catch (error) {
       console.error('[SUSD Supabase] Exception fetching word pairs:', error);
@@ -104,12 +108,15 @@ export class SupabaseService {
   /**
    * Fetch questions from game_content table
    * Returns { personalQuestions, comparativeQuestions } for backward compatibility
+   * @param language - Optional language filter ('en' | 'de'). Defaults to 'en' if not provided.
    */
-  async getQuestions(): Promise<{ personalQuestions: Question[]; comparativeQuestions: Question[] }> {
+  async getQuestions(language?: 'en' | 'de'): Promise<{ personalQuestions: Question[]; comparativeQuestions: Question[] }> {
     if (!this.isAvailable || !this.supabase) {
       console.log('[SUSD Supabase] Supabase not available for questions');
       return { personalQuestions: [], comparativeQuestions: [] };
     }
+
+    const lang = language || 'en'; // Default to English
 
     try {
       const { data, error } = await this.supabase
@@ -117,7 +124,8 @@ export class SupabaseService {
         .select('*')
         .contains('game_ids', ['badactor'])
         .contains('tags', ['question'])
-        .eq('is_verified', true);
+        .eq('is_verified', true)
+        .eq('language', lang); // Filter by language
 
       if (error) {
         console.error('[SUSD Supabase] Error fetching questions:', error);
@@ -143,7 +151,7 @@ export class SupabaseService {
         }
       });
 
-      console.log(`[SUSD Supabase] Fetched ${personalQuestions.length} personal and ${comparativeQuestions.length} comparative questions`);
+      console.log(`[SUSD Supabase] Fetched ${personalQuestions.length} personal and ${comparativeQuestions.length} comparative questions (language: ${lang})`);
       return { personalQuestions, comparativeQuestions };
     } catch (error) {
       console.error('[SUSD Supabase] Exception fetching questions:', error);
@@ -153,16 +161,17 @@ export class SupabaseService {
 
   /**
    * Fetch all content (word pairs and questions) in a single call
+   * @param language - Optional language filter ('en' | 'de'). Defaults to 'en' if not provided.
    */
-  async getAllContent(): Promise<{
+  async getAllContent(language?: 'en' | 'de'): Promise<{
     wordPairs: WordPair[];
     classicWords: string[];
     personalQuestions: Question[];
     comparativeQuestions: Question[];
   }> {
     const [wordData, questionData] = await Promise.all([
-      this.getWordPairs(),
-      this.getQuestions()
+      this.getWordPairs(language),
+      this.getQuestions(language)
     ]);
 
     return {

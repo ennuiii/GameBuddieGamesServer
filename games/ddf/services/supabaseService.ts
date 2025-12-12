@@ -100,12 +100,15 @@ export class SupabaseService {
 
   /**
    * Fetch all questions from game_content table where 'ddf' is in game_ids
+   * @param language - Optional language filter ('en' | 'de'). Defaults to 'en' if not provided.
    */
-  async getQuestions(): Promise<DDFQuestion[]> {
+  async getQuestions(language?: 'en' | 'de'): Promise<DDFQuestion[]> {
     if (!this.isAvailable || !this.supabase) {
       console.log('[Supabase] Supabase not available, returning empty array');
       return [];
     }
+
+    const lang = language || 'en'; // Default to English
 
     try {
       const { data, error } = await this.supabase
@@ -113,6 +116,7 @@ export class SupabaseService {
         .select('*')
         .contains('game_ids', ['ddf'])
         .eq('is_verified', true) // Only fetch valid questions
+        .eq('language', lang) // Filter by language
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -121,7 +125,7 @@ export class SupabaseService {
       }
 
       const questions = (data as GameContentRow[] || []).map(convertToDDFQuestion);
-      console.log(`[Supabase] Fetched ${questions.length} questions from game_content table`);
+      console.log(`[Supabase] Fetched ${questions.length} questions from game_content table (language: ${lang})`);
       return questions;
     } catch (error) {
       console.error('[Supabase] Exception fetching questions:', error);
@@ -131,11 +135,15 @@ export class SupabaseService {
 
   /**
    * Fetch questions by category from game_content table
+   * @param category - Category to filter by
+   * @param language - Optional language filter ('en' | 'de'). Defaults to 'en' if not provided.
    */
-  async getQuestionsByCategory(category: string): Promise<DDFQuestion[]> {
+  async getQuestionsByCategory(category: string, language?: 'en' | 'de'): Promise<DDFQuestion[]> {
     if (!this.isAvailable || !this.supabase) {
       return [];
     }
+
+    const lang = language || 'en'; // Default to English
 
     try {
       // First try filtering by data->>'category', then fallback to tags
@@ -144,6 +152,7 @@ export class SupabaseService {
         .select('*')
         .contains('game_ids', ['ddf'])
         .eq('is_verified', true)
+        .eq('language', lang) // Filter by language
         .or(`data->>category.eq.${category},tags.cs.{${category.toLowerCase()}}`)
         .order('created_at', { ascending: false });
 
