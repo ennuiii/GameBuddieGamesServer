@@ -50,11 +50,17 @@ interface DDFQuestion {
 function convertToDDFQuestion(row: GameContentRow): DDFQuestion {
   const difficultyMap: Record<number, string> = { 1: 'easy', 2: 'medium', 3: 'hard' };
 
+  // Get category from: data.category -> data.subject -> first relevant tag -> 'general'
+  const category = (row.data?.category as string)
+    || (row.data?.subject as string)
+    || row.tags.find(t => !['trivia', 'ddf', 'schooled', 'question'].includes(t.toLowerCase()))
+    || 'general';
+
   return {
     id: row.id,
     question_text: row.text_content,
     answer: (row.data?.answer as string) || '',
-    category: (row.data?.category as string) || row.tags.find(t => !['trivia', 'ddf'].includes(t.toLowerCase())) || 'general',
+    category,
     difficulty: difficultyMap[row.difficulty_level] || 'medium',
     is_bad: !row.is_verified,
     created_at: row.created_at,
