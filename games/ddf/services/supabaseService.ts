@@ -362,18 +362,26 @@ export class SupabaseService {
 
   /**
    * Get unique categories from game_content table for DDF
+   * @param language - Optional language filter ('en' | 'de'). Filters categories to only those in the selected language.
    */
-  async getCategories(): Promise<string[]> {
+  async getCategories(language?: 'en' | 'de'): Promise<string[]> {
     if (!this.isAvailable || !this.supabase) {
       return [];
     }
 
     try {
-      const { data, error } = await this.supabase
+      let query = this.supabase
         .from('game_content')
         .select('data, tags')
         .contains('game_ids', ['ddf'])
         .eq('is_verified', true);
+
+      // Apply language filter if specified
+      if (language) {
+        query = query.eq('language', language);
+      }
+
+      const { data, error } = await query;
 
       if (error) {
         console.error('[Supabase] Error fetching categories:', error);
@@ -397,7 +405,9 @@ export class SupabaseService {
         });
       });
 
-      return Array.from(categories).sort();
+      const result = Array.from(categories).sort();
+      console.log(`[Supabase] Fetched ${result.length} categories (language: ${language || 'all'})`);
+      return result;
     } catch (error) {
       console.error('[Supabase] Exception fetching categories:', error);
       return [];

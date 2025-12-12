@@ -322,10 +322,11 @@ class UnifiedGameServer {
       }
     });
 
-    // Get categories
+    // Get categories (with optional language filter)
     this.app.get('/api/ddf/categories', async (req, res) => {
       try {
-        const categories = await supabaseService.getCategories();
+        const language = req.query.language as 'en' | 'de' | undefined;
+        const categories = await supabaseService.getCategories(language);
         res.json(categories);
       } catch (error) {
         console.error('[DDF Admin] Error fetching categories:', error);
