@@ -79,6 +79,17 @@ export class GameManager {
     }
   }
 
+  /**
+   * Refresh content from Supabase for a new room
+   * Always fetches fresh content, bypassing the cache
+   */
+  private async refreshContentForNewRoom(language: 'en' | 'de' = 'en'): Promise<void> {
+    console.log(`[GameManager] 🔄 Refreshing content for new room (language: ${language})...`);
+    // Clear cache for this language to force fresh fetch
+    this.contentCache.delete(language);
+    await this.initializeContent(language);
+  }
+
   // Public method to reload all content after admin panel updates
   public async reloadContent(language?: 'en' | 'de') {
     if (language) {
@@ -103,7 +114,7 @@ export class GameManager {
   }
 
   // Room Management
-  createRoom(gamemaster: Player, gameMode: GameMode, customRoomCode?: string): Room {
+  async createRoom(gamemaster: Player, gameMode: GameMode, customRoomCode?: string): Promise<Room> {
     const roomId = uuidv4();
     const roomCode = customRoomCode ? customRoomCode.toUpperCase() : this.generateRoomCode();
 
@@ -111,6 +122,9 @@ export class GameManager {
     if (customRoomCode && this.getRoomByCode(roomCode)) {
       throw new Error('Room code already exists');
     }
+
+    // Refresh content for the new room (fetch latest from DB)
+    await this.refreshContentForNewRoom('en');
 
     const room: Room = {
       id: roomId,

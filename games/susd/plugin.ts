@@ -193,8 +193,8 @@ class SUSDPlugin implements GamePlugin {
           gameBuddiesPlayerId: hostPlayer.id,
         };
 
-        // Create SUSD room using GameManager
-        const susdRoom = this.gameManager.createRoom(susdPlayer, gameMode || 'classic', coreRoom.code);
+        // Create SUSD room using GameManager (async - refreshes content from DB)
+        const susdRoom = await this.gameManager.createRoom(susdPlayer, gameMode || 'classic', coreRoom.code);
 
         // Apply custom settings
         if (settings) {
