@@ -94,7 +94,8 @@ class TemplatePlugin implements GamePlugin {
         isHost: p.isHost,
         connected: p.connected,
         isReady: (p.gameData as TemplatePlayerData)?.isReady || false,
-        score: (p.gameData as TemplatePlayerData)?.score || 0
+        score: (p.gameData as TemplatePlayerData)?.score || 0,
+        avatarUrl: p.avatarUrl
       })),
       state: gameState.phase, // 'LOBBY', 'PLAYING', etc.
       settings: room.settings,

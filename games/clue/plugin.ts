@@ -52,6 +52,7 @@ function serializeRoomToLobby(room: Room, socketId: string) {
     isHost: p.isHost,
     disconnectedAt: p.disconnectedAt,
     premiumTier: p.premiumTier,
+    avatarUrl: p.avatarUrl,
   }));
   console.log(`💎 [PREMIUM DEBUG] Serialized players with premiumTier:`, players.map(p => ({ name: p.name, premiumTier: p.premiumTier })));
 

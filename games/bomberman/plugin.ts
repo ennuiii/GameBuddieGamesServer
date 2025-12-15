@@ -107,7 +107,8 @@ class BombermanPlugin implements GamePlugin {
           canKickBombs: pData?.canKickBombs || false,
           canPickUpBombs: pData?.canPickUpBombs || false,
           heldBomb: pData?.heldBomb || null,
-          facing: pData?.facing || 'down'
+          facing: pData?.facing || 'down',
+          avatarUrl: p.avatarUrl
         };
       }),
       state: gameState.phase,
