@@ -136,12 +136,21 @@ export function serializeRoomToDDF(room: Room, socketId: string): any {
   // Find the host player to get their premiumTier
   const hostPlayer = allPlayers.find(p => p.id === room.hostId);
 
+  console.log('[DDF AVATAR DEBUG] hostPlayer:', {
+    id: hostPlayer?.id,
+    name: hostPlayer?.name,
+    avatarUrl: hostPlayer?.avatarUrl,
+    premiumTier: hostPlayer?.premiumTier
+  });
+
   const gamemasterWithName = {
     id: room.hostId,
     name: room.hostName || gs.gamemaster?.name || 'Gamemaster',
     premiumTier: hostPlayer?.premiumTier || 'free',
     avatarUrl: hostPlayer?.avatarUrl,
   };
+
+  console.log('[DDF AVATAR DEBUG] gamemasterWithName:', gamemasterWithName);
 
   // =========================================================================
   // 3. Build complete room object for client

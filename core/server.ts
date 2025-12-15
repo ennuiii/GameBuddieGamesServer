@@ -544,6 +544,7 @@ class UnifiedGameServer {
         player.userId = data.playerId || player.userId;
         player.avatarUrl = data.avatarUrl;
         console.log(`💎 [PREMIUM DEBUG] Player created with premiumTier: ${player.premiumTier}`);
+        console.log(`🖼️ [AVATAR DEBUG] Player avatarUrl set from data.avatarUrl:`, data.avatarUrl);
 
         const settings = { ...plugin.defaultSettings, ...data.settings };
         const room = this.roomManager.createRoom(plugin.id, player, settings, data.roomCode);
