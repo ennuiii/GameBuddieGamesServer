@@ -19,6 +19,7 @@ export interface Player {
   lastActivity: number;
   gameData?: any; // Game-specific data
   premiumTier?: string; // 'free' | 'monthly' | 'lifetime' - GameBuddies premium status
+  avatarUrl?: string; // GameBuddies avatar URL for player profile picture
 }
 
 export interface Room {

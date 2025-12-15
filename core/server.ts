@@ -438,6 +438,7 @@ class UnifiedGameServer {
         premiumTier?: string;
         streamerMode?: boolean;
         hideRoomCode?: boolean;
+        avatarUrl?: string;
       }) => {
         // Rate limiting - max 5 room creates per minute per IP
         const clientIp = socket.handshake.address || socket.id;
@@ -491,6 +492,7 @@ class UnifiedGameServer {
               existingPlayer.isHost = true;
               existingPlayer.isGuest = false;
               existingPlayer.userId = data.playerId;
+              existingPlayer.avatarUrl = data.avatarUrl;
 
               // Refresh session tracking
               const sessionToken = this.sessionManager.createSession(
@@ -540,6 +542,7 @@ class UnifiedGameServer {
         player.isHost = true;
         player.isGuest = !(isGameBuddiesRoom || data.playerId);
         player.userId = data.playerId || player.userId;
+        player.avatarUrl = data.avatarUrl;
         console.log(`💎 [PREMIUM DEBUG] Player created with premiumTier: ${player.premiumTier}`);
 
         const settings = { ...plugin.defaultSettings, ...data.settings };
@@ -745,6 +748,7 @@ class UnifiedGameServer {
         playerId?: string; // Added playerId
         sessionToken?: string;
         premiumTier?: string;
+        avatarUrl?: string;
       }) => {
         console.log(`📥 [${plugin.id.toUpperCase()}] room:join received:`, {
            roomCode: data.roomCode,
@@ -865,6 +869,7 @@ class UnifiedGameServer {
 
               player = existingPlayer;
               player.oldSocketId = oldSocketId; // Store for plugin use
+              player.avatarUrl = data.avatarUrl; // Update avatar on reconnection
               sessionToken = data.sessionToken;
               isReconnecting = true;
               console.log(`[${plugin.id.toUpperCase()}] Player reconnected: ${player.name}`);
@@ -878,7 +883,8 @@ class UnifiedGameServer {
               player = this.createPlayer(socket.id, nameValidation.sanitizedValue!, data.premiumTier, playerId);
               player.isGuest = !(data.playerId || session.playerId);
               player.userId = data.playerId || session.playerId || player.userId;
-              
+              player.avatarUrl = data.avatarUrl;
+
               // Register session again just in case
               sessionToken = this.sessionManager.createSession(player.id, room.code, data.sessionToken);
             }
@@ -896,6 +902,7 @@ class UnifiedGameServer {
             );
             player.isGuest = !(data.playerId || session?.playerId);
             player.userId = data.playerId || session?.playerId || player.userId;
+            player.avatarUrl = data.avatarUrl;
             sessionToken = this.sessionManager.createSession(player.id, room.code);
           }
         } else {
@@ -912,7 +919,8 @@ class UnifiedGameServer {
           );
           player.isGuest = !data.playerId;
           player.userId = data.playerId || player.userId;
-          
+          player.avatarUrl = data.avatarUrl;
+
           sessionToken = this.sessionManager.createSession(player.id, room.code, data.sessionToken);
         }
 
@@ -1583,6 +1591,7 @@ class UnifiedGameServer {
       lastActivity: Date.now(),
       premiumTier,
       isGuest: !userId,
+      avatarUrl: undefined, // Will be set by caller if available
     };
   }
 
@@ -1625,6 +1634,7 @@ class UnifiedGameServer {
       disconnectedAt: player.disconnectedAt,
       gameData: player.gameData,
       premiumTier: player.premiumTier,
+      avatarUrl: player.avatarUrl,
     };
   }
 
