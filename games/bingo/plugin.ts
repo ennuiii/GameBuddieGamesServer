@@ -57,6 +57,7 @@ function serializeRoomToClient(room: Room, socketId: string) {
       joinedAt: Date.now(), // Could store this in playerData if needed
       sessionToken: undefined, // Client manages this separately
       premiumTier: p.premiumTier,
+      avatarUrl: p.avatarUrl,
     };
   });
 

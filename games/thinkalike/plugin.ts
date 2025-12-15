@@ -344,7 +344,8 @@ class ThinkAlikePlugin implements GamePlugin {
           isSpectator: false,  // Active players, not spectators
           currentWord: currentWord,
           hasSubmitted: isPlayer1 ? gameState.player1Submitted : gameState.player2Submitted,
-          premiumTier: p.premiumTier
+          premiumTier: p.premiumTier,
+          avatarUrl: p.avatarUrl
         };
       }),
 
@@ -355,7 +356,8 @@ class ThinkAlikePlugin implements GamePlugin {
         isHost: s.isHost,
         connected: s.connected,
         isSpectator: true,
-        premiumTier: s.premiumTier
+        premiumTier: s.premiumTier,
+        avatarUrl: s.avatarUrl
       })),
 
       // Game state - map to client-friendly format

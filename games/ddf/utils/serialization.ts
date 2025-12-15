@@ -112,6 +112,7 @@ export function serializeRoomToDDF(room: Room, socketId: string): any {
       connected: p.connected,
       isHost: p.isHost,
       premiumTier: p.premiumTier,
+      avatarUrl: p.avatarUrl,
 
       // Game-specific data
       lives: playerData?.lives || 3,

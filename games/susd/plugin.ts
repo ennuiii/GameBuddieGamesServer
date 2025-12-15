@@ -101,6 +101,7 @@ class SUSDPlugin implements GamePlugin {
       lastSubmittedRound: (gameData as any).lastSubmittedRound ?? 0,
       gameBuddiesPlayerId: (gameData as any).gameBuddiesPlayerId,
       premiumTier: corePlayer.premiumTier,
+      avatarUrl: corePlayer.avatarUrl,
     };
 
     console.log('[SUSD-DEBUG] ✅ Serialized player result:', {
