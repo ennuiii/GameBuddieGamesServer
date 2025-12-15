@@ -140,6 +140,7 @@ export function serializeRoomToDDF(room: Room, socketId: string): any {
     id: room.hostId,
     name: room.hostName || gs.gamemaster?.name || 'Gamemaster',
     premiumTier: hostPlayer?.premiumTier || 'free',
+    avatarUrl: hostPlayer?.avatarUrl,
   };
 
   // =========================================================================
