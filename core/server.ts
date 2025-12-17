@@ -32,7 +32,7 @@ import DDFGamePlugin from '../games/ddf/plugin.js';
 import { supabaseService } from '../games/ddf/services/supabaseService.js';
 import thinkAlikePlugin from '../games/thinkalike/plugin.js';
 import templatePlugin from '../games/template/plugin.js';
-import loveLetterPlugin from '../games/love-letter/plugin.js';
+import heartsGambitPlugin from '../games/hearts-gambit/plugin.js';
 import bombermanPlugin from '../games/bomberman/plugin.js';
 
 /**
@@ -1573,12 +1573,12 @@ class UnifiedGameServer {
       console.error('[Server] ✗ Failed to register Bomberman game');
     }
 
-    // Register Love Letter game
-    const loveLetterRegistered = await this.registerGame(loveLetterPlugin);
-    if (loveLetterRegistered) {
-      console.log('[Server] ✓ Love Letter game registered');
+    // Register Hearts Gambit game
+    const heartsGambitRegistered = await this.registerGame(heartsGambitPlugin);
+    if (heartsGambitRegistered) {
+      console.log('[Server] ✓ Hearts Gambit game registered');
     } else {
-      console.error('[Server] ✗ Failed to register Love Letter game');
+      console.error('[Server] ✗ Failed to register Hearts Gambit game');
     }
 
     // TODO: Load games dynamically from games/ directory

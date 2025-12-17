@@ -18,7 +18,7 @@ import type { Socket } from 'socket.io';
 
 export type CardType = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8; // 0 = card back (hidden)
 
-export interface LoveLetterGameState {
+export interface HeartsGambitGameState {
   currentRound: number;
   deck: CardType[];
   removedCard: CardType | null; // The one removed secretly at start
@@ -29,7 +29,7 @@ export interface LoveLetterGameState {
   roundWinner: string | null; // Winner of the current round
 }
 
-export interface LoveLetterPlayerData {
+export interface HeartsGambitPlayerData {
   hand: CardType[];
   discarded: CardType[];
   tokens: number; // Affection tokens
@@ -40,7 +40,7 @@ export interface LoveLetterPlayerData {
   seenHandSnapshots: { [observerId: string]: CardType[] }; // Hand snapshot for Priest effect
 }
 
-interface LoveLetterSettings {
+interface HeartsGambitSettings {
   tokensToWin: number; // Configurable, defaults based on player count
 }
 
@@ -48,21 +48,21 @@ interface LoveLetterSettings {
 // PLUGIN CLASS
 // ============================================================================
 
-class LoveLetterPlugin implements GamePlugin {
-  id = 'loveletter';
-  name = 'Love Letter';
+class HeartsGambitPlugin implements GamePlugin {
+  id = 'heartsgambit';
+  name = 'Hearts Gambit';
   version = '1.0.0';
   description = 'Risk, deduction, and luck. Get your letter to the Princess!';
   author = 'GameBuddies';
-  namespace = '/loveletter';
-  basePath = '/loveletter';
+  namespace = '/heartsgambit';
+  basePath = '/heartsgambit';
 
   defaultSettings: RoomSettings = {
     minPlayers: 2,
     maxPlayers: 4,
     gameSpecific: {
       tokensToWin: 0 // 0 means auto-calculate based on players
-    } as LoveLetterSettings
+    } as HeartsGambitSettings
   };
 
   private io: any;
@@ -86,7 +86,7 @@ class LoveLetterPlugin implements GamePlugin {
       turnPhase: 'draw',
       winner: null,
       roundWinner: null
-    } as LoveLetterGameState;
+    } as HeartsGambitGameState;
     room.gameState.phase = 'lobby';
 
     // Initialize data for existing players (e.g. host)
@@ -108,7 +108,7 @@ class LoveLetterPlugin implements GamePlugin {
         seenBy: [],
         isReady: false,
         seenHandSnapshots: {}
-      } as LoveLetterPlayerData;
+      } as HeartsGambitPlayerData;
     }
     this.broadcastRoomState(room);
   }
@@ -121,7 +121,7 @@ class LoveLetterPlugin implements GamePlugin {
 
   onPlayerLeave(room: Room, player: Player): void {
      // If active game, eliminate them
-    const playerData = player.gameData as LoveLetterPlayerData;
+    const playerData = player.gameData as HeartsGambitPlayerData;
     if (room.gameState.phase === 'playing' && !playerData.isEliminated) {
         playerData.isEliminated = true;
         this.checkRoundEnd(room);
@@ -134,14 +134,14 @@ class LoveLetterPlugin implements GamePlugin {
   // ============================================================================
 
   serializeRoom(room: Room, socketId: string): any {
-    const gameState = room.gameState.data as LoveLetterGameState;
+    const gameState = room.gameState.data as HeartsGambitGameState;
     const requestingPlayer = Array.from(room.players.values()).find(p => p.socketId === socketId);
 
     return {
       code: room.code,
       hostId: room.hostId,
       players: Array.from(room.players.values()).map(p => {
-        const pd = (p.gameData as LoveLetterPlayerData) || {
+        const pd = (p.gameData as HeartsGambitPlayerData) || {
           hand: [], discarded: [], tokens: 0, isEliminated: false, isImmune: false, seenBy: [], isReady: false, seenHandSnapshots: {}
         };
         const isMe = p.socketId === socketId;
@@ -233,7 +233,7 @@ class LoveLetterPlugin implements GamePlugin {
 
     'player:draw': async (socket, data, room, helpers) => {
       const player = Array.from(room.players.values()).find(p => p.socketId === socket.id);
-      const gameState = room.gameState.data as LoveLetterGameState;
+      const gameState = room.gameState.data as HeartsGambitGameState;
       
       if (!player || gameState.currentTurn !== player.id || gameState.turnPhase !== 'draw') return;
       
@@ -245,11 +245,11 @@ class LoveLetterPlugin implements GamePlugin {
     'play:card': async (socket, data, room, helpers) => {
       // data: { card: CardType, targetId?: string, guess?: CardType }
       const player = Array.from(room.players.values()).find(p => p.socketId === socket.id);
-      const gameState = room.gameState.data as LoveLetterGameState;
+      const gameState = room.gameState.data as HeartsGambitGameState;
       
       if (!player || gameState.currentTurn !== player.id || room.gameState.phase !== 'playing') return;
       
-      const playerData = player.gameData as LoveLetterPlayerData;
+      const playerData = player.gameData as HeartsGambitPlayerData;
       const cardToPlay = data.card;
 
       // Validate: Player must have the card
@@ -292,18 +292,18 @@ class LoveLetterPlugin implements GamePlugin {
 
   private startNewGame(room: Room) {
     room.gameState.phase = 'playing';
-    const gameState = room.gameState.data as LoveLetterGameState;
+    const gameState = room.gameState.data as HeartsGambitGameState;
     gameState.currentRound = 0;
     gameState.winner = null;
     
     // Reset tokens
     room.players.forEach(p => {
-        (p.gameData as LoveLetterPlayerData).tokens = 0;
+        (p.gameData as HeartsGambitPlayerData).tokens = 0;
     });
   }
 
   private startNewRound(room: Room) {
-    const gameState = room.gameState.data as LoveLetterGameState;
+    const gameState = room.gameState.data as HeartsGambitGameState;
     gameState.currentRound++;
     gameState.roundWinner = null;
     gameState.deck = this.createDeck();
@@ -312,7 +312,7 @@ class LoveLetterPlugin implements GamePlugin {
 
     // Reset player round state
     room.players.forEach(p => {
-        const pd = p.gameData as LoveLetterPlayerData;
+        const pd = p.gameData as HeartsGambitPlayerData;
         pd.hand = [];
         pd.discarded = [];
         pd.isEliminated = false;
@@ -336,7 +336,7 @@ class LoveLetterPlugin implements GamePlugin {
     // Deal 1 card to each
     activePlayers.forEach(p => {
         const card = gameState.deck.pop();
-        if (card) (p.gameData as LoveLetterPlayerData).hand.push(card);
+        if (card) (p.gameData as HeartsGambitPlayerData).hand.push(card);
     });
 
     // Determine starter (winner of last round, or random/host for first)
@@ -364,10 +364,10 @@ class LoveLetterPlugin implements GamePlugin {
   }
 
   private drawCardForCurrentPlayer(room: Room) {
-      const gameState = room.gameState.data as LoveLetterGameState;
+      const gameState = room.gameState.data as HeartsGambitGameState;
       if (gameState.deck.length > 0 && gameState.currentTurn) {
           const player = room.players.get(gameState.currentTurn);
-          const pd = player?.gameData as LoveLetterPlayerData;
+          const pd = player?.gameData as HeartsGambitPlayerData;
           if (pd && !pd.isEliminated) {
               const card = gameState.deck.pop();
               if (card) pd.hand.push(card);
@@ -376,7 +376,7 @@ class LoveLetterPlugin implements GamePlugin {
   }
 
   private nextTurn(room: Room) {
-    const gameState = room.gameState.data as LoveLetterGameState;
+    const gameState = room.gameState.data as HeartsGambitGameState;
     const players = Array.from(room.players.values()); // Order matters, assuming consistent map iteration or sort by join
     // Ideally, GameBuddies core should provide a consistent player order list. 
     // We'll rely on map keys order for now or implement a seat system later. 
@@ -391,7 +391,7 @@ class LoveLetterPlugin implements GamePlugin {
         currentIndex = (currentIndex + 1) % activeIds.length;
         const nextId = activeIds[currentIndex];
         const nextPlayer = room.players.get(nextId);
-        const nextPd = nextPlayer?.gameData as LoveLetterPlayerData;
+        const nextPd = nextPlayer?.gameData as HeartsGambitPlayerData;
         
         if (nextPlayer?.connected && !nextPd.isEliminated) {
             gameState.currentTurn = nextId;
@@ -401,7 +401,7 @@ class LoveLetterPlugin implements GamePlugin {
             
             // Clear seenBy for the player whose turn is next (i.e., this player's "sight" from a previous Priest play expires)
             players.forEach(p => {
-                const pd = p.gameData as LoveLetterPlayerData;
+                const pd = p.gameData as HeartsGambitPlayerData;
                 const observerIndex = pd.seenBy.indexOf(nextId);
                 if (observerIndex !== -1) {
                     pd.seenBy.splice(observerIndex, 1);
@@ -415,14 +415,14 @@ class LoveLetterPlugin implements GamePlugin {
   }
 
   private async resolveCardEffect(room: Room, player: Player, card: CardType, targetId: string | undefined, guess: CardType | undefined, helpers: GameHelpers) {
-      const gameState = room.gameState.data as LoveLetterGameState;
-      const pd = player.gameData as LoveLetterPlayerData;
+      const gameState = room.gameState.data as HeartsGambitGameState;
+      const pd = player.gameData as HeartsGambitPlayerData;
       
       // Helper to get target
       const getTarget = () => {
           if (!targetId) return null;
           const t = room.players.get(targetId);
-          const tpd = t?.gameData as LoveLetterPlayerData;
+          const tpd = t?.gameData as HeartsGambitPlayerData;
           if (!t || !tpd || tpd.isEliminated) return null;
           if (tpd.isImmune && card !== 5) return null; // Prince can target immune players? No, usually immune blocks everything. 
           // Rule clarification: Prince targets a player. If immune, effect does nothing.
@@ -453,7 +453,7 @@ class LoveLetterPlugin implements GamePlugin {
           }
           
           if (target) {
-               const tpd = target.gameData as LoveLetterPlayerData;
+               const tpd = target.gameData as HeartsGambitPlayerData;
                const discardedCard = tpd.hand.pop();
                if (discardedCard) {
                    tpd.discarded.push(discardedCard);
@@ -500,7 +500,7 @@ class LoveLetterPlugin implements GamePlugin {
           helpers.sendToRoom(room.code, 'game:log', { message: `${player.name} played ${this.getCardName(card)} but it had no effect.` });
           return; 
       }
-      const tpd = target.gameData as LoveLetterPlayerData;
+      const tpd = target.gameData as HeartsGambitPlayerData;
 
       // 1: Guard - Guess hand
       if (card === 1) {
@@ -547,9 +547,9 @@ class LoveLetterPlugin implements GamePlugin {
   }
 
   private checkRoundEnd(room: Room): boolean {
-      const gameState = room.gameState.data as LoveLetterGameState;
+      const gameState = room.gameState.data as HeartsGambitGameState;
       const activePlayers = Array.from(room.players.values())
-          .filter(p => p.connected && !(p.gameData as LoveLetterPlayerData).isEliminated);
+          .filter(p => p.connected && !(p.gameData as HeartsGambitPlayerData).isEliminated);
 
       // Condition 1: One player left
       if (activePlayers.length === 1) {
@@ -564,7 +564,7 @@ class LoveLetterPlugin implements GamePlugin {
           let winners: Player[] = [];
           
           activePlayers.forEach(p => {
-              const val = (p.gameData as LoveLetterPlayerData).hand[0] || 0;
+              const val = (p.gameData as HeartsGambitPlayerData).hand[0] || 0;
               if (val > highestVal) {
                   highestVal = val;
                   winners = [p];
@@ -576,7 +576,7 @@ class LoveLetterPlugin implements GamePlugin {
           
           if (winners.length > 1) {
              // Calculate discard sums
-             const getDiscardSum = (p: Player): number => (p.gameData as LoveLetterPlayerData).discarded.reduce((a: number, b) => a + b, 0);
+             const getDiscardSum = (p: Player): number => (p.gameData as HeartsGambitPlayerData).discarded.reduce((a: number, b) => a + b, 0);
              winners.sort((a,b) => getDiscardSum(b) - getDiscardSum(a));
              // Winner is first
           }
@@ -589,12 +589,12 @@ class LoveLetterPlugin implements GamePlugin {
   }
 
   private endRound(room: Room, winnerId: string) {
-      const gameState = room.gameState.data as LoveLetterGameState;
+      const gameState = room.gameState.data as HeartsGambitGameState;
       const winner = room.players.get(winnerId);
       gameState.roundWinner = winnerId;
       
       if (winner) {
-          const pd = winner.gameData as LoveLetterPlayerData;
+          const pd = winner.gameData as HeartsGambitPlayerData;
           pd.tokens += 1;
           
           // Check Game Win
@@ -650,4 +650,4 @@ class LoveLetterPlugin implements GamePlugin {
   }
 }
 
-export default new LoveLetterPlugin();
+export default new HeartsGambitPlugin();
