@@ -35,8 +35,9 @@ export interface LoveLetterPlayerData {
   tokens: number; // Affection tokens
   isEliminated: boolean;
   isImmune: boolean; // From Handmaid
-  seenBy: string[]; // List of player IDs who have seen this hand (Priest effect)
+  seenBy: string[]; // List of player IDs who have seen this hand (Priest effect) - DEPRECATED
   isReady: boolean;
+  seenHandSnapshots: { [observerId: string]: CardType[] }; // Hand snapshot for Priest effect
 }
 
 interface LoveLetterSettings {
@@ -105,7 +106,8 @@ class LoveLetterPlugin implements GamePlugin {
         isEliminated: false,
         isImmune: false,
         seenBy: [],
-        isReady: false
+        isReady: false,
+        seenHandSnapshots: {}
       } as LoveLetterPlayerData;
     }
     this.broadcastRoomState(room);
@@ -140,18 +142,42 @@ class LoveLetterPlugin implements GamePlugin {
       hostId: room.hostId,
       players: Array.from(room.players.values()).map(p => {
         const pd = (p.gameData as LoveLetterPlayerData) || {
-          hand: [], discarded: [], tokens: 0, isEliminated: false, isImmune: false, seenBy: [], isReady: false
+          hand: [], discarded: [], tokens: 0, isEliminated: false, isImmune: false, seenBy: [], isReady: false, seenHandSnapshots: {}
         };
         const isMe = p.socketId === socketId;
         
-        // Logic for showing hands:
-        // 1. Show my own hand
-        // 2. Show if I used a Priest on them (seenBy includes me)
-        // 3. Show if round is over (roundWinner is set)
-        const showHand = isMe || 
-                         (requestingPlayer && pd.seenBy.includes(requestingPlayer.id)) ||
-                         gameState.roundWinner !== null;
+        let handToSend: CardType[];
+        const actualHandLength = pd.hand.length;
 
+        if (isMe || gameState.roundWinner !== null) {
+            handToSend = pd.hand;
+        } else if (requestingPlayer && pd.seenHandSnapshots[requestingPlayer.id]) {
+            const currentActualHand = pd.hand; // The target's current actual hand
+            const originalSnapshot = pd.seenHandSnapshots[requestingPlayer.id]; // The snapshot taken earlier
+
+            const revealedCards: CardType[] = [];
+            const currentHandCopy = [...currentActualHand]; // Copy to modify for comparison
+
+            // Iterate through the original snapshot to identify cards still in hand
+            for (const snapCard of originalSnapshot) {
+                const indexInCurrentHand = currentHandCopy.indexOf(snapCard);
+                if (indexInCurrentHand !== -1) {
+                    revealedCards.push(snapCard); // This card from the snapshot is still in hand, reveal it
+                    currentHandCopy.splice(indexInCurrentHand, 1); // Remove from copy to handle duplicates
+                }
+                // If snapCard is not found, it means it was played/discarded, so it's not revealed
+            }
+
+            // Fill the rest with card backs to match the actual hand length
+            handToSend = [...revealedCards];
+            while (handToSend.length < actualHandLength) {
+                handToSend.push(0); // Card back for new/unknown cards
+            }
+        }
+        else {
+            handToSend = pd.hand.map(() => 0); // All card backs
+        }
+        // ...
         return {
           id: p.id,
           socketId: p.socketId,
@@ -163,9 +189,8 @@ class LoveLetterPlugin implements GamePlugin {
           isImmune: pd.isImmune,
           isReady: pd.isReady,
           discarded: pd.discarded,
-          // If hidden, send null/empty array, otherwise send real cards
-          hand: showHand ? pd.hand : pd.hand.map(() => 0), // 0 represents "Card Back"
-          handCount: pd.hand.length
+          hand: handToSend,
+          handCount: actualHandLength
         };
       }),
       state: this.mapPhaseToClientState(room.gameState.phase),
@@ -204,6 +229,17 @@ class LoveLetterPlugin implements GamePlugin {
 
     'player:ready': async (socket, data, room) => {
        // ... standard ready logic (omitted for brevity, assume auto-ready for now or implement if needed)
+    },
+
+    'player:draw': async (socket, data, room, helpers) => {
+      const player = Array.from(room.players.values()).find(p => p.socketId === socket.id);
+      const gameState = room.gameState.data as LoveLetterGameState;
+      
+      if (!player || gameState.currentTurn !== player.id || gameState.turnPhase !== 'draw') return;
+      
+      this.drawCardForCurrentPlayer(room);
+      gameState.turnPhase = 'play';
+      this.broadcastRoomState(room);
     },
 
     'play:card': async (socket, data, room, helpers) => {
@@ -282,6 +318,7 @@ class LoveLetterPlugin implements GamePlugin {
         pd.isEliminated = false;
         pd.isImmune = false;
         pd.seenBy = [];
+        pd.seenHandSnapshots = {}; // Reset snapshots
     });
 
     // Setup Deck
@@ -308,8 +345,9 @@ class LoveLetterPlugin implements GamePlugin {
          gameState.currentTurn = activePlayers[0].id;
     }
     
-    // Draw card for first player
-    this.drawCardForCurrentPlayer(room);
+    // Set phase to draw, wait for player action
+    gameState.turnPhase = 'draw';
+    // this.drawCardForCurrentPlayer(room); // Removed for manual draw
   }
 
   private createDeck(): CardType[] {
@@ -357,13 +395,19 @@ class LoveLetterPlugin implements GamePlugin {
         
         if (nextPlayer?.connected && !nextPd.isEliminated) {
             gameState.currentTurn = nextId;
+            gameState.turnPhase = 'draw';
             // Clear immunity from previous turn (it lasts until YOUR next turn)
             nextPd.isImmune = false; 
-            // Also clear "seenBy" flags as info is stale? 
-            // Actually rules say "look at hand". If hand changes, info is stale. 
-            // Usually we keep it until they play? Let's clear for simplicity or keep. Rules don't specify strict memory reset.
             
-            this.drawCardForCurrentPlayer(room);
+            // Clear seenBy for the player whose turn is next (i.e., this player's "sight" from a previous Priest play expires)
+            players.forEach(p => {
+                const pd = p.gameData as LoveLetterPlayerData;
+                const observerIndex = pd.seenBy.indexOf(nextId);
+                if (observerIndex !== -1) {
+                    pd.seenBy.splice(observerIndex, 1);
+                }
+            });
+            
             return;
         }
         loops++;
@@ -471,8 +515,8 @@ class LoveLetterPlugin implements GamePlugin {
 
       // 2: Priest - Look at hand
       if (card === 2) {
-          tpd.seenBy.push(player.id);
-          // Client will handle showing the card to `player` based on `seenBy`
+          // Store a snapshot of the target's current hand for the observer
+          tpd.seenHandSnapshots[player.id] = [...tpd.hand]; // Take a deep copy
           helpers.sendToRoom(room.code, 'game:log', { message: `${player.name} looked at ${target.name}'s hand.` });
       }
 
