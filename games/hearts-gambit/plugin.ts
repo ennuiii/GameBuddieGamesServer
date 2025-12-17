@@ -222,7 +222,14 @@ class HeartsGambitPlugin implements GamePlugin {
           return;
       }
 
-      this.startNewGame(room);
+      const gameState = room.gameState.data as HeartsGambitGameState;
+
+      // Only reset tokens for NEW game (winner exists = game ended, or still in lobby)
+      // Don't reset when just starting a new round mid-game
+      if (gameState.winner || room.gameState.phase === 'lobby') {
+          this.startNewGame(room);
+      }
+
       this.startNewRound(room);
       this.broadcastRoomState(room);
     },
@@ -524,7 +531,13 @@ class HeartsGambitPlugin implements GamePlugin {
       if (card === 3) {
           const myCard = pd.hand[0]; // Remaining card
           const theirCard = tpd.hand[0];
-          
+
+          // Safety check for undefined hands
+          if (myCard === undefined || theirCard === undefined) {
+              helpers.sendToRoom(room.code, 'game:log', { message: `Baron comparison failed - invalid hand state.` });
+              return;
+          }
+
           if (myCard > theirCard) {
               tpd.isEliminated = true;
               helpers.sendToRoom(room.code, 'game:log', { message: `Baron Battle! ${player.name} (${myCard}) defeats ${target.name} (${theirCard}).` });
@@ -592,11 +605,14 @@ class HeartsGambitPlugin implements GamePlugin {
       const gameState = room.gameState.data as HeartsGambitGameState;
       const winner = room.players.get(winnerId);
       gameState.roundWinner = winnerId;
-      
+
       if (winner) {
           const pd = winner.gameData as HeartsGambitPlayerData;
           pd.tokens += 1;
-          
+
+          // Immediate broadcast so clients see token update right away
+          this.broadcastRoomState(room);
+
           // Check Game Win
           const required = this.getTokensToWin(room.players.size);
           if (pd.tokens >= required) {
