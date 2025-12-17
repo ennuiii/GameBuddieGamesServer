@@ -16,7 +16,7 @@ import type { Socket } from 'socket.io';
 // TYPE DEFINITIONS
 // ============================================================================
 
-export type CardType = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+export type CardType = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8; // 0 = card back (hidden)
 
 export interface LoveLetterGameState {
   currentRound: number;
@@ -576,7 +576,7 @@ class LoveLetterPlugin implements GamePlugin {
           
           if (winners.length > 1) {
              // Calculate discard sums
-             const getDiscardSum = (p: Player) => (p.gameData as LoveLetterPlayerData).discarded.reduce((a,b)=>a+b, 0);
+             const getDiscardSum = (p: Player): number => (p.gameData as LoveLetterPlayerData).discarded.reduce((a: number, b) => a + b, 0);
              winners.sort((a,b) => getDiscardSum(b) - getDiscardSum(a));
              // Winner is first
           }
