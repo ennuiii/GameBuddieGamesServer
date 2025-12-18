@@ -2,6 +2,7 @@
  * Love Letter Game Plugin
  */
 
+import crypto from 'crypto';
 import type {
   GamePlugin,
   Room,
@@ -17,12 +18,23 @@ import type { Socket } from 'socket.io';
 // ============================================================================
 
 export type CardType = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8; // 0 = card back (hidden)
+type DiscardCardType = Exclude<CardType, 0>;
+
+export interface HeartsGambitDiscardEvent {
+  card: DiscardCardType;
+  playerId: string;
+  playerName: string;
+  timestamp: number;
+  round: number;
+  kind: 'play' | 'forced-discard';
+}
 
 export interface HeartsGambitGameState {
   currentRound: number;
   deck: CardType[];
   removedCard: CardType | null; // The one removed secretly at start
   faceUpCards: CardType[]; // For 2 player games
+  discardPile: HeartsGambitDiscardEvent[]; // Chronological (oldest -> newest), per-round
   currentTurn: string | null; // Player ID
   turnPhase: 'draw' | 'play'; // Start of turn (draw) or ready to play card
   winner: string | null; // Winner of the game (collected enough tokens)
@@ -82,6 +94,7 @@ class HeartsGambitPlugin implements GamePlugin {
       deck: [],
       removedCard: null,
       faceUpCards: [],
+      discardPile: [],
       currentTurn: null,
       turnPhase: 'draw',
       winner: null,
@@ -200,11 +213,13 @@ class HeartsGambitPlugin implements GamePlugin {
         turnPhase: gameState.turnPhase,
         deckCount: gameState.deck.length,
         faceUpCards: gameState.faceUpCards, // Visible to all
+        discardPile: gameState.discardPile,
         roundWinner: gameState.roundWinner,
         winner: gameState.winner
       },
       settings: room.settings,
-      mySocketId: socketId
+      mySocketId: socketId,
+      messages: room.messages || []
     };
   }
 
@@ -241,11 +256,15 @@ class HeartsGambitPlugin implements GamePlugin {
     'player:draw': async (socket, data, room, helpers) => {
       const player = Array.from(room.players.values()).find(p => p.socketId === socket.id);
       const gameState = room.gameState.data as HeartsGambitGameState;
-      
+
       if (!player || gameState.currentTurn !== player.id || gameState.turnPhase !== 'draw') return;
-      
+
       this.drawCardForCurrentPlayer(room);
       gameState.turnPhase = 'play';
+
+      // Log draw action
+      this.logGameMessage(room, `${player.name} drew a card.`, helpers);
+
       this.broadcastRoomState(room);
     },
 
@@ -258,6 +277,7 @@ class HeartsGambitPlugin implements GamePlugin {
       
       const playerData = player.gameData as HeartsGambitPlayerData;
       const cardToPlay = data.card;
+      if (cardToPlay === 0) return;
 
       // Validate: Player must have the card
       const cardIndex = playerData.hand.indexOf(cardToPlay);
@@ -279,7 +299,34 @@ class HeartsGambitPlugin implements GamePlugin {
       playerData.hand.splice(cardIndex, 1);
       // 2. Add to discards (visible history)
       playerData.discarded.push(cardToPlay);
-      
+      gameState.discardPile.push({
+        card: cardToPlay,
+        playerId: player.id,
+        playerName: player.name,
+        timestamp: Date.now(),
+        round: gameState.currentRound,
+        kind: 'play'
+      });
+
+      // Log play action with details based on card type
+      let playLogMsg = `${player.name} played ${this.getCardName(cardToPlay)}`;
+
+      // Add target info for targeting cards
+      if (data.targetId && [1, 2, 3, 5, 6].includes(cardToPlay)) {
+        const targetPlayer = room.players.get(data.targetId);
+        if (targetPlayer) {
+          playLogMsg += ` targeting ${targetPlayer.name}`;
+        }
+      }
+
+      // Add guess info for Guard
+      if (cardToPlay === 1 && data.guess) {
+        playLogMsg += `, guessing ${this.getCardName(data.guess)}`;
+      }
+
+      playLogMsg += '.';
+      this.logGameMessage(room, playLogMsg, helpers);
+
       // 3. Resolve Effect
       await this.resolveCardEffect(room, player, cardToPlay, data.targetId, data.guess, helpers);
       
@@ -316,6 +363,7 @@ class HeartsGambitPlugin implements GamePlugin {
     gameState.deck = this.createDeck();
     gameState.faceUpCards = [];
     gameState.removedCard = null;
+    gameState.discardPile = [];
 
     // Reset player round state
     room.players.forEach(p => {
@@ -421,10 +469,23 @@ class HeartsGambitPlugin implements GamePlugin {
     } while (loops < activeIds.length); // Prevent infinite loop if all eliminated (should be caught by checkRoundEnd)
   }
 
+  // Helper to log game messages (persists to room.messages AND sends socket event)
+  private logGameMessage(room: Room, message: string, helpers: GameHelpers) {
+    room.messages = room.messages || [];
+    room.messages.push({
+      id: crypto.randomUUID(),
+      playerId: 'system',
+      playerName: 'Game',
+      message,
+      timestamp: Date.now()
+    });
+    helpers.sendToRoom(room.code, 'game:log', { message });
+  }
+
   private async resolveCardEffect(room: Room, player: Player, card: CardType, targetId: string | undefined, guess: CardType | undefined, helpers: GameHelpers) {
       const gameState = room.gameState.data as HeartsGambitGameState;
       const pd = player.gameData as HeartsGambitPlayerData;
-      
+
       // Helper to get target
       const getTarget = () => {
           if (!targetId) return null;
@@ -441,7 +502,7 @@ class HeartsGambitPlugin implements GamePlugin {
       // 8: Princess - If played/discarded, YOU die.
       if (card === 8) {
           pd.isEliminated = true;
-          helpers.sendToRoom(room.code, 'game:log', { message: `${player.name} discarded the Princess and was eliminated!` });
+          this.logGameMessage(room, `${player.name} discarded the Princess and was eliminated!`, helpers);
           return;
       }
 
@@ -461,15 +522,23 @@ class HeartsGambitPlugin implements GamePlugin {
           
           if (target) {
                const tpd = target.gameData as HeartsGambitPlayerData;
-               const discardedCard = tpd.hand.pop();
+               const discardedCard = tpd.hand.pop() as DiscardCardType | undefined;
                if (discardedCard) {
                    tpd.discarded.push(discardedCard);
-                   helpers.sendToRoom(room.code, 'game:log', { message: `${player.name} forced ${target.name} to discard a card.` });
-                   
+                   gameState.discardPile.push({
+                     card: discardedCard,
+                     playerId: target.id,
+                     playerName: target.name,
+                     timestamp: Date.now(),
+                     round: gameState.currentRound,
+                     kind: 'forced-discard'
+                   });
+                   this.logGameMessage(room, `${target.name} discarded ${this.getCardName(discardedCard)}.`, helpers);
+
                    // If Princess discarded, eliminated
                    if (discardedCard === 8) {
                        tpd.isEliminated = true;
-                       helpers.sendToRoom(room.code, 'game:log', { message: `${target.name} discarded the Princess and was eliminated!` });
+                       this.logGameMessage(room, `${target.name} is eliminated!`, helpers);
                    } else {
                        // Draw new
                        const newCard = gameState.deck.pop();
@@ -490,22 +559,22 @@ class HeartsGambitPlugin implements GamePlugin {
 
       // 7: Countess - No effect when played, just discarded.
       if (card === 7) {
-          helpers.sendToRoom(room.code, 'game:log', { message: `${player.name} played the Countess.` });
+          // No additional log needed - play action already logged
           return;
       }
 
       // 4: Handmaid - Immunity
       if (card === 4) {
           pd.isImmune = true;
-          helpers.sendToRoom(room.code, 'game:log', { message: `${player.name} is immune until next turn.` });
+          this.logGameMessage(room, `${player.name} is now immune until their next turn.`, helpers);
           return;
       }
 
       // TARGETING EFFECTS (Needs valid target)
       const target = getTarget();
       if (!target) {
-          helpers.sendToRoom(room.code, 'game:log', { message: `${player.name} played ${this.getCardName(card)} but it had no effect.` });
-          return; 
+          this.logGameMessage(room, `No valid target - no effect.`, helpers);
+          return;
       }
       const tpd = target.gameData as HeartsGambitPlayerData;
 
@@ -514,9 +583,9 @@ class HeartsGambitPlugin implements GamePlugin {
           if (!guess || guess === 1) return; // Cannot guess Guard
           if (tpd.hand.includes(guess)) {
               tpd.isEliminated = true;
-              helpers.sendToRoom(room.code, 'game:log', { message: `${player.name} correctly guessed ${target.name} had a ${this.getCardName(guess)}! ${target.name} is eliminated.` });
+              this.logGameMessage(room, `Correct! ${target.name} had ${this.getCardName(guess)} and is eliminated!`, helpers);
           } else {
-              helpers.sendToRoom(room.code, 'game:log', { message: `${player.name} guessed ${target.name} had a ${this.getCardName(guess)}, but was wrong.` });
+              this.logGameMessage(room, `Wrong! ${target.name} did not have ${this.getCardName(guess)}.`, helpers);
           }
       }
 
@@ -524,7 +593,7 @@ class HeartsGambitPlugin implements GamePlugin {
       if (card === 2) {
           // Store a snapshot of the target's current hand for the observer
           tpd.seenHandSnapshots[player.id] = [...tpd.hand]; // Take a deep copy
-          helpers.sendToRoom(room.code, 'game:log', { message: `${player.name} looked at ${target.name}'s hand.` });
+          this.logGameMessage(room, `${player.name} sees ${target.name}'s hand.`, helpers);
       }
 
       // 3: Baron - Compare hands
@@ -534,18 +603,18 @@ class HeartsGambitPlugin implements GamePlugin {
 
           // Safety check for undefined hands
           if (myCard === undefined || theirCard === undefined) {
-              helpers.sendToRoom(room.code, 'game:log', { message: `Baron comparison failed - invalid hand state.` });
+              this.logGameMessage(room, `Baron comparison failed - invalid hand state.`, helpers);
               return;
           }
 
           if (myCard > theirCard) {
               tpd.isEliminated = true;
-              helpers.sendToRoom(room.code, 'game:log', { message: `Baron Battle! ${player.name} (${myCard}) defeats ${target.name} (${theirCard}).` });
+              this.logGameMessage(room, `${player.name} wins! ${target.name} (${this.getCardName(theirCard)}) is eliminated.`, helpers);
           } else if (theirCard > myCard) {
               pd.isEliminated = true;
-              helpers.sendToRoom(room.code, 'game:log', { message: `Baron Battle! ${target.name} (${theirCard}) defeats ${player.name} (${myCard}).` });
+              this.logGameMessage(room, `${target.name} wins! ${player.name} (${this.getCardName(myCard)}) is eliminated.`, helpers);
           } else {
-              helpers.sendToRoom(room.code, 'game:log', { message: `Baron Battle! It's a tie.` });
+              this.logGameMessage(room, `It's a tie! Both had ${this.getCardName(myCard)}.`, helpers);
           }
       }
 
@@ -555,7 +624,7 @@ class HeartsGambitPlugin implements GamePlugin {
           const theirHand = [...tpd.hand];
           pd.hand = theirHand;
           tpd.hand = myHand;
-          helpers.sendToRoom(room.code, 'game:log', { message: `${player.name} traded hands with ${target.name}.` });
+          this.logGameMessage(room, `${player.name} and ${target.name} traded hands.`, helpers);
       }
   }
 
