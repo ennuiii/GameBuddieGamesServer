@@ -79,6 +79,9 @@ class PrimeSuspectPlugin implements GamePlugin {
 
   private io: any;
 
+  // Track auto-start timeouts per room to prevent race conditions
+  private roundStartTimeouts: Map<string, NodeJS.Timeout> = new Map();
+
   // ============================================================================
   // LIFECYCLE HOOKS
   // ============================================================================
@@ -235,6 +238,13 @@ class PrimeSuspectPlugin implements GamePlugin {
       if (room.players.size < 2) {
           helpers.sendToRoom(room.code, 'game:log', { message: `Need at least 2 players to start. Current: ${room.players.size}` });
           return;
+      }
+
+      // Clear any pending auto-start timeout to prevent race condition
+      const existingTimeout = this.roundStartTimeouts.get(room.code);
+      if (existingTimeout) {
+        clearTimeout(existingTimeout);
+        this.roundStartTimeouts.delete(room.code);
       }
 
       const gameState = room.gameState.data as PrimeSuspectGameState;
@@ -691,19 +701,21 @@ class PrimeSuspectPlugin implements GamePlugin {
           }
       }
       
-      // Delay before next round? Client can handle animation, then Host clicks "Next Round" or auto after delay
-      // For now, let's just leave it in "round ended" state and let Host restart/next round via event?
-      // Or auto-restart after 5s?
-      // Simplified: Just wait for Host to click "Start Round" or "Next Round" (reusing game:start or adding round:next)
-      // We'll reuse 'game:start' to trigger next round if game not over.
-      
-      // Actually, let's set a timeout to auto-start next round for flow
-      setTimeout(() => {
+      // Auto-start next round after 5s delay (clear any existing timeout first)
+      const existingTimeout = this.roundStartTimeouts.get(room.code);
+      if (existingTimeout) {
+        clearTimeout(existingTimeout);
+      }
+
+      const timeoutId = setTimeout(() => {
+          this.roundStartTimeouts.delete(room.code);
           if (!gameState.winner) {
              this.startNewRound(room);
              this.broadcastRoomState(room);
           }
       }, 5000);
+
+      this.roundStartTimeouts.set(room.code, timeoutId);
   }
   
   private endGame(room: Room, message: string) {
