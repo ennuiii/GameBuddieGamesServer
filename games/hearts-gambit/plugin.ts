@@ -1,5 +1,5 @@
 /**
- * Love Letter Game Plugin
+ * Prime Suspect Game Plugin
  */
 
 import crypto from 'crypto';
@@ -20,7 +20,7 @@ import type { Socket } from 'socket.io';
 export type CardType = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8; // 0 = card back (hidden)
 type DiscardCardType = Exclude<CardType, 0>;
 
-export interface HeartsGambitDiscardEvent {
+export interface PrimeSuspectDiscardEvent {
   card: DiscardCardType;
   playerId: string;
   playerName: string;
@@ -29,30 +29,30 @@ export interface HeartsGambitDiscardEvent {
   kind: 'play' | 'forced-discard';
 }
 
-export interface HeartsGambitGameState {
+export interface PrimeSuspectGameState {
   currentRound: number;
   deck: CardType[];
   removedCard: CardType | null; // The one removed secretly at start
   faceUpCards: CardType[]; // For 2 player games
-  discardPile: HeartsGambitDiscardEvent[]; // Chronological (oldest -> newest), per-round
+  discardPile: PrimeSuspectDiscardEvent[]; // Chronological (oldest -> newest), per-round
   currentTurn: string | null; // Player ID
   turnPhase: 'draw' | 'play'; // Start of turn (draw) or ready to play card
   winner: string | null; // Winner of the game (collected enough tokens)
   roundWinner: string | null; // Winner of the current round
 }
 
-export interface HeartsGambitPlayerData {
+export interface PrimeSuspectPlayerData {
   hand: CardType[];
   discarded: CardType[];
   tokens: number; // Affection tokens
   isEliminated: boolean;
-  isImmune: boolean; // From Handmaid
-  seenBy: string[]; // List of player IDs who have seen this hand (Priest effect) - DEPRECATED
+  isImmune: boolean; // From Lawyer
+  seenBy: string[]; // List of player IDs who have seen this hand (Butler effect) - DEPRECATED
   isReady: boolean;
-  seenHandSnapshots: { [observerId: string]: CardType[] }; // Hand snapshot for Priest effect
+  seenHandSnapshots: { [observerId: string]: CardType[] }; // Hand snapshot for Butler effect
 }
 
-interface HeartsGambitSettings {
+interface PrimeSuspectSettings {
   tokensToWin: number; // Configurable, defaults based on player count
 }
 
@@ -60,21 +60,21 @@ interface HeartsGambitSettings {
 // PLUGIN CLASS
 // ============================================================================
 
-class HeartsGambitPlugin implements GamePlugin {
-  id = 'heartsgambit';
-  name = 'Hearts Gambit';
+class PrimeSuspectPlugin implements GamePlugin {
+  id = 'primesuspect';
+  name = 'Prime Suspect';
   version = '1.0.0';
-  description = 'Risk, deduction, and luck. Get your letter to the Princess!';
+  description = 'Risk, deduction, and luck. Solve the murder mystery!';
   author = 'GameBuddies';
-  namespace = '/heartsgambit';
-  basePath = '/heartsgambit';
+  namespace = '/primesuspect';
+  basePath = '/primesuspect';
 
   defaultSettings: RoomSettings = {
     minPlayers: 2,
     maxPlayers: 4,
     gameSpecific: {
       tokensToWin: 0 // 0 means auto-calculate based on players
-    } as HeartsGambitSettings
+    } as PrimeSuspectSettings
   };
 
   private io: any;
@@ -99,7 +99,7 @@ class HeartsGambitPlugin implements GamePlugin {
       turnPhase: 'draw',
       winner: null,
       roundWinner: null
-    } as HeartsGambitGameState;
+    } as PrimeSuspectGameState;
     room.gameState.phase = 'lobby';
 
     // Initialize data for existing players (e.g. host)
@@ -121,7 +121,7 @@ class HeartsGambitPlugin implements GamePlugin {
         seenBy: [],
         isReady: false,
         seenHandSnapshots: {}
-      } as HeartsGambitPlayerData;
+      } as PrimeSuspectPlayerData;
     }
     this.broadcastRoomState(room);
   }
@@ -134,7 +134,7 @@ class HeartsGambitPlugin implements GamePlugin {
 
   onPlayerLeave(room: Room, player: Player): void {
      // If active game, eliminate them
-    const playerData = player.gameData as HeartsGambitPlayerData;
+    const playerData = player.gameData as PrimeSuspectPlayerData;
     if (room.gameState.phase === 'playing' && !playerData.isEliminated) {
         playerData.isEliminated = true;
         this.checkRoundEnd(room);
@@ -147,14 +147,14 @@ class HeartsGambitPlugin implements GamePlugin {
   // ============================================================================
 
   serializeRoom(room: Room, socketId: string): any {
-    const gameState = room.gameState.data as HeartsGambitGameState;
+    const gameState = room.gameState.data as PrimeSuspectGameState;
     const requestingPlayer = Array.from(room.players.values()).find(p => p.socketId === socketId);
 
     return {
       code: room.code,
       hostId: room.hostId,
       players: Array.from(room.players.values()).map(p => {
-        const pd = (p.gameData as HeartsGambitPlayerData) || {
+        const pd = (p.gameData as PrimeSuspectPlayerData) || {
           hand: [], discarded: [], tokens: 0, isEliminated: false, isImmune: false, seenBy: [], isReady: false, seenHandSnapshots: {}
         };
         const isMe = p.socketId === socketId;
@@ -237,7 +237,7 @@ class HeartsGambitPlugin implements GamePlugin {
           return;
       }
 
-      const gameState = room.gameState.data as HeartsGambitGameState;
+      const gameState = room.gameState.data as PrimeSuspectGameState;
 
       // Only reset tokens for NEW game (winner exists = game ended, or still in lobby)
       // Don't reset when just starting a new round mid-game
@@ -255,7 +255,7 @@ class HeartsGambitPlugin implements GamePlugin {
 
     'player:draw': async (socket, data, room, helpers) => {
       const player = Array.from(room.players.values()).find(p => p.socketId === socket.id);
-      const gameState = room.gameState.data as HeartsGambitGameState;
+      const gameState = room.gameState.data as PrimeSuspectGameState;
 
       if (!player || gameState.currentTurn !== player.id || gameState.turnPhase !== 'draw') return;
 
@@ -271,11 +271,11 @@ class HeartsGambitPlugin implements GamePlugin {
     'play:card': async (socket, data, room, helpers) => {
       // data: { card: CardType, targetId?: string, guess?: CardType }
       const player = Array.from(room.players.values()).find(p => p.socketId === socket.id);
-      const gameState = room.gameState.data as HeartsGambitGameState;
+      const gameState = room.gameState.data as PrimeSuspectGameState;
       
       if (!player || gameState.currentTurn !== player.id || room.gameState.phase !== 'playing') return;
       
-      const playerData = player.gameData as HeartsGambitPlayerData;
+      const playerData = player.gameData as PrimeSuspectPlayerData;
       const cardToPlay = data.card;
       if (cardToPlay === 0) return;
 
@@ -283,12 +283,12 @@ class HeartsGambitPlugin implements GamePlugin {
       const cardIndex = playerData.hand.indexOf(cardToPlay);
       if (cardIndex === -1) return; // Cheating?
 
-      // Validate: Countess Check
-      // If holding King(6) or Prince(5) AND Countess(7), MUST play Countess
+      // Validate: Accomplice Check
+      // If holding Double Agent(6) or Blackmailer(5) AND Accomplice(7), MUST play Accomplice
       if (playerData.hand.includes(7)) {
         if (playerData.hand.includes(5) || playerData.hand.includes(6)) {
           if (cardToPlay !== 7) {
-             socket.emit('error', { message: 'You must play the Countess!' });
+             socket.emit('error', { message: 'You must play the Accomplice!' });
              return;
           }
         }
@@ -319,7 +319,7 @@ class HeartsGambitPlugin implements GamePlugin {
         }
       }
 
-      // Add guess info for Guard
+      // Add guess info for Inspector
       if (cardToPlay === 1 && data.guess) {
         playLogMsg += `, guessing ${this.getCardName(data.guess)}`;
       }
@@ -346,18 +346,18 @@ class HeartsGambitPlugin implements GamePlugin {
 
   private startNewGame(room: Room) {
     room.gameState.phase = 'playing';
-    const gameState = room.gameState.data as HeartsGambitGameState;
+    const gameState = room.gameState.data as PrimeSuspectGameState;
     gameState.currentRound = 0;
     gameState.winner = null;
     
     // Reset tokens
     room.players.forEach(p => {
-        (p.gameData as HeartsGambitPlayerData).tokens = 0;
+        (p.gameData as PrimeSuspectPlayerData).tokens = 0;
     });
   }
 
   private startNewRound(room: Room) {
-    const gameState = room.gameState.data as HeartsGambitGameState;
+    const gameState = room.gameState.data as PrimeSuspectGameState;
     gameState.currentRound++;
     gameState.roundWinner = null;
     gameState.deck = this.createDeck();
@@ -367,7 +367,7 @@ class HeartsGambitPlugin implements GamePlugin {
 
     // Reset player round state
     room.players.forEach(p => {
-        const pd = p.gameData as HeartsGambitPlayerData;
+        const pd = p.gameData as PrimeSuspectPlayerData;
         pd.hand = [];
         pd.discarded = [];
         pd.isEliminated = false;
@@ -391,7 +391,7 @@ class HeartsGambitPlugin implements GamePlugin {
     // Deal 1 card to each
     activePlayers.forEach(p => {
         const card = gameState.deck.pop();
-        if (card) (p.gameData as HeartsGambitPlayerData).hand.push(card);
+        if (card) (p.gameData as PrimeSuspectPlayerData).hand.push(card);
     });
 
     // Determine starter (winner of last round, or random/host for first)
@@ -407,11 +407,11 @@ class HeartsGambitPlugin implements GamePlugin {
 
   private createDeck(): CardType[] {
     const deck: CardType[] = [];
-    // 5x Guard (1)
+    // 5x Inspector (1)
     for(let i=0; i<5; i++) deck.push(1);
-    // 2x Priest (2), Baron (3), Handmaid (4), Prince (5)
+    // 2x Butler (2), Witness (3), Lawyer (4), Blackmailer (5)
     for(let i=0; i<2; i++) { deck.push(2); deck.push(3); deck.push(4); deck.push(5); }
-    // 1x King (6), Countess (7), Princess (8)
+    // 1x Double Agent (6), Accomplice (7), The Murderer (8)
     deck.push(6); deck.push(7); deck.push(8);
     
     // Shuffle
@@ -419,10 +419,10 @@ class HeartsGambitPlugin implements GamePlugin {
   }
 
   private drawCardForCurrentPlayer(room: Room) {
-      const gameState = room.gameState.data as HeartsGambitGameState;
+      const gameState = room.gameState.data as PrimeSuspectGameState;
       if (gameState.deck.length > 0 && gameState.currentTurn) {
           const player = room.players.get(gameState.currentTurn);
-          const pd = player?.gameData as HeartsGambitPlayerData;
+          const pd = player?.gameData as PrimeSuspectPlayerData;
           if (pd && !pd.isEliminated) {
               const card = gameState.deck.pop();
               if (card) pd.hand.push(card);
@@ -431,7 +431,7 @@ class HeartsGambitPlugin implements GamePlugin {
   }
 
   private nextTurn(room: Room) {
-    const gameState = room.gameState.data as HeartsGambitGameState;
+    const gameState = room.gameState.data as PrimeSuspectGameState;
     const players = Array.from(room.players.values()); // Order matters, assuming consistent map iteration or sort by join
     // Ideally, GameBuddies core should provide a consistent player order list. 
     // We'll rely on map keys order for now or implement a seat system later. 
@@ -446,7 +446,7 @@ class HeartsGambitPlugin implements GamePlugin {
         currentIndex = (currentIndex + 1) % activeIds.length;
         const nextId = activeIds[currentIndex];
         const nextPlayer = room.players.get(nextId);
-        const nextPd = nextPlayer?.gameData as HeartsGambitPlayerData;
+        const nextPd = nextPlayer?.gameData as PrimeSuspectPlayerData;
         
         if (nextPlayer?.connected && !nextPd.isEliminated) {
             gameState.currentTurn = nextId;
@@ -454,9 +454,9 @@ class HeartsGambitPlugin implements GamePlugin {
             // Clear immunity from previous turn (it lasts until YOUR next turn)
             nextPd.isImmune = false; 
             
-            // Clear seenBy for the player whose turn is next (i.e., this player's "sight" from a previous Priest play expires)
+            // Clear seenBy for the player whose turn is next (i.e., this player's "sight" from a previous Butler play expires)
             players.forEach(p => {
-                const pd = p.gameData as HeartsGambitPlayerData;
+                const pd = p.gameData as PrimeSuspectPlayerData;
                 const observerIndex = pd.seenBy.indexOf(nextId);
                 if (observerIndex !== -1) {
                     pd.seenBy.splice(observerIndex, 1);
@@ -483,31 +483,31 @@ class HeartsGambitPlugin implements GamePlugin {
   }
 
   private async resolveCardEffect(room: Room, player: Player, card: CardType, targetId: string | undefined, guess: CardType | undefined, helpers: GameHelpers) {
-      const gameState = room.gameState.data as HeartsGambitGameState;
-      const pd = player.gameData as HeartsGambitPlayerData;
+      const gameState = room.gameState.data as PrimeSuspectGameState;
+      const pd = player.gameData as PrimeSuspectPlayerData;
 
       // Helper to get target
       const getTarget = () => {
           if (!targetId) return null;
           const t = room.players.get(targetId);
-          const tpd = t?.gameData as HeartsGambitPlayerData;
+          const tpd = t?.gameData as PrimeSuspectPlayerData;
           if (!t || !tpd || tpd.isEliminated) return null;
-          if (tpd.isImmune && card !== 5) return null; // Prince can target immune players? No, usually immune blocks everything. 
-          // Rule clarification: Prince targets a player. If immune, effect does nothing.
-          // Wait, Prince can target yourself. Immune doesn't apply to self.
+          if (tpd.isImmune && card !== 5) return null; // Blackmailer can target immune players? No, usually immune blocks everything.
+          // Rule clarification: Blackmailer targets a player. If immune, effect does nothing.
+          // Wait, Blackmailer can target yourself. Immune doesn't apply to self.
           if (tpd.isImmune && t.id !== player.id) return null; 
           return t;
       };
 
-      // 8: Princess - If played/discarded, YOU die.
+      // 8: The Murderer - If played/discarded, YOU are eliminated.
       if (card === 8) {
           pd.isEliminated = true;
-          this.logGameMessage(room, `${player.name} discarded the Princess and was eliminated!`, helpers);
+          this.logGameMessage(room, `${player.name} discarded The Murderer and was eliminated!`, helpers);
           return;
       }
 
-      // 5: Prince - Target discards hand and draws new.
-      // Note: If you have Prince and Countess, you must play Countess. So Prince is only played if you don't have Countess.
+      // 5: Blackmailer - Target discards hand and draws new.
+      // Note: If you have Blackmailer and Accomplice, you must play Accomplice. So Blackmailer is only played if you don't have Accomplice.
       if (card === 5) {
           // Can target self.
           let target = getTarget();
@@ -521,7 +521,7 @@ class HeartsGambitPlugin implements GamePlugin {
           }
           
           if (target) {
-               const tpd = target.gameData as HeartsGambitPlayerData;
+               const tpd = target.gameData as PrimeSuspectPlayerData;
                const discardedCard = tpd.hand.pop() as DiscardCardType | undefined;
                if (discardedCard) {
                    tpd.discarded.push(discardedCard);
@@ -535,7 +535,7 @@ class HeartsGambitPlugin implements GamePlugin {
                    });
                    this.logGameMessage(room, `${target.name} discarded ${this.getCardName(discardedCard)}.`, helpers);
 
-                   // If Princess discarded, eliminated
+                   // If The Murderer discarded, eliminated
                    if (discardedCard === 8) {
                        tpd.isEliminated = true;
                        this.logGameMessage(room, `${target.name} is eliminated!`, helpers);
@@ -557,13 +557,13 @@ class HeartsGambitPlugin implements GamePlugin {
           return;
       }
 
-      // 7: Countess - No effect when played, just discarded.
+      // 7: Accomplice - No effect when played, just discarded.
       if (card === 7) {
           // No additional log needed - play action already logged
           return;
       }
 
-      // 4: Handmaid - Immunity
+      // 4: Lawyer - Immunity
       if (card === 4) {
           pd.isImmune = true;
           this.logGameMessage(room, `${player.name} is now immune until their next turn.`, helpers);
@@ -576,11 +576,11 @@ class HeartsGambitPlugin implements GamePlugin {
           this.logGameMessage(room, `No valid target - no effect.`, helpers);
           return;
       }
-      const tpd = target.gameData as HeartsGambitPlayerData;
+      const tpd = target.gameData as PrimeSuspectPlayerData;
 
-      // 1: Guard - Guess hand
+      // 1: Inspector - Guess hand
       if (card === 1) {
-          if (!guess || guess === 1) return; // Cannot guess Guard
+          if (!guess || guess === 1) return; // Cannot guess Inspector
           if (tpd.hand.includes(guess)) {
               tpd.isEliminated = true;
               this.logGameMessage(room, `Correct! ${target.name} had ${this.getCardName(guess)} and is eliminated!`, helpers);
@@ -589,21 +589,21 @@ class HeartsGambitPlugin implements GamePlugin {
           }
       }
 
-      // 2: Priest - Look at hand
+      // 2: Butler - Look at hand
       if (card === 2) {
           // Store a snapshot of the target's current hand for the observer
           tpd.seenHandSnapshots[player.id] = [...tpd.hand]; // Take a deep copy
           this.logGameMessage(room, `${player.name} sees ${target.name}'s hand.`, helpers);
       }
 
-      // 3: Baron - Compare hands
+      // 3: Witness - Compare hands (Confrontation)
       if (card === 3) {
           const myCard = pd.hand[0]; // Remaining card
           const theirCard = tpd.hand[0];
 
           // Safety check for undefined hands
           if (myCard === undefined || theirCard === undefined) {
-              this.logGameMessage(room, `Baron comparison failed - invalid hand state.`, helpers);
+              this.logGameMessage(room, `Witness Confrontation failed - invalid hand state.`, helpers);
               return;
           }
 
@@ -618,7 +618,7 @@ class HeartsGambitPlugin implements GamePlugin {
           }
       }
 
-      // 6: King - Trade hands
+      // 6: Double Agent - Trade hands
       if (card === 6) {
           const myHand = [...pd.hand];
           const theirHand = [...tpd.hand];
@@ -629,9 +629,9 @@ class HeartsGambitPlugin implements GamePlugin {
   }
 
   private checkRoundEnd(room: Room): boolean {
-      const gameState = room.gameState.data as HeartsGambitGameState;
+      const gameState = room.gameState.data as PrimeSuspectGameState;
       const activePlayers = Array.from(room.players.values())
-          .filter(p => p.connected && !(p.gameData as HeartsGambitPlayerData).isEliminated);
+          .filter(p => p.connected && !(p.gameData as PrimeSuspectPlayerData).isEliminated);
 
       // Condition 1: One player left
       if (activePlayers.length === 1) {
@@ -646,7 +646,7 @@ class HeartsGambitPlugin implements GamePlugin {
           let winners: Player[] = [];
           
           activePlayers.forEach(p => {
-              const val = (p.gameData as HeartsGambitPlayerData).hand[0] || 0;
+              const val = (p.gameData as PrimeSuspectPlayerData).hand[0] || 0;
               if (val > highestVal) {
                   highestVal = val;
                   winners = [p];
@@ -658,7 +658,7 @@ class HeartsGambitPlugin implements GamePlugin {
           
           if (winners.length > 1) {
              // Calculate discard sums
-             const getDiscardSum = (p: Player): number => (p.gameData as HeartsGambitPlayerData).discarded.reduce((a: number, b) => a + b, 0);
+             const getDiscardSum = (p: Player): number => (p.gameData as PrimeSuspectPlayerData).discarded.reduce((a: number, b) => a + b, 0);
              winners.sort((a,b) => getDiscardSum(b) - getDiscardSum(a));
              // Winner is first
           }
@@ -671,12 +671,12 @@ class HeartsGambitPlugin implements GamePlugin {
   }
 
   private endRound(room: Room, winnerId: string) {
-      const gameState = room.gameState.data as HeartsGambitGameState;
+      const gameState = room.gameState.data as PrimeSuspectGameState;
       const winner = room.players.get(winnerId);
       gameState.roundWinner = winnerId;
 
       if (winner) {
-          const pd = winner.gameData as HeartsGambitPlayerData;
+          const pd = winner.gameData as PrimeSuspectPlayerData;
           pd.tokens += 1;
 
           // Immediate broadcast so clients see token update right away
@@ -686,7 +686,7 @@ class HeartsGambitPlugin implements GamePlugin {
           const required = this.getTokensToWin(room.players.size);
           if (pd.tokens >= required) {
               gameState.winner = winnerId;
-              this.endGame(room, `${winner.name} won the heart of the Princess!`);
+              this.endGame(room, `${winner.name} solved the case!`);
               return;
           }
       }
@@ -718,7 +718,7 @@ class HeartsGambitPlugin implements GamePlugin {
   }
 
   private getCardName(card: number): string {
-      const names = ["?", "Guard", "Priest", "Baron", "Handmaid", "Prince", "King", "Countess", "Princess"];
+      const names = ["?", "Inspector", "Butler", "Witness", "Lawyer", "Blackmailer", "Double Agent", "Accomplice", "The Murderer"];
       return names[card] || "Unknown";
   }
 
@@ -735,4 +735,4 @@ class HeartsGambitPlugin implements GamePlugin {
   }
 }
 
-export default new HeartsGambitPlugin();
+export default new PrimeSuspectPlugin();
