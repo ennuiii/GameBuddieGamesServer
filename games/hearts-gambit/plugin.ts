@@ -307,7 +307,18 @@ class PrimeSuspectPlugin implements GamePlugin {
       // Execute Play
       // 1. Remove from hand
       playerData.hand.splice(cardIndex, 1);
-      // 2. Add to discards (visible history)
+
+      // 2. Update all observers' snapshots - remove the played card
+      // This prevents newly drawn cards with the same value from being revealed
+      for (const observerId in playerData.seenHandSnapshots) {
+          const snapshot = playerData.seenHandSnapshots[observerId];
+          const snapIndex = snapshot.indexOf(cardToPlay);
+          if (snapIndex !== -1) {
+              snapshot.splice(snapIndex, 1);
+          }
+      }
+
+      // 3. Add to discards (visible history)
       playerData.discarded.push(cardToPlay);
       gameState.discardPile.push({
         card: cardToPlay,
