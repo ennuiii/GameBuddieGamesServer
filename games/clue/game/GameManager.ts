@@ -240,7 +240,7 @@ export function revealRoundResults(
         rank: index + 1,
         name: p.name,
         score: playerData?.score ?? 0,
-        playerId: p.id,
+        socketId: p.socketId,
       };
     });
 
