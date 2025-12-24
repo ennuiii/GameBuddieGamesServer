@@ -80,6 +80,9 @@ function serializeRoomToLobby(room: Room, socketId: string) {
   // Build round data if exists
   let round = null;
   if (gameState.round) {
+    // Include guesses array (just playerIds) for clue giver to see progress
+    const guessesForClient = gameState.round.guesses.map(g => ({ playerId: g.playerId }));
+
     round = {
       index: gameState.round.index,
       category: gameState.round.category,
@@ -88,6 +91,7 @@ function serializeRoomToLobby(room: Room, socketId: string) {
       numberPickerId: null, // No number picker in new version
       clueGiverId: gameState.round.clueGiverId,
       guessCount: gameState.round.guesses.length,
+      guesses: guessesForClient,
     };
   }
 
@@ -355,8 +359,8 @@ class CluePlugin implements GamePlugin {
      */
     'game:start': async (socket: Socket, data: any, room: Room, helpers: GameHelpers) => {
       try {
-        // Check if host
-        const currentPlayer = room.players.get(socket.id);
+        // Check if host (lookup by socketId since Map is keyed by player.id)
+        const currentPlayer = Array.from(room.players.values()).find((p) => p.socketId === socket.id);
         if (!currentPlayer || !currentPlayer.isHost) {
           socket.emit('error', { message: 'Only host can start game' });
           return;
@@ -433,11 +437,6 @@ class CluePlugin implements GamePlugin {
           socket.emit('error', { message: 'Clue must be a single word' });
           return;
         }
-        if (/\d/.test(trimmedClue)) {
-          socket.emit('error', { message: 'Clue cannot contain numbers' });
-          return;
-        }
-
         // Save clue
         gameState.round.clueWord = trimmedClue;
         gameState.round.clueSubmittedAt = Date.now();
@@ -534,6 +533,9 @@ class CluePlugin implements GamePlugin {
           playerId: currentPlayer.id,
           playerName: currentPlayer.name,
         });
+
+        // Send lobby update so clue giver sees who has guessed
+        this.sendLobbyUpdate(room);
 
         // Check if all players have guessed
         const nonClueGiverPlayers = Array.from(room.players.values()).filter(
