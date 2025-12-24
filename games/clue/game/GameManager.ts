@@ -246,6 +246,17 @@ export function revealRoundResults(
 
   console.log(`[ClueScale] Room ${room.code} - Round ${gameState.round.index} results revealed - Target: ${gameState.round.targetNumber}, Clue: ${gameState.round.clueWord}`);
 
+  // Debug: Log the reveal payload
+  console.log(`[RESULT] 📤 Emitting round:reveal to room ${room.code}`);
+  console.log(`[RESULT] 📤 Payload:`, JSON.stringify({
+    roundIndex: gameState.round.index,
+    targetNumber: gameState.round.targetNumber,
+    clueWord: gameState.round.clueWord,
+    guessCount: scoredGuesses.length,
+    guesses: scoredGuesses.map(g => ({ player: g.playerName, value: g.value, points: g.points })),
+    leaderboardCount: leaderboard.length,
+  }, null, 2));
+
   // Emit results
   helpers.sendToRoom(room.code, 'round:reveal', {
     roundIndex: gameState.round.index,

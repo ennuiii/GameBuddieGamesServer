@@ -393,11 +393,29 @@ class UnifiedGameServer {
             }, this.broadcastThrottleMs);
           }
         } else {
-          // Too soon - add to queue (preserves all pending broadcasts)
+          // Too soon - add to queue and schedule delivery
           if (!this.pendingBroadcasts.has(roomCode)) {
             this.pendingBroadcasts.set(roomCode, []);
           }
-          this.pendingBroadcasts.get(roomCode)!.push({ event, data });
+          const queue = this.pendingBroadcasts.get(roomCode)!;
+          queue.push({ event, data });
+
+          // Schedule queue processing after throttle period expires
+          // Only schedule if this is the first item (prevents multiple timers)
+          if (queue.length === 1) {
+            const delay = this.broadcastThrottleMs - timeSinceLastBroadcast;
+            setTimeout(() => {
+              const pending = this.pendingBroadcasts.get(roomCode);
+              if (pending && pending.length > 0) {
+                const item = pending.shift()!;
+                namespace.to(roomCode).emit(item.event, item.data);
+                this.lastBroadcastTime.set(roomCode, Date.now());
+                if (pending.length === 0) {
+                  this.pendingBroadcasts.delete(roomCode);
+                }
+              }
+            }, delay);
+          }
         }
       },
       sendToPlayer: (socketId: string, event: string, data: any) => {

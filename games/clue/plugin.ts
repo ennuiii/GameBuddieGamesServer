@@ -534,10 +534,9 @@ class CluePlugin implements GamePlugin {
           playerName: currentPlayer.name,
         });
 
-        // Send lobby update so clue giver sees who has guessed
-        this.sendLobbyUpdate(room);
-
-        // Check if all players have guessed
+        // Check if all players have guessed BEFORE sending lobby update
+        // This prevents a race condition where lobby update with ROUND_GUESS state
+        // arrives after round:reveal and overwrites the ROUND_REVEAL state
         const nonClueGiverPlayers = Array.from(room.players.values()).filter(
           (p) => p.connected && p.id !== gameState.round!.clueGiverId
         );
@@ -550,8 +549,9 @@ class CluePlugin implements GamePlugin {
             gameState.roundTimer = undefined;
           }
           revealRoundResults(room, helpers);
-          
-          // Broadcast updated player scores via lobby update
+          // Note: round:reveal event already contains leaderboard with scores, no lobby update needed
+        } else {
+          // Only send lobby update for intermediate guesses so clue giver sees progress
           this.sendLobbyUpdate(room);
         }
       } catch (error: any) {
