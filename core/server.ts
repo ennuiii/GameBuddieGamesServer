@@ -32,6 +32,7 @@ import DDFGamePlugin from '../games/ddf/plugin.js';
 import { supabaseService } from '../games/ddf/services/supabaseService.js';
 import thinkAlikePlugin from '../games/thinkalike/plugin.js';
 import templatePlugin from '../games/template/plugin.js';
+import gameTemplatePlugin from '../games/game-template/plugin.js';
 import primeSuspectPlugin from '../games/hearts-gambit/plugin.js';
 import bombermanPlugin from '../games/bomberman/plugin.js';
 
@@ -1581,6 +1582,14 @@ class UnifiedGameServer {
       console.log('[Server] ✓ Template game registered');
     } else {
       console.error('[Server] ✗ Failed to register Template game');
+    }
+
+    // Register Game Template (from GameBuddiesTemplate)
+    const gameTemplateRegistered = await this.registerGame(gameTemplatePlugin);
+    if (gameTemplateRegistered) {
+      console.log('[Server] ✓ Game Template registered');
+    } else {
+      console.error('[Server] ✗ Failed to register Game Template');
     }
 
     // Register Bomberman game
