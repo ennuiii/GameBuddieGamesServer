@@ -153,10 +153,52 @@ class TemplatePlugin implements GamePlugin {
          console.error(`[${this.name}] Validation Error (game:action):`, validation.error);
          return;
        }
-       
+
        // Generic action handler for testing
        console.log(`[${this.name}] Action received:`, validation.data);
        // Implement your game logic here
+    },
+
+    'debug:grant-xp': async (socket: Socket, data: { password: string }, room: Room, helpers: GameHelpers) => {
+      // Validate password
+      if (data.password !== 'Gabu123!') {
+        socket.emit('error', { message: 'Invalid password' });
+        return;
+      }
+
+      // Find player
+      const player = Array.from(room.players.values()).find(p => p.socketId === socket.id);
+      if (!player) {
+        socket.emit('error', { message: 'Player not found' });
+        return;
+      }
+
+      if (!player.userId) {
+        socket.emit('error', { message: 'Must be logged in via GameBuddies to test XP' });
+        return;
+      }
+
+      console.log(`[${this.name}] Debug: Granting XP to ${player.name} (${player.userId})`);
+
+      try {
+        // Grant reward via API (~50 XP: 30 base + 20 win bonus)
+        const reward = await helpers.grantReward(this.id, player.userId, {
+          won: true,
+          durationSeconds: 60,
+          score: 50,
+          metadata: { reason: 'debug_test' }
+        });
+
+        if (reward) {
+          console.log(`[${this.name}] Debug: XP granted successfully:`, reward);
+          socket.emit('player:reward', reward);
+        } else {
+          socket.emit('error', { message: 'Failed to grant XP - no response from API' });
+        }
+      } catch (error) {
+        console.error(`[${this.name}] Debug: Error granting XP:`, error);
+        socket.emit('error', { message: 'Failed to grant XP - API error' });
+      }
     }
   };
 
