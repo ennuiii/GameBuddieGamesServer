@@ -6,6 +6,8 @@ import {
   ClueSettings,
   DEFAULT_CLUE_SETTINGS,
   Guess,
+  Team,
+  TEAM_PRESETS,
 } from './types/index.js';
 import {
   startNewRound,
@@ -13,6 +15,63 @@ import {
   initializeGameState,
   initializePlayerData,
 } from './game/GameManager.js';
+
+/**
+ * Initialize teams for team mode
+ * Distributes players evenly across 2 teams
+ */
+function initializeTeams(players: Player[]): Team[] {
+  // Shuffle players for random team assignment
+  const shuffled = [...players].sort(() => Math.random() - 0.5);
+
+  // Create 2 teams
+  const teams: Team[] = [
+    {
+      id: 'team-1',
+      name: TEAM_PRESETS[0].name,
+      color: TEAM_PRESETS[0].color,
+      playerIds: [],
+      score: 0,
+    },
+    {
+      id: 'team-2',
+      name: TEAM_PRESETS[1].name,
+      color: TEAM_PRESETS[1].color,
+      playerIds: [],
+      score: 0,
+    },
+  ];
+
+  // Distribute players evenly
+  shuffled.forEach((player, index) => {
+    teams[index % 2].playerIds.push(player.id);
+  });
+
+  return teams;
+}
+
+/**
+ * Shuffle existing teams (redistribute players)
+ */
+function shuffleTeams(teams: Team[], players: Player[]): Team[] {
+  // Get all player IDs currently in teams
+  const allPlayerIds = teams.flatMap(t => t.playerIds);
+
+  // Shuffle them
+  const shuffled = [...allPlayerIds].sort(() => Math.random() - 0.5);
+
+  // Clear existing assignments
+  teams.forEach(team => {
+    team.playerIds = [];
+  });
+
+  // Redistribute
+  shuffled.forEach((playerId, index) => {
+    teams[index % teams.length].playerIds.push(playerId);
+  });
+
+  return teams;
+}
 
 /**
  * Serialize Room to client Lobby format
@@ -69,6 +128,8 @@ function serializeRoomToLobby(room: Room, socketId: string) {
     teamBonusEnabled: gameSpecificSettings.teamBonusEnabled,
     rotationType: gameSpecificSettings.rotationType,
     categories: gameSpecificSettings.categories,
+    gameMode: gameSpecificSettings.gameMode || 'classic',
+    totalRounds: gameSpecificSettings.totalRounds || 5,
   };
 
   if (room.isStreamerMode || room.hideRoomCode) {
@@ -108,6 +169,11 @@ function serializeRoomToLobby(room: Room, socketId: string) {
     messages: room.messages,
     isStreamerMode: room.isStreamerMode || false,
     hideRoomCode: room.hideRoomCode || false,
+    // Team mode data
+    teams: gameState.teams,
+    currentTeamIndex: gameState.currentTeamIndex,
+    teamRoundNumber: gameState.teamRoundNumber,
+    completedRounds: gameState.completedRounds,
   };
 }
 
@@ -159,6 +225,18 @@ class CluePlugin implements GamePlugin {
       room.settings.gameSpecific = { ...DEFAULT_CLUE_SETTINGS };
     }
 
+    // Initialize teams if settings already have teams mode
+    const settings = room.settings.gameSpecific as ClueSettings;
+    const gameState = room.gameState.data as ClueGameState;
+    if (settings.gameMode === 'teams') {
+      const connectedPlayers = Array.from(room.players.values()).filter(p => p.connected);
+      gameState.teams = initializeTeams(connectedPlayers);
+      gameState.currentTeamIndex = 0;
+      gameState.teamRoundNumber = 1;
+      gameState.completedRounds = 0;
+      console.log(`[ClueScale] Room ${room.code} - Initialized teams on create:`, gameState.teams?.map(t => ({ name: t.name, players: t.playerIds.length })));
+    }
+
     console.log(`[ClueScale] Room ${room.code} created with initial game state`);
   }
 
@@ -188,6 +266,22 @@ class CluePlugin implements GamePlugin {
     // Initialize player's game data
     if (!player.gameData) {
       player.gameData = initializePlayerData();
+    }
+
+    // If teams mode is active, add late-joining players to the team with fewer members
+    const settings = room.settings.gameSpecific as ClueSettings;
+    const gameState = room.gameState.data as ClueGameState;
+    if (settings.gameMode === 'teams' && gameState.teams && gameState.teams.length > 0) {
+      // Check if player is already on a team
+      const alreadyOnTeam = gameState.teams.some(t => t.playerIds.includes(player.id));
+      if (!alreadyOnTeam) {
+        // Find team with fewer players
+        const teamWithFewerPlayers = gameState.teams.reduce((min, team) =>
+          team.playerIds.length < min.playerIds.length ? team : min
+        );
+        teamWithFewerPlayers.playerIds.push(player.id);
+        console.log(`[ClueScale] Added late-joiner ${player.name} to ${teamWithFewerPlayers.name}`);
+      }
     }
 
     if (isReconnecting) {
@@ -501,6 +595,21 @@ class CluePlugin implements GamePlugin {
           return;
         }
 
+        // In teams mode, only teammates of the clue giver can guess
+        const settings = room.settings.gameSpecific as ClueSettings;
+        if (settings.gameMode === 'teams' && gameState.teams && gameState.round) {
+          // Find which team the clue giver belongs to
+          const clueGiverTeam = gameState.teams.find(t =>
+            t.playerIds.includes(gameState.round!.clueGiverId)
+          );
+
+          // Only allow guessing if player is on the same team as the clue giver
+          if (!clueGiverTeam || !clueGiverTeam.playerIds.includes(currentPlayer.id)) {
+            socket.emit('error', { message: 'Only the clue giver\'s teammates can guess' });
+            return;
+          }
+        }
+
         // Validate guess (1-10)
         const guessNum = parseInt(guess);
         if (isNaN(guessNum) || guessNum < 1 || guessNum > 10) {
@@ -534,15 +643,33 @@ class CluePlugin implements GamePlugin {
           playerName: currentPlayer.name,
         });
 
-        // Check if all players have guessed BEFORE sending lobby update
+        // Check if all expected players have guessed BEFORE sending lobby update
         // This prevents a race condition where lobby update with ROUND_GUESS state
         // arrives after round:reveal and overwrites the ROUND_REVEAL state
-        const nonClueGiverPlayers = Array.from(room.players.values()).filter(
-          (p) => p.connected && p.id !== gameState.round!.clueGiverId
-        );
 
-        if (gameState.round.guesses.length === nonClueGiverPlayers.length) {
-          console.log(`[ClueScale] Room ${room.code} - All players guessed, revealing results`);
+        // Get players who should be guessing
+        let expectedGuessers: Player[];
+        const revealSettings = room.settings.gameSpecific as ClueSettings;
+
+        if (revealSettings.gameMode === 'teams' && gameState.teams) {
+          // In team mode, only teammates of the clue giver should guess
+          const clueGiverTeam = gameState.teams.find(t =>
+            t.playerIds.includes(gameState.round!.clueGiverId)
+          );
+          expectedGuessers = Array.from(room.players.values()).filter(
+            (p) => p.connected &&
+                   p.id !== gameState.round!.clueGiverId &&
+                   clueGiverTeam?.playerIds.includes(p.id)
+          );
+        } else {
+          // In classic mode, all non-clue-giver players should guess
+          expectedGuessers = Array.from(room.players.values()).filter(
+            (p) => p.connected && p.id !== gameState.round!.clueGiverId
+          );
+        }
+
+        if (gameState.round.guesses.length === expectedGuessers.length) {
+          console.log(`[ClueScale] Room ${room.code} - All ${expectedGuessers.length} expected guessers submitted, revealing results`);
           // Clear timer and reveal immediately
           if (gameState.roundTimer) {
             clearTimeout(gameState.roundTimer);
@@ -654,6 +781,7 @@ class CluePlugin implements GamePlugin {
 
         const { settings } = data;
         const currentSettings = room.settings.gameSpecific as ClueSettings;
+        const gameState = room.gameState.data as ClueGameState;
 
         // Update settings with validation
         if (settings.roundDuration !== undefined) {
@@ -669,15 +797,76 @@ class CluePlugin implements GamePlugin {
           currentSettings.categories = settings.categories;
         }
 
+        // Team mode settings
+        if (settings.gameMode !== undefined && ['classic', 'teams'].includes(settings.gameMode)) {
+          const prevMode = currentSettings.gameMode;
+          currentSettings.gameMode = settings.gameMode;
+
+          // Initialize teams when switching to teams mode
+          if (settings.gameMode === 'teams' && prevMode !== 'teams') {
+            const connectedPlayers = Array.from(room.players.values()).filter(p => p.connected);
+            gameState.teams = initializeTeams(connectedPlayers);
+            gameState.currentTeamIndex = 0;
+            gameState.teamRoundNumber = 1;
+            gameState.completedRounds = 0;
+            console.log(`[ClueScale] Room ${room.code} - Initialized teams:`, gameState.teams.map(t => ({ name: t.name, players: t.playerIds.length })));
+          } else if (settings.gameMode === 'classic') {
+            // Clear team data when switching back to classic
+            gameState.teams = undefined;
+            gameState.currentTeamIndex = undefined;
+            gameState.teamRoundNumber = undefined;
+            gameState.completedRounds = undefined;
+          }
+        }
+        if (settings.totalRounds !== undefined) {
+          currentSettings.totalRounds = Math.max(1, Math.min(20, settings.totalRounds));
+        }
+
         console.log(`[ClueScale] Room ${room.code} - Settings updated by ${currentPlayer.name}`);
 
-        // Broadcast updated settings
-        helpers.sendToRoom(room.code, 'settings:updated', {
-          settings: currentSettings,
-        });
+        // Broadcast lobby update (includes team data)
+        this.sendLobbyUpdate(room);
       } catch (error: any) {
         console.error('[ClueScale] settings:update error:', error);
         socket.emit('error', { message: 'Failed to update settings' });
+      }
+    },
+
+    /**
+     * Shuffle teams (redistribute players)
+     */
+    'game:shuffle-teams': async (socket: Socket, data: any, room: Room, helpers: GameHelpers) => {
+      try {
+        const currentPlayer = Array.from(room.players.values()).find((p) => p.socketId === socket.id);
+        if (!currentPlayer || !currentPlayer.isHost) {
+          socket.emit('error', { message: 'Only host can shuffle teams' });
+          return;
+        }
+
+        if (room.gameState.phase !== 'lobby') {
+          socket.emit('error', { message: 'Can only shuffle teams in lobby' });
+          return;
+        }
+
+        const gameState = room.gameState.data as ClueGameState;
+        const settings = room.settings.gameSpecific as ClueSettings;
+
+        if (settings.gameMode !== 'teams' || !gameState.teams) {
+          socket.emit('error', { message: 'Not in teams mode' });
+          return;
+        }
+
+        // Shuffle teams
+        const connectedPlayers = Array.from(room.players.values()).filter(p => p.connected);
+        gameState.teams = shuffleTeams(gameState.teams, connectedPlayers);
+
+        console.log(`[ClueScale] Room ${room.code} - Teams shuffled by ${currentPlayer.name}`);
+
+        // Broadcast lobby update with new team assignments
+        this.sendLobbyUpdate(room);
+      } catch (error: any) {
+        console.error('[ClueScale] game:shuffle-teams error:', error);
+        socket.emit('error', { message: 'Failed to shuffle teams' });
       }
     },
 
@@ -714,8 +903,19 @@ class CluePlugin implements GamePlugin {
           playerData.score = 0;
         }
 
-        // Notify players
+        // Reset team scores and round counter (keep teams setup)
+        if (gameState.teams) {
+          gameState.teams.forEach(team => {
+            team.score = 0;
+          });
+          gameState.currentTeamIndex = 0;
+          gameState.teamRoundNumber = 1;
+          gameState.completedRounds = 0;
+        }
+
+        // Notify players and send updated lobby
         helpers.sendToRoom(room.code, 'game:restarted', {});
+        this.sendLobbyUpdate(room);
       } catch (error: any) {
         console.error('[ClueScale] game:restart error:', error);
         socket.emit('error', { message: 'Failed to restart game' });

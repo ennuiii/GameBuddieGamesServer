@@ -13,6 +13,32 @@ export type ClueGamePhase =
 
 export type PlayerRole = 'NUMBER_PICKER' | 'CLUE_GIVER' | 'GUESSER' | 'SPECTATOR';
 
+// Team mode types
+export type GameMode = 'classic' | 'teams';
+
+export interface TeamPlayer {
+  id: string;
+  name: string;
+}
+
+export interface Team {
+  id: string;
+  name: string;
+  color: string;
+  playerIds: string[];
+  score: number;
+}
+
+// Team presets with distinct, accessible colors
+export const TEAM_PRESETS = [
+  { name: 'Team Red', color: '#ef4444' },
+  { name: 'Team Blue', color: '#3b82f6' },
+  { name: 'Team Green', color: '#22c55e' },
+  { name: 'Team Purple', color: '#a855f7' },
+  { name: 'Team Orange', color: '#f97316' },
+  { name: 'Team Teal', color: '#14b8a6' },
+];
+
 export interface Guess {
   playerId: string; // Player ID
   playerName: string;
@@ -38,6 +64,9 @@ export interface ClueSettings {
   teamBonusEnabled: boolean;
   rotationType: 'circular' | 'random';
   categories: string[];
+  // Team mode settings
+  gameMode: GameMode;
+  totalRounds: number; // Total rounds to play (teams mode)
 }
 
 // This is what gets stored in room.gameState.data
@@ -46,6 +75,11 @@ export interface ClueGameState {
   roundStartTime: number | null;
   roleQueue: string[]; // Array of player IDs for role rotation
   roundTimer?: NodeJS.Timeout; // Timer for round timeout
+  // Team mode state
+  teams?: Team[];
+  currentTeamIndex?: number; // Which team's turn (0-indexed)
+  teamRoundNumber?: number; // Current round number for teams mode
+  completedRounds?: number; // How many full rounds completed
 }
 
 // For extending the core Player type with game-specific data
@@ -79,4 +113,6 @@ export const DEFAULT_CLUE_SETTINGS: ClueSettings = {
   teamBonusEnabled: true,
   rotationType: 'circular',
   categories: DEFAULT_CATEGORIES,
+  gameMode: 'classic',
+  totalRounds: 5,
 };

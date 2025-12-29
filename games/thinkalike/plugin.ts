@@ -24,14 +24,23 @@ import {
   ThinkAlikePlayerData,
   ThinkAlikeSettings,
   GamePhase,
+  GameMode,
+  Team,
+  TeamPlayer,
   RoundHistory,
   createInitialGameState,
   createInitialPlayerData,
+  createTeam,
+  createTeamPlayer,
+  resetTeamsForNewRound,
+  TEAM_PRESETS,
   DEFAULT_SETTINGS
 } from './types.js';
 import {
   MAX_PLAYERS,
   MIN_PLAYERS,
+  MIN_PLAYERS_PAIRS_MODE,
+  MAX_TEAMS,
   TYPING_UPDATE_INTERVAL_MS,
   COUNTDOWN_DURATION_MS,
   VOICE_VOTE_TIMEOUT_MS,
@@ -52,8 +61,8 @@ class ThinkAlikePlugin implements GamePlugin {
 
   id = 'thinkalike';
   name = 'ThinkAlike';
-  version = '1.0.0';
-  description = '1v1 word synchronization game - share 5 lives and think of the same word!';
+  version = '2.0.0';
+  description = 'Word synchronization game - Classic 1v1 or Pairs mode (2v2, 2v2v2, 2v2v2v2)!';
   author = 'GameBuddies';
   namespace = '/thinkalike';
   basePath = '/thinkalike';
@@ -226,6 +235,13 @@ class ThinkAlikePlugin implements GamePlugin {
       }
     }
 
+    // Reinitialize teams if in pairs mode lobby (new player needs a team)
+    const gameState = room.gameState.data as ThinkAlikeGameState;
+    if (!isReconnecting && gameState.gameMode === 'pairs' && gameState.phase === 'lobby') {
+      this.initializeTeamsForPairsMode(room);
+      console.log(`[${this.name}] Reinitialized teams after player join in pairs mode`);
+    }
+
     // Broadcast updated state to all players
     this.broadcastRoomState(room);
 
@@ -277,6 +293,12 @@ class ThinkAlikePlugin implements GamePlugin {
       .filter(p => p.connected && !(p.gameData as ThinkAlikePlayerData)?.isSpectator);
     if (gameState.phase !== 'lobby' && connectedActivePlayers.length < 2) {
       this.endGame(room, 'Player left the game');
+    }
+
+    // Reinitialize teams if in pairs mode lobby (player left, need to rebalance)
+    if (gameState.gameMode === 'pairs' && gameState.phase === 'lobby') {
+      this.initializeTeamsForPairsMode(room);
+      console.log(`[${this.name}] Reinitialized teams after player left in pairs mode`);
     }
 
     // Broadcast updated state
@@ -371,9 +393,16 @@ class ThinkAlikePlugin implements GamePlugin {
         maxLives: gameState.maxLives,
         timeRemaining: gameState.timeRemaining,
         rounds: gameState.rounds,
+        // Pairs mode data
+        gameMode: gameState.gameMode,
+        teams: gameState.gameMode === 'pairs' ? this.serializeTeams(gameState, socketId, isSpectator) : [],
+        winningTeamId: gameState.winningTeamId,
+        pointsToWin: gameState.pointsToWin,
         settings: {
           timerDuration: gameState.settings.timerDuration,
-          maxLives: gameState.settings.maxLives
+          maxLives: gameState.settings.maxLives,
+          gameMode: gameState.settings.gameMode,
+          pointsToWin: gameState.settings.pointsToWin
         }
       },
 
@@ -383,7 +412,9 @@ class ThinkAlikePlugin implements GamePlugin {
         maxPlayers: room.settings.maxPlayers,
         timerDuration: gameState.settings.timerDuration,
         maxLives: gameState.settings.maxLives,
-        voiceMode: gameState.settings.voiceMode
+        voiceMode: gameState.settings.voiceMode,
+        gameMode: gameState.settings.gameMode,
+        pointsToWin: gameState.settings.pointsToWin
       },
 
       // Messages (most recent)
@@ -456,44 +487,69 @@ class ThinkAlikePlugin implements GamePlugin {
           return;
         }
 
-        // Validate exactly 2 active players (not counting spectators)
+        const gameState = room.gameState.data as ThinkAlikeGameState;
         const activePlayers = Array.from(room.players.values())
           .filter(p => p.connected && !(p.gameData as ThinkAlikePlayerData)?.isSpectator);
-        if (activePlayers.length !== 2) {
-          socket.emit('error', { message: 'Need exactly 2 active players to start' });
-          return;
+
+        // Validate player count based on game mode
+        if (gameState.gameMode === 'pairs') {
+          // Pairs mode requires at least 4 players (2 teams of 2)
+          if (activePlayers.length < MIN_PLAYERS_PAIRS_MODE) {
+            socket.emit('error', { message: `Need at least ${MIN_PLAYERS_PAIRS_MODE} players for pairs mode` });
+            return;
+          }
+          // Must be even number of players
+          if (activePlayers.length % 2 !== 0) {
+            socket.emit('error', { message: 'Need even number of players for pairs mode' });
+            return;
+          }
+        } else {
+          // Classic mode requires exactly 2 players
+          if (activePlayers.length !== 2) {
+            socket.emit('error', { message: 'Need exactly 2 active players to start' });
+            return;
+          }
         }
 
         // Initialize first round
-        const gameState = room.gameState.data as ThinkAlikeGameState;
         gameState.phase = 'round_prep';
         gameState.currentRound = 1;
-        gameState.player1Word = null;
-        gameState.player2Word = null;
-        gameState.player1Submitted = false;
-        gameState.player2Submitted = false;
+        gameState.winningTeamId = null;
 
-        // Store player identity for stable mapping across reconnections
-        // Use player.id for game logic (stable, unique), name for display only
-        // NOTE: Assignment order depends on Map iteration order (insertion order in JS).
-        gameState.player1Id = activePlayers[0]?.id || null;
-        gameState.player2Id = activePlayers[1]?.id || null;
-        gameState.player1Name = activePlayers[0]?.name || null;
-        gameState.player2Name = activePlayers[1]?.name || null;
-        console.log(`[${this.name}] Player slots assigned: P1=${gameState.player1Name} (${gameState.player1Id}), P2=${gameState.player2Name} (${gameState.player2Id})`);
+        if (gameState.gameMode === 'pairs') {
+          // PAIRS MODE: Initialize teams
+          this.initializeTeamsForPairsMode(room);
+          resetTeamsForNewRound(gameState.teams);
+
+          console.log(`[${this.name}] Pairs mode started with ${gameState.teams.length} teams`);
+        } else {
+          // CLASSIC MODE: Set up player slots
+          gameState.player1Word = null;
+          gameState.player2Word = null;
+          gameState.player1Submitted = false;
+          gameState.player2Submitted = false;
+
+          // Store player identity for stable mapping across reconnections
+          gameState.player1Id = activePlayers[0]?.id || null;
+          gameState.player2Id = activePlayers[1]?.id || null;
+          gameState.player1Name = activePlayers[0]?.name || null;
+          gameState.player2Name = activePlayers[1]?.name || null;
+          console.log(`[${this.name}] Classic mode: P1=${gameState.player1Name}, P2=${gameState.player2Name}`);
+        }
 
         // Update phase
         room.gameState.phase = 'round_prep';
 
         // Notify all players
         helpers.sendToRoom(room.code, 'game:started', {
-          message: 'Game starting! Get ready...'
+          message: 'Game starting! Get ready...',
+          gameMode: gameState.gameMode
         });
 
         // Broadcast updated state
         this.broadcastRoomState(room);
 
-        console.log(`[${this.name}] Game started in room ${room.code}`);
+        console.log(`[${this.name}] Game started in room ${room.code} (mode: ${gameState.gameMode})`);
 
         // After 3.5 seconds, move to word input phase (matches client countdown: 3→2→1→GO!)
         const timerKey = `${room.code}:round-prep-transition`;
@@ -503,7 +559,7 @@ class ThinkAlikePlugin implements GamePlugin {
             console.log(`[${this.name}] Timer expired but phase changed to ${room.gameState.phase}, aborting transition`);
             return;
           }
-          
+
           console.log(`[${this.name}] Round prep countdown complete, transitioning to word input in room ${room.code}`);
           this.startWordInputPhase(room);
         }, COUNTDOWN_DURATION_MS);
@@ -543,28 +599,72 @@ class ThinkAlikePlugin implements GamePlugin {
           return;
         }
 
-        // Determine which player slot by ID (not array index or name) for stable reconnection
-        const isPlayer1 = player.id === gameState.player1Id;
+        if (gameState.gameMode === 'pairs') {
+          // PAIRS MODE: Find player's team and store word
+          const teamInfo = this.findPlayerTeam(gameState, player.id);
+          if (!teamInfo) {
+            socket.emit('error', { message: 'You are not assigned to a team' });
+            return;
+          }
 
-        if (isPlayer1) {
-          gameState.player1Word = word;
-          gameState.player1Submitted = true;
+          const { team, isPlayer1 } = teamInfo;
+          if (isPlayer1 && team.player1) {
+            team.player1.word = word;
+            team.player1.submitted = true;
+          } else if (team.player2) {
+            team.player2.word = word;
+            team.player2.submitted = true;
+          }
+
+          console.log(`[${this.name}] ${team.name} player ${player.name} submitted word`);
+
+          // Check for match immediately (real-time detection)
+          const winningTeam = this.checkForPairsMatch(gameState);
+          if (winningTeam) {
+            // RACE CONDITION FIX: Clear timer BEFORE handling victory
+            this.clearTimer(`${room.code}:round-timer`);
+            this.handlePairsVictory(room, winningTeam);
+          } else {
+            // Check if ALL teams have submitted (no winner found)
+            const allTeamsSubmitted = gameState.teams.every(t =>
+              t.player1?.submitted && t.player2?.submitted
+            );
+
+            if (allTeamsSubmitted) {
+              // All teams submitted but no match - handle as timeout (lose a life)
+              console.log(`[${this.name}] All teams submitted, no match - treating as timeout`);
+              this.clearTimer(`${room.code}:round-timer`);
+              this.handlePairsTimeout(room);
+            } else {
+              // Still waiting for more submissions - broadcast state
+              this.broadcastRoomState(room);
+            }
+          }
+
         } else {
-          gameState.player2Word = word;
-          gameState.player2Submitted = true;
-        }
+          // CLASSIC MODE: Original logic
+          const isPlayer1 = player.id === gameState.player1Id;
 
-        console.log(`[${this.name}] Player ${player.name} submitted word in room ${room.code}`);
+          if (isPlayer1) {
+            gameState.player1Word = word;
+            gameState.player1Submitted = true;
+          } else {
+            gameState.player2Word = word;
+            gameState.player2Submitted = true;
+          }
 
-        // Check if both players have submitted
-        if (gameState.player1Submitted && gameState.player2Submitted) {
-          // RACE CONDITION FIX: Clear timer BEFORE reveal to prevent timeout race
-          this.clearTimer(`${room.code}:round-timer`);
-          // Both submitted - move to reveal phase
-          this.revealWords(room);
-        } else {
-          // Waiting for other player - broadcast state
-          this.broadcastRoomState(room);
+          console.log(`[${this.name}] Player ${player.name} submitted word in room ${room.code}`);
+
+          // Check if both players have submitted
+          if (gameState.player1Submitted && gameState.player2Submitted) {
+            // RACE CONDITION FIX: Clear timer BEFORE reveal to prevent timeout race
+            this.clearTimer(`${room.code}:round-timer`);
+            // Both submitted - move to reveal phase
+            this.revealWords(room);
+          } else {
+            // Waiting for other player - broadcast state
+            this.broadcastRoomState(room);
+          }
         }
 
       } catch (error) {
@@ -591,10 +691,18 @@ class ThinkAlikePlugin implements GamePlugin {
           gameState.phase = 'round_prep';
           room.gameState.phase = 'round_prep';  // CRITICAL: Must set both for timer check
           gameState.currentRound++;
-          gameState.player1Word = null;
-          gameState.player2Word = null;
-          gameState.player1Submitted = false;
-          gameState.player2Submitted = false;
+          gameState.winningTeamId = null;
+
+          if (gameState.gameMode === 'pairs') {
+            // PAIRS MODE: Reset all teams for new round
+            resetTeamsForNewRound(gameState.teams);
+          } else {
+            // CLASSIC MODE: Reset player words
+            gameState.player1Word = null;
+            gameState.player2Word = null;
+            gameState.player1Submitted = false;
+            gameState.player2Submitted = false;
+          }
 
           // Broadcast state
           this.broadcastRoomState(room);
@@ -714,6 +822,26 @@ class ThinkAlikePlugin implements GamePlugin {
           return;
         }
 
+        // Validate gameMode if provided
+        if (data.settings.gameMode !== undefined) {
+          if (data.settings.gameMode !== 'classic' && data.settings.gameMode !== 'pairs') {
+            socket.emit('error', { message: 'Game mode must be "classic" or "pairs"' });
+            return;
+          }
+        }
+
+        // Validate pointsToWin if provided
+        if (data.settings.pointsToWin !== undefined) {
+          if (typeof data.settings.pointsToWin !== 'number' ||
+              Number.isNaN(data.settings.pointsToWin) ||
+              !Number.isInteger(data.settings.pointsToWin) ||
+              data.settings.pointsToWin < 3 ||
+              data.settings.pointsToWin > 10) {
+            socket.emit('error', { message: 'Points to win must be an integer between 3 and 10' });
+            return;
+          }
+        }
+
         // Update settings
         const gameState = room.gameState.data as ThinkAlikeGameState;
         gameState.settings = {
@@ -725,6 +853,26 @@ class ThinkAlikePlugin implements GamePlugin {
         if (data.settings.maxLives) {
           gameState.maxLives = data.settings.maxLives;
           gameState.livesRemaining = data.settings.maxLives;
+        }
+
+        // Update gameMode if setting changed
+        if (data.settings.gameMode) {
+          gameState.gameMode = data.settings.gameMode;
+
+          // Initialize or clear teams based on mode
+          if (data.settings.gameMode === 'pairs') {
+            // Initialize teams for pairs mode in lobby
+            this.initializeTeamsForPairsMode(room);
+            console.log(`[${this.name}] Initialized teams for pairs mode in room ${room.code}`);
+          } else {
+            // Clear teams for classic mode
+            gameState.teams = [];
+          }
+        }
+
+        // Update pointsToWin if setting changed
+        if (data.settings.pointsToWin) {
+          gameState.pointsToWin = data.settings.pointsToWin;
         }
 
         // Notify all players
@@ -1042,6 +1190,44 @@ class ThinkAlikePlugin implements GamePlugin {
      * Live typing update (players send their current typed word to spectators)
      * Only broadcasts to spectators, not to other players (for privacy)
      */
+    /**
+     * Shuffle teams (host only, pairs mode, lobby only)
+     */
+    'game:shuffle-teams': async (socket: Socket, data: any, room: Room, helpers: GameHelpers) => {
+      try {
+        const player = Array.from(room.players.values()).find(p => p.socketId === socket.id);
+        if (!player?.isHost) {
+          socket.emit('error', { message: 'Only the host can shuffle teams' });
+          return;
+        }
+
+        const gameState = room.gameState.data as ThinkAlikeGameState;
+
+        // Only allow in lobby and pairs mode
+        if (gameState.phase !== 'lobby') {
+          socket.emit('error', { message: 'Can only shuffle teams in lobby' });
+          return;
+        }
+
+        if (gameState.gameMode !== 'pairs') {
+          socket.emit('error', { message: 'Team shuffle only available in pairs mode' });
+          return;
+        }
+
+        // Shuffle teams
+        this.shuffleTeams(room);
+
+        // Broadcast updated state
+        this.broadcastRoomState(room);
+
+        console.log(`[${this.name}] Teams shuffled by host in room ${room.code}`);
+
+      } catch (error) {
+        console.error(`[${this.name}] Error shuffling teams:`, error);
+        socket.emit('error', { message: 'Failed to shuffle teams' });
+      }
+    },
+
     'game:typing-update': async (socket: Socket, data: { word: string }, room: Room, helpers: GameHelpers) => {
       try {
         const player = Array.from(room.players.values()).find(p => p.socketId === socket.id);
@@ -1066,29 +1252,59 @@ class ThinkAlikePlugin implements GamePlugin {
         }
         this.lastTypingUpdate.set(playerKey, now);
 
-        // Determine which player slot by ID (not array index or name) for stable reconnection
-        const isPlayer1 = player.id === gameState.player1Id;
+        if (gameState.gameMode === 'pairs') {
+          // PAIRS MODE: Find player's team and update live word
+          const teamInfo = this.findPlayerTeam(gameState, player.id);
+          if (!teamInfo) return;
 
-        // Update live word in game state
-        if (isPlayer1) {
-          gameState.player1LiveWord = data.word;
-        } else {
-          gameState.player2LiveWord = data.word;
-        }
+          const { team, isPlayer1: isTeamPlayer1 } = teamInfo;
+          if (isTeamPlayer1 && team.player1) {
+            team.player1.liveWord = data.word;
+          } else if (team.player2) {
+            team.player2.liveWord = data.word;
+          }
 
-        // Broadcast ONLY to spectators (not to other players for privacy)
-        const spectators = Array.from(room.players.values())
-          .filter(p => (p.gameData as ThinkAlikePlayerData)?.isSpectator);
+          // Broadcast to spectators with team info
+          const spectators = Array.from(room.players.values())
+            .filter(p => (p.gameData as ThinkAlikePlayerData)?.isSpectator);
 
-        if (this.io && spectators.length > 0) {
-          const namespace = this.io.of(this.namespace);
-          spectators.forEach(spectator => {
-            namespace.to(spectator.socketId).emit('spectator:typing-update', {
-              playerIndex: isPlayer1 ? 0 : 1,
-              playerName: player.name,
-              word: data.word
+          if (this.io && spectators.length > 0) {
+            const namespace = this.io.of(this.namespace);
+            spectators.forEach(spectator => {
+              namespace.to(spectator.socketId).emit('spectator:typing-update', {
+                teamId: team.id,
+                teamName: team.name,
+                isPlayer1: isTeamPlayer1,
+                playerName: player.name,
+                word: data.word
+              });
             });
-          });
+          }
+        } else {
+          // CLASSIC MODE: Original logic
+          const isPlayer1 = player.id === gameState.player1Id;
+
+          // Update live word in game state
+          if (isPlayer1) {
+            gameState.player1LiveWord = data.word;
+          } else {
+            gameState.player2LiveWord = data.word;
+          }
+
+          // Broadcast ONLY to spectators (not to other players for privacy)
+          const spectators = Array.from(room.players.values())
+            .filter(p => (p.gameData as ThinkAlikePlayerData)?.isSpectator);
+
+          if (this.io && spectators.length > 0) {
+            const namespace = this.io.of(this.namespace);
+            spectators.forEach(spectator => {
+              namespace.to(spectator.socketId).emit('spectator:typing-update', {
+                playerIndex: isPlayer1 ? 0 : 1,
+                playerName: player.name,
+                word: data.word
+              });
+            });
+          }
         }
 
       } catch (error) {
@@ -1158,9 +1374,15 @@ class ThinkAlikePlugin implements GamePlugin {
         maxLives: gameState.maxLives,
         timeRemaining: gameState.timeRemaining,
         rounds: gameState.rounds,
+        // Pairs mode data
+        gameMode: gameState.gameMode,
+        winningTeamId: gameState.winningTeamId,
+        pointsToWin: gameState.pointsToWin,
         settings: {
           timerDuration: gameState.settings.timerDuration,
-          maxLives: gameState.settings.maxLives
+          maxLives: gameState.settings.maxLives,
+          gameMode: gameState.settings.gameMode,
+          pointsToWin: gameState.settings.pointsToWin
         }
       },
       settings: {
@@ -1168,7 +1390,9 @@ class ThinkAlikePlugin implements GamePlugin {
         maxPlayers: room.settings.maxPlayers,
         timerDuration: gameState.settings.timerDuration,
         maxLives: gameState.settings.maxLives,
-        voiceMode: gameState.settings.voiceMode
+        voiceMode: gameState.settings.voiceMode,
+        gameMode: gameState.settings.gameMode,
+        pointsToWin: gameState.settings.pointsToWin
       },
       messages: room.messages.slice(-MAX_STORED_MESSAGES),
       isStreamerMode: room.isStreamerMode || false,
@@ -1197,10 +1421,19 @@ class ThinkAlikePlugin implements GamePlugin {
         return { ...cleanPlayer, currentWord };
       });
 
+      // Serialize teams with proper visibility for this viewer
+      const personalizedTeams = gameState.gameMode === 'pairs'
+        ? this.serializeTeams(gameState, player.socketId, isViewerSpectator)
+        : [];
+
       // Send personalized state
       namespace.to(player.socketId).emit('roomStateUpdated', {
         ...baseState,
         players: personalizedPlayers,
+        gameData: {
+          ...baseState.gameData,
+          teams: personalizedTeams
+        },
         mySocketId: player.socketId,
         isSpectator: isViewerSpectator
       });
@@ -1314,18 +1547,23 @@ class ThinkAlikePlugin implements GamePlugin {
 
       console.log(`[${this.name}] Round timeout in room ${room.code}`);
 
-      // If both players haven't submitted, auto-submit empty words
-      if (!gameState.player1Submitted) {
-        gameState.player1Word = '';
-        gameState.player1Submitted = true;
-      }
-      if (!gameState.player2Submitted) {
-        gameState.player2Word = '';
-        gameState.player2Submitted = true;
-      }
+      if (gameState.gameMode === 'pairs') {
+        // PAIRS MODE: Handle timeout
+        this.handlePairsTimeout(room);
+      } else {
+        // CLASSIC MODE: Auto-submit empty words
+        if (!gameState.player1Submitted) {
+          gameState.player1Word = '';
+          gameState.player1Submitted = true;
+        }
+        if (!gameState.player2Submitted) {
+          gameState.player2Word = '';
+          gameState.player2Submitted = true;
+        }
 
-      // Reveal words
-      this.revealWords(room);
+        // Reveal words
+        this.revealWords(room);
+      }
     } finally {
       this.timeoutInProgress.delete(room.code);
     }
@@ -1590,6 +1828,312 @@ class ThinkAlikePlugin implements GamePlugin {
     // Clear race condition guards for this room
     this.revealInProgress.delete(roomCode);
     this.timeoutInProgress.delete(roomCode);
+  }
+
+  // ============================================================================
+  // PAIRS MODE HELPER METHODS
+  // ============================================================================
+
+  /**
+   * Initialize teams for pairs mode based on player count
+   * Creates teams and assigns players to them
+   */
+  private initializeTeamsForPairsMode(room: Room): void {
+    const gameState = room.gameState.data as ThinkAlikeGameState;
+    const activePlayers = Array.from(room.players.values())
+      .filter(p => !(p.gameData as ThinkAlikePlayerData)?.isSpectator);
+
+    // Calculate number of teams needed (1 team per 2 players)
+    const numTeams = Math.floor(activePlayers.length / 2);
+
+    // Create teams
+    gameState.teams = [];
+    for (let i = 0; i < numTeams; i++) {
+      gameState.teams.push(createTeam(i));
+    }
+
+    // Assign players to teams
+    for (let i = 0; i < activePlayers.length && i < numTeams * 2; i++) {
+      const teamIndex = Math.floor(i / 2);
+      const isPlayer1 = i % 2 === 0;
+      const player = activePlayers[i];
+
+      if (isPlayer1) {
+        gameState.teams[teamIndex].player1 = createTeamPlayer(player.id, player.name);
+      } else {
+        gameState.teams[teamIndex].player2 = createTeamPlayer(player.id, player.name);
+      }
+    }
+
+    console.log(`[${this.name}] Initialized ${numTeams} teams for pairs mode`);
+  }
+
+  /**
+   * Find which team a player belongs to
+   */
+  private findPlayerTeam(gameState: ThinkAlikeGameState, playerId: string): { team: Team; isPlayer1: boolean } | null {
+    for (const team of gameState.teams) {
+      if (team.player1?.id === playerId) {
+        return { team, isPlayer1: true };
+      }
+      if (team.player2?.id === playerId) {
+        return { team, isPlayer1: false };
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Check if any team has matched in pairs mode (real-time detection)
+   * Returns the winning team or null
+   */
+  private checkForPairsMatch(gameState: ThinkAlikeGameState): Team | null {
+    for (const team of gameState.teams) {
+      if (team.player1?.submitted && team.player2?.submitted) {
+        const word1 = (team.player1.word || '').trim().toUpperCase().replace(/[^A-Z0-9 ]/g, '');
+        const word2 = (team.player2.word || '').trim().toUpperCase().replace(/[^A-Z0-9 ]/g, '');
+
+        if (word1.length > 0 && word1 === word2) {
+          team.matched = true;
+          return team; // First team to match wins!
+        }
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Handle pairs mode victory
+   */
+  private handlePairsVictory(room: Room, winningTeam: Team): void {
+    const gameState = room.gameState.data as ThinkAlikeGameState;
+
+    // Award point to winning team
+    winningTeam.score++;
+    gameState.winningTeamId = winningTeam.id;
+
+    // Calculate time taken
+    const timeTaken = gameState.timerStartedAt
+      ? Math.floor((Date.now() - gameState.timerStartedAt) / 1000)
+      : gameState.settings.timerDuration - gameState.timeRemaining;
+
+    // Check if team has won the game
+    if (winningTeam.score >= gameState.pointsToWin) {
+      // GAME VICTORY!
+      gameState.phase = 'victory';
+      room.gameState.phase = 'victory';
+
+      // Add to round history
+      gameState.rounds.push({
+        number: gameState.currentRound,
+        player1Word: winningTeam.player1?.word || '',
+        player2Word: winningTeam.player2?.word || '',
+        wasMatch: true,
+        timeTaken,
+        timestamp: Date.now()
+      });
+
+      // Broadcast final state
+      this.broadcastRoomState(room);
+
+      // Notify all players
+      if (this.io) {
+        const namespace = this.io.of(this.namespace);
+        namespace.to(room.code).emit('game:victory', {
+          winningTeamId: winningTeam.id,
+          winningTeamName: winningTeam.name,
+          matchedWord: winningTeam.player1?.word,
+          round: gameState.currentRound,
+          timeTaken
+        });
+      }
+
+      // Grant rewards to winning team members
+      this.grantPairsVictoryRewards(room, gameState, winningTeam);
+
+      console.log(`[${this.name}] PAIRS VICTORY! ${winningTeam.name} wins in room ${room.code}!`);
+    } else {
+      // Round win - move to reveal phase
+      gameState.phase = 'reveal';
+      room.gameState.phase = 'reveal';
+
+      // Add to round history
+      gameState.rounds.push({
+        number: gameState.currentRound,
+        player1Word: winningTeam.player1?.word || '',
+        player2Word: winningTeam.player2?.word || '',
+        wasMatch: true,
+        timeTaken,
+        timestamp: Date.now()
+      });
+
+      // Broadcast state
+      this.broadcastRoomState(room);
+
+      // Notify players
+      if (this.io) {
+        const namespace = this.io.of(this.namespace);
+        namespace.to(room.code).emit('game:round-win', {
+          winningTeamId: winningTeam.id,
+          winningTeamName: winningTeam.name,
+          matchedWord: winningTeam.player1?.word,
+          teamScores: gameState.teams.map(t => ({ id: t.id, name: t.name, score: t.score })),
+          pointsToWin: gameState.pointsToWin
+        });
+      }
+
+      console.log(`[${this.name}] Round win: ${winningTeam.name} (${winningTeam.score}/${gameState.pointsToWin} points)`);
+    }
+  }
+
+  /**
+   * Handle pairs mode timeout (no team matched)
+   */
+  private handlePairsTimeout(room: Room): void {
+    const gameState = room.gameState.data as ThinkAlikeGameState;
+
+    // Lose a life
+    gameState.livesRemaining--;
+
+    // Calculate time taken
+    const timeTaken = gameState.settings.timerDuration;
+
+    // Add to history (no winner)
+    gameState.rounds.push({
+      number: gameState.currentRound,
+      player1Word: 'TIMEOUT',
+      player2Word: 'TIMEOUT',
+      wasMatch: false,
+      timeTaken,
+      timestamp: Date.now()
+    });
+
+    if (gameState.livesRemaining <= 0) {
+      // Game over - all lives lost
+      this.endGame(room, 'all-lives-lost');
+    } else {
+      // Move to reveal
+      gameState.phase = 'reveal';
+      room.gameState.phase = 'reveal';
+      gameState.winningTeamId = null;
+
+      // Broadcast state
+      this.broadcastRoomState(room);
+
+      // Notify players
+      if (this.io) {
+        const namespace = this.io.of(this.namespace);
+        namespace.to(room.code).emit('game:no-match', {
+          teams: gameState.teams.map(t => ({
+            id: t.id,
+            name: t.name,
+            player1Word: t.player1?.word,
+            player2Word: t.player2?.word,
+            matched: t.matched
+          })),
+          livesRemaining: gameState.livesRemaining
+        });
+      }
+
+      console.log(`[${this.name}] Pairs timeout - no match. Lives: ${gameState.livesRemaining}`);
+    }
+  }
+
+  /**
+   * Grant rewards to winning team members in pairs mode
+   */
+  private grantPairsVictoryRewards(room: Room, gameState: ThinkAlikeGameState, winningTeam: Team): void {
+    const durationSeconds = Math.floor((Date.now() - room.createdAt) / 1000);
+
+    // Find actual player objects for the winning team
+    const winningPlayerIds = [winningTeam.player1?.id, winningTeam.player2?.id].filter(Boolean);
+    const winningPlayers = Array.from(room.players.values())
+      .filter(p => winningPlayerIds.includes(p.id) && p.userId);
+
+    console.log(`[${this.name}] 🎁 Granting PAIRS VICTORY rewards to ${winningTeam.name}`);
+
+    winningPlayers.forEach(async player => {
+      if (player.userId) {
+        try {
+          const reward = await gameBuddiesService.grantReward(this.id, player.userId, {
+            won: true,
+            durationSeconds,
+            score: 30 + (gameState.livesRemaining * 2) + (winningTeam.score * 5),
+            metadata: {
+              gameMode: 'pairs',
+              teamName: winningTeam.name,
+              totalRounds: gameState.currentRound,
+              livesRemaining: gameState.livesRemaining,
+              teamScore: winningTeam.score
+            }
+          });
+
+          if (reward && this.io) {
+            const namespace = this.io.of(this.namespace);
+            namespace.to(player.socketId).emit('player:reward', reward);
+          }
+        } catch (err) {
+          console.error(`[${this.name}] Failed to grant pairs reward to ${player.name}:`, err);
+        }
+      }
+    });
+  }
+
+  /**
+   * Shuffle teams randomly
+   */
+  private shuffleTeams(room: Room): void {
+    const gameState = room.gameState.data as ThinkAlikeGameState;
+
+    // Collect all players from teams
+    const allTeamPlayers: TeamPlayer[] = [];
+    for (const team of gameState.teams) {
+      if (team.player1) allTeamPlayers.push(team.player1);
+      if (team.player2) allTeamPlayers.push(team.player2);
+    }
+
+    // Fisher-Yates shuffle
+    for (let i = allTeamPlayers.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [allTeamPlayers[i], allTeamPlayers[j]] = [allTeamPlayers[j], allTeamPlayers[i]];
+    }
+
+    // Reassign to teams
+    let playerIndex = 0;
+    for (const team of gameState.teams) {
+      team.player1 = allTeamPlayers[playerIndex++] || null;
+      team.player2 = allTeamPlayers[playerIndex++] || null;
+    }
+
+    console.log(`[${this.name}] Teams shuffled in room ${room.code}`);
+  }
+
+  /**
+   * Serialize teams for client consumption
+   * Handles visibility of words based on whether requester is spectator
+   */
+  private serializeTeams(gameState: ThinkAlikeGameState, socketId: string, isSpectator: boolean): any[] {
+    return gameState.teams.map(team => ({
+      id: team.id,
+      name: team.name,
+      color: team.color,
+      score: team.score,
+      matched: team.matched,
+      player1: team.player1 ? {
+        id: team.player1.id,
+        name: team.player1.name,
+        // Spectators see live words, own team sees submitted words
+        word: isSpectator ? team.player1.liveWord : (team.player1.submitted ? team.player1.word : null),
+        submitted: team.player1.submitted
+      } : null,
+      player2: team.player2 ? {
+        id: team.player2.id,
+        name: team.player2.name,
+        // Spectators see live words, own team sees submitted words
+        word: isSpectator ? team.player2.liveWord : (team.player2.submitted ? team.player2.word : null),
+        submitted: team.player2.submitted
+      } : null
+    }));
   }
 }
 

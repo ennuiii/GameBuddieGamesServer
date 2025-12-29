@@ -371,9 +371,10 @@ export class RoomManager {
       }
     }
 
-    // Remove all player mappings
-    for (const socketId of room.players.keys()) {
-      this.playerRoomMap.delete(socketId);
+    // Remove all player mappings (players are keyed by playerId, not socketId)
+    for (const player of room.players.values()) {
+      this.playerRoomMap.delete(player.socketId);
+      this.socketToPlayerId.delete(player.socketId);
     }
 
     this.rooms.delete(roomCode);

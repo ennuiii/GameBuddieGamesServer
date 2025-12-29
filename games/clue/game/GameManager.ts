@@ -225,24 +225,67 @@ export function revealRoundResults(
   console.log(`[ClueScale] Clue giver ${clueGiver.name} score updated: ${clueGiverData.score - clueGiverPoints} -> ${clueGiverData.score} (+${clueGiverPoints})`);
   }
 
-  // Sort players by score for leaderboard
-  const leaderboard = Array.from(room.players.values())
-    .sort((a, b) => {
-      const aData = a.gameData as CluePlayerData;
-      const bData = b.gameData as CluePlayerData;
-      const aScore = aData?.score ?? 0;
-      const bScore = bData?.score ?? 0;
-      return bScore - aScore;
-    })
-    .map((p, index) => {
-      const playerData = p.gameData as CluePlayerData;
-      return {
+  // In team mode, aggregate points to team score
+  if (settings.gameMode === 'teams' && gameState.teams) {
+    const clueGiverTeam = gameState.teams.find(t =>
+      t.playerIds.includes(gameState.round!.clueGiverId)
+    );
+
+    if (clueGiverTeam) {
+      // Add clue giver points to team score
+      clueGiverTeam.score += clueGiverPoints;
+
+      // Add all guesser points to team score
+      scoredGuesses.forEach((guess) => {
+        clueGiverTeam.score += guess.points;
+      });
+
+      console.log(`[ClueScale] Team ${clueGiverTeam.name} score updated to ${clueGiverTeam.score}`);
+    }
+  }
+
+  // Generate leaderboard - teams in team mode, individuals in classic
+  let leaderboard: Array<{
+    rank: number;
+    name: string;
+    score: number;
+    socketId?: string;
+    color?: string;
+    isTeam?: boolean;
+  }>;
+
+  if (settings.gameMode === 'teams' && gameState.teams) {
+    // Team leaderboard
+    leaderboard = [...gameState.teams]
+      .sort((a, b) => b.score - a.score)
+      .map((team, index) => ({
         rank: index + 1,
-        name: p.name,
-        score: playerData?.score ?? 0,
-        socketId: p.socketId,
-      };
-    });
+        name: team.name,
+        score: team.score,
+        color: team.color,
+        isTeam: true,
+      }));
+    console.log(`[ClueScale] Team leaderboard:`, leaderboard.map(t => `${t.name}: ${t.score}`));
+  } else {
+    // Individual player leaderboard
+    leaderboard = Array.from(room.players.values())
+      .sort((a, b) => {
+        const aData = a.gameData as CluePlayerData;
+        const bData = b.gameData as CluePlayerData;
+        const aScore = aData?.score ?? 0;
+        const bScore = bData?.score ?? 0;
+        return bScore - aScore;
+      })
+      .map((p, index) => {
+        const playerData = p.gameData as CluePlayerData;
+        return {
+          rank: index + 1,
+          name: p.name,
+          score: playerData?.score ?? 0,
+          socketId: p.socketId,
+        };
+      });
+  }
 
   console.log(`[ClueScale] Room ${room.code} - Round ${gameState.round.index} results revealed - Target: ${gameState.round.targetNumber}, Clue: ${gameState.round.clueWord}`);
 

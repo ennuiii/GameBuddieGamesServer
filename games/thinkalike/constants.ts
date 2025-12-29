@@ -46,3 +46,17 @@ export const MAX_STORED_MESSAGES = 100;
 // ============================================================================
 /** Maximum word length allowed */
 export const MAX_WORD_LENGTH = 50;
+
+// ============================================================================
+// PAIRS MODE CONSTANTS
+// ============================================================================
+/** Minimum players for pairs mode (2v2) */
+export const MIN_PLAYERS_PAIRS_MODE = 4;
+/** Maximum teams supported (4 teams = 8 players) */
+export const MAX_TEAMS = 4;
+/** Default points needed to win in pairs mode */
+export const DEFAULT_POINTS_TO_WIN = 5;
+/** Minimum points to win setting */
+export const MIN_POINTS_TO_WIN = 3;
+/** Maximum points to win setting */
+export const MAX_POINTS_TO_WIN = 10;
