@@ -399,6 +399,12 @@ class UnifiedGameServer {
             this.pendingBroadcasts.set(roomCode, []);
           }
           const queue = this.pendingBroadcasts.get(roomCode)!;
+
+          // Limit queue size to prevent memory exhaustion
+          const MAX_PENDING_BROADCASTS = 10;
+          if (queue.length >= MAX_PENDING_BROADCASTS) {
+            queue.shift(); // Drop oldest broadcast if at capacity
+          }
           queue.push({ event, data });
 
           // Schedule queue processing after throttle period expires
@@ -454,6 +460,7 @@ class UnifiedGameServer {
         isGameBuddiesRoom?: boolean;
         settings?: any;
         playerId?: string;
+        userId?: string;
         sessionToken?: string;
         premiumTier?: string;
         streamerMode?: boolean;
@@ -509,7 +516,7 @@ class UnifiedGameServer {
               existingPlayer.socketId = socket.id;
               existingPlayer.connected = true;
               existingPlayer.lastActivity = Date.now();
-              existingPlayer.isHost = true;
+              // Preserve existing isHost status - don't override
               existingPlayer.isGuest = false;
               existingPlayer.userId = data.playerId;
               existingPlayer.avatarUrl = data.avatarUrl;
@@ -560,8 +567,9 @@ class UnifiedGameServer {
           resolvedPlayerId
         );
         player.isHost = true;
-        player.isGuest = !(isGameBuddiesRoom || data.playerId);
-        player.userId = data.playerId || player.userId;
+        player.isGuest = !(isGameBuddiesRoom || data.playerId || data.userId);
+        player.userId = data.userId || data.playerId || player.userId;
+        console.log(`🔑 [USER DEBUG] Player userId set to: ${player.userId} (from data.userId: ${data.userId}, data.playerId: ${data.playerId})`);
         player.avatarUrl = data.avatarUrl;
         console.log(`💎 [PREMIUM DEBUG] Player created with premiumTier: ${player.premiumTier}`);
         console.log(`🖼️ [AVATAR DEBUG] Player avatarUrl set from data.avatarUrl:`, data.avatarUrl);
@@ -902,8 +910,8 @@ class UnifiedGameServer {
               // Use the ID from the session/data if available
               const playerId = session.playerId || data.playerId || randomUUID();
               player = this.createPlayer(socket.id, nameValidation.sanitizedValue!, data.premiumTier, playerId);
-              player.isGuest = !(data.playerId || session.playerId);
-              player.userId = data.playerId || session.playerId || player.userId;
+              player.isGuest = !(data.playerId || data.userId || session.playerId);
+              player.userId = data.userId || data.playerId || session.playerId || player.userId;
               player.avatarUrl = data.avatarUrl;
 
               // Register session again just in case
@@ -921,8 +929,8 @@ class UnifiedGameServer {
               data.premiumTier,
               data.playerId || session?.playerId
             );
-            player.isGuest = !(data.playerId || session?.playerId);
-            player.userId = data.playerId || session?.playerId || player.userId;
+            player.isGuest = !(data.playerId || data.userId || session?.playerId);
+            player.userId = data.userId || data.playerId || session?.playerId || player.userId;
             player.avatarUrl = data.avatarUrl;
             sessionToken = this.sessionManager.createSession(player.id, room.code);
           }
@@ -938,8 +946,9 @@ class UnifiedGameServer {
             newPlayerTier,
             data.playerId
           );
-          player.isGuest = !data.playerId;
-          player.userId = data.playerId || player.userId;
+          player.isGuest = !(data.playerId || data.userId);
+          player.userId = data.userId || data.playerId || player.userId;
+          console.log(`🔑 [USER DEBUG] Player userId set to: ${player.userId} (from data.userId: ${data.userId}, data.playerId: ${data.playerId})`);
           player.avatarUrl = data.avatarUrl;
 
           sessionToken = this.sessionManager.createSession(player.id, room.code, data.sessionToken);
@@ -1086,6 +1095,13 @@ class UnifiedGameServer {
         };
 
         room.messages.push(chatMessage);
+
+        // Limit chat message storage to prevent memory exhaustion
+        const MAX_MESSAGES_PER_ROOM = 500;
+        if (room.messages.length > MAX_MESSAGES_PER_ROOM) {
+          room.messages = room.messages.slice(-MAX_MESSAGES_PER_ROOM);
+        }
+
         namespace.to(room.code).emit('chat:message', chatMessage);
       });
 
@@ -1142,6 +1158,15 @@ class UnifiedGameServer {
           return;
         }
 
+        // Security: Verify sender and recipient are in the same room
+        const senderRoom = this.roomManager.getRoomBySocket(socket.id);
+        const recipientRoom = this.roomManager.getRoomBySocket(data.toPeerId);
+        if (!senderRoom || !recipientRoom || senderRoom.code !== recipientRoom.code) {
+          console.warn(`⚠️ [WebRTC] Rejected offer: ${socket.id} and ${data.toPeerId} not in same room`);
+          socket.emit('error', { message: 'Invalid WebRTC target' });
+          return;
+        }
+
         console.log(`[WebRTC] Relaying offer from ${socket.id} to ${data.toPeerId} in room ${data.roomCode}`);
 
         // Relay the offer to the target peer
@@ -1155,6 +1180,15 @@ class UnifiedGameServer {
         // Rate limiting - max 20 answers per minute per socket
         if (!validationService.checkRateLimit(`webrtc:answer:${socket.id}`, 20, 60000)) {
           console.log(`⚠️ [WebRTC] Rate limit exceeded for answer from ${socket.id}`);
+          return;
+        }
+
+        // Security: Verify sender and recipient are in the same room
+        const senderRoom = this.roomManager.getRoomBySocket(socket.id);
+        const recipientRoom = this.roomManager.getRoomBySocket(data.toPeerId);
+        if (!senderRoom || !recipientRoom || senderRoom.code !== recipientRoom.code) {
+          console.warn(`⚠️ [WebRTC] Rejected answer: ${socket.id} and ${data.toPeerId} not in same room`);
+          socket.emit('error', { message: 'Invalid WebRTC target' });
           return;
         }
 
@@ -1172,6 +1206,14 @@ class UnifiedGameServer {
         if (!validationService.checkRateLimit(`webrtc:ice:${socket.id}`, 100, 60000)) {
           console.log(`⚠️ [WebRTC] Rate limit exceeded for ICE candidate from ${socket.id}`);
           return;
+        }
+
+        // Security: Verify sender and recipient are in the same room
+        // Don't log every ICE candidate rejection to avoid log spam
+        const senderRoom = this.roomManager.getRoomBySocket(socket.id);
+        const recipientRoom = this.roomManager.getRoomBySocket(data.toPeerId);
+        if (!senderRoom || !recipientRoom || senderRoom.code !== recipientRoom.code) {
+          return; // Silently drop invalid ICE candidates
         }
 
         console.log(`[WebRTC] Relaying ICE candidate from ${socket.id} to ${data.toPeerId} in room ${data.roomCode}`);
