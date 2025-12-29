@@ -104,7 +104,9 @@ class TemplatePlugin implements GamePlugin {
         ...gameState.customData
       },
       mySocketId: socketId,
-      isGameBuddiesRoom: room.isGameBuddiesRoom
+      isGameBuddiesRoom: room.isGameBuddiesRoom,
+      isStreamerMode: room.isStreamerMode,
+      hideRoomCode: room.hideRoomCode
     };
   }
 
