@@ -444,6 +444,9 @@ class UnifiedGameServer {
       removePlayerFromRoom: (roomCode: string, socketId: string) => {
         this.roomManager.removePlayerFromRoom(socketId);
       },
+      invalidateSession: (sessionToken: string) => {
+        this.sessionManager.deleteSession(sessionToken);
+      },
       grantReward: async (gameId: string, userId: string, data: any) => {
         return await gameBuddiesService.grantReward(gameId, userId, data);
       },
