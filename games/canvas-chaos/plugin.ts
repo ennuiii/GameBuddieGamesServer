@@ -363,6 +363,16 @@ class CanvasChaosPlugin implements GamePlugin {
       this.broadcastRoomState(room);
     },
 
+    'room:updateLanguage': async (socket: Socket, data: { language: 'en' | 'de' }, room: Room, helpers: GameHelpers) => {
+      // Update room language for prompt fetching
+      const validLanguages = ['en', 'de'];
+      if (data.language && validLanguages.includes(data.language)) {
+        room.settings.language = data.language;
+        helpers.sendToRoom(room.code, 'room:languageUpdated', { language: data.language });
+        console.log(`[${this.name}] Room language updated to: ${data.language}`);
+      }
+    },
+
     'mode:select': async (socket: Socket, data: any, room: Room, helpers: GameHelpers) => {
       const player = this.getPlayer(room, socket.id);
       if (!player?.isHost) {
