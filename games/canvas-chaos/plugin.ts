@@ -211,6 +211,8 @@ class CanvasChaosPlugin implements GamePlugin {
           isReady: playerData?.isReady || false,
           hasSubmitted: playerData?.hasSubmitted || false,
           hasVideo: playerData?.hasVideo || false,
+          premiumTier: p.premiumTier,
+          avatarUrl: p.avatarUrl,
         };
       }),
 
