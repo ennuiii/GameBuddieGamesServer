@@ -373,6 +373,60 @@ class CanvasChaosPlugin implements GamePlugin {
       }
     },
 
+    'player:kick': async (socket: Socket, data: { roomCode: string; playerId: string }, room: Room, helpers: GameHelpers) => {
+      const { playerId } = data;
+
+      // Find current player (the one who clicked kick)
+      const currentPlayer = Array.from(room.players.values())
+        .find(p => p.socketId === socket.id);
+
+      // Only host can kick
+      if (!currentPlayer?.isHost) {
+        socket.emit('error', { message: 'Only host can kick players' });
+        return;
+      }
+
+      // Find target player
+      const targetPlayer = Array.from(room.players.values())
+        .find(p => p.id === playerId);
+
+      if (!targetPlayer) {
+        socket.emit('error', { message: 'Player not found' });
+        return;
+      }
+
+      // Cannot kick the host
+      if (targetPlayer.isHost) {
+        socket.emit('error', { message: 'Cannot kick the host' });
+        return;
+      }
+
+      console.log(`[${this.name}] Host ${currentPlayer.name} kicking ${targetPlayer.name}`);
+
+      // 1. Notify kicked player FIRST
+      helpers.sendToPlayer(targetPlayer.socketId, 'player:kicked', {
+        message: 'You have been kicked by the host'
+      });
+
+      // 2. Invalidate session to prevent auto-reconnect
+      if (targetPlayer.sessionToken) {
+        helpers.invalidateSession(targetPlayer.sessionToken);
+      }
+
+      // 3. Remove from room
+      helpers.removePlayerFromRoom(room.code, targetPlayer.socketId);
+
+      // 4. Notify remaining players
+      helpers.sendToRoom(room.code, 'player:left', {
+        playerId: targetPlayer.socketId,
+        playerName: targetPlayer.name,
+        reason: 'kicked'
+      });
+
+      // 5. Broadcast updated state
+      this.broadcastRoomState(room);
+    },
+
     'mode:select': async (socket: Socket, data: any, room: Room, helpers: GameHelpers) => {
       const player = this.getPlayer(room, socket.id);
       if (!player?.isHost) {
