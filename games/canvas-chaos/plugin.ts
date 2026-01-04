@@ -13,7 +13,7 @@ import type {
   SocketEventHandler,
   GameHelpers,
   RoomSettings
-} from '../../core/types/core';
+} from '../../core/types/core.js';
 import type { Socket } from 'socket.io';
 
 import {
@@ -31,9 +31,9 @@ import {
   createFreezeFrameData,
   createArtisticDiffData,
   createEvolutionData,
-} from './types';
+} from './types.js';
 
-import { contentService } from './services/contentService';
+import { contentService } from './services/contentService.js';
 
 import {
   selectModeSchema,
@@ -45,7 +45,7 @@ import {
   voteMutationSchema,
   voteNameSchema,
   updateSettingsSchema,
-} from './schemas';
+} from './schemas.js';
 
 // ============================================================================
 // PLUGIN CLASS
