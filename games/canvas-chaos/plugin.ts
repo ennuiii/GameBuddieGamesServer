@@ -505,7 +505,7 @@ class CanvasChaosPlugin implements GamePlugin {
       // Select random prompt if enabled
       const settings = room.settings.gameSpecific as CanvasChaosSettings;
       if (settings.freezeFramePrompts) {
-        modeData.prompt = await contentService.getRandomFreezeFramePrompt();
+        modeData.prompt = await contentService.getRandomFreezeFramePrompt(room.settings.language || 'en');
       }
 
       gameState.phase = 'drawing';
@@ -553,7 +553,7 @@ class CanvasChaosPlugin implements GamePlugin {
 
       const settings = room.settings.gameSpecific as CanvasChaosSettings;
       if (settings.freezeFramePrompts) {
-        modeData.prompt = await contentService.getRandomFreezeFramePrompt();
+        modeData.prompt = await contentService.getRandomFreezeFramePrompt(room.settings.language || 'en');
       }
 
       gameState.phase = 'drawing';
@@ -967,8 +967,8 @@ class CanvasChaosPlugin implements GamePlugin {
       : connectedPlayers[Math.floor(Math.random() * connectedPlayers.length)];
 
     // Select prompt and modifier from database
-    modeData.prompt = await contentService.getRandomArtisticDiffPrompt();
-    modeData.modifier = await contentService.getRandomModifier(settings.modifierDifficulty);
+    modeData.prompt = await contentService.getRandomArtisticDiffPrompt(room.settings.language || 'en');
+    modeData.modifier = await contentService.getRandomModifier(settings.modifierDifficulty, room.settings.language || 'en');
 
     // Assign modifier to one player
     modeData.modifierPlayerId = modifierPlayer.id;
@@ -1170,7 +1170,7 @@ class CanvasChaosPlugin implements GamePlugin {
 
               // Select mutation prompt
               if (settings.useMutationPrompts) {
-                modeData.mutationPrompt = await contentService.getRandomEvolutionPrompt();
+                modeData.mutationPrompt = await contentService.getRandomEvolutionPrompt(room.settings.language || 'en');
               }
 
               // Reset submission state
@@ -1593,7 +1593,7 @@ class CanvasChaosPlugin implements GamePlugin {
     }
 
     if (settings.freezeFramePrompts) {
-      modeData.prompt = await contentService.getRandomFreezeFramePrompt();
+      modeData.prompt = await contentService.getRandomFreezeFramePrompt(room.settings.language || 'en');
     }
 
     gameState.phase = 'drawing';
@@ -1723,7 +1723,7 @@ class CanvasChaosPlugin implements GamePlugin {
       modeData.currentArtistName = nextArtist.name;
 
       if (settings.useMutationPrompts) {
-        modeData.mutationPrompt = await contentService.getRandomEvolutionPrompt();
+        modeData.mutationPrompt = await contentService.getRandomEvolutionPrompt(room.settings.language || 'en');
       }
 
       // Reset submission state

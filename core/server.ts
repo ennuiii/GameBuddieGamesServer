@@ -36,7 +36,6 @@ import gameTemplatePlugin from '../games/game-template/plugin.js';
 import primeSuspectPlugin from '../games/hearts-gambit/plugin.js';
 import bombermanPlugin from '../games/bomberman/plugin.js';
 import canvasChaosPlugin from '../games/canvas-chaos/plugin.js';
-import bluffaloPlugin from '../games/bluffalo/plugin.js';
 
 /**
  * Global error handlers to prevent server crashes
@@ -1661,14 +1660,6 @@ class UnifiedGameServer {
       console.log('[Server] ✓ Canvas Chaos game registered');
     } else {
       console.error('[Server] ✗ Failed to register Canvas Chaos game');
-    }
-
-    // Register Bluffalo game
-    const bluffaloRegistered = await this.registerGame(bluffaloPlugin);
-    if (bluffaloRegistered) {
-      console.log('[Server] ✓ Bluffalo game registered');
-    } else {
-      console.error('[Server] ✗ Failed to register Bluffalo game');
     }
 
     // TODO: Load games dynamically from games/ directory
