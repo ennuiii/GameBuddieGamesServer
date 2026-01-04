@@ -17,7 +17,8 @@ export const selectModeSchema = z.object({
 // ============================================================================
 
 export const submitDrawingSchema = z.object({
-  imageData: z.string().min(1, 'Drawing data is required'),
+  // Max 5MB base64 (~3.75MB raw image) - prevents DOS via huge payloads
+  imageData: z.string().min(1, 'Drawing data is required').max(5242880, 'Image data too large'),
 });
 
 // ============================================================================
@@ -25,7 +26,8 @@ export const submitDrawingSchema = z.object({
 // ============================================================================
 
 export const captureFrameSchema = z.object({
-  frameData: z.string().min(1, 'Frame data is required'),
+  // Max 5MB base64 - prevents DOS via huge payloads
+  frameData: z.string().min(1, 'Frame data is required').max(5242880, 'Frame data too large'),
   targetPlayerId: z.string().min(1, 'Target player ID is required'),
 });
 
