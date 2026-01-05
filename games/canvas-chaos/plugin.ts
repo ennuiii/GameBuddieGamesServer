@@ -77,6 +77,8 @@ class CanvasChaosPlugin implements GamePlugin {
       mutationTime: 15,
       originTime: 20,
       useMutationPrompts: true,
+      useDatabasePrompts: false,   // false = use player prompts by default
+      promptSubmissionTime: 30,    // 30 seconds for prompt submission
     } as CanvasChaosSettings
   };
 
