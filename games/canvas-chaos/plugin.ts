@@ -26,6 +26,7 @@ import {
   ArtisticDiffData,
   EvolutionData,
   DrawingSubmission,
+  PlayerPromptSubmission,
   createInitialGameState,
   createInitialPlayerData,
   createFreezeFrameData,
