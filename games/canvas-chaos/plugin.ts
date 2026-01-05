@@ -328,21 +328,21 @@ class CanvasChaosPlugin implements GamePlugin {
 
   private serializeEvolutionData(data: EvolutionData): any {
     return {
-      chain: {
+      chain: data.chain ? {
         id: data.chain.id,
         layers: data.chain.layers,
         mutationOrder: data.chain.mutationOrder,
         finalName: data.chain.finalName,
-      },
+      } : null,
       currentArtistId: data.currentArtistId,
       currentArtistName: data.currentArtistName,
       stageNumber: data.stageNumber,
       mutationPrompt: data.mutationPrompt,
-      nameSubmissions: Object.fromEntries(data.nameSubmissions),
-      votes: {
+      nameSubmissions: data.nameSubmissions ? Object.fromEntries(data.nameSubmissions) : {},
+      votes: data.votes ? {
         bestMutation: Object.fromEntries(data.votes.bestMutation),
         bestName: Object.fromEntries(data.votes.bestName),
-      },
+      } : { bestMutation: {}, bestName: {} },
       skippedRound: data.skippedRound,
       skipReason: data.skipReason,
     };
