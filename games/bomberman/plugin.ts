@@ -1,5 +1,8 @@
 /**
- * Bomberman Game Plugin
+ * Bomberman Game Plugin for GameBuddies Platform
+ *
+ * Classic Bomberman multiplayer with kick/throw mechanics
+ * Ported from Colyseus implementation
  */
 
 import type {
@@ -11,43 +14,52 @@ import type {
   RoomSettings
 } from '../../core/types/core.js';
 import type { Socket } from 'socket.io';
+
+import { GAME_CONFIG, TILE, GAME_PHASE, GAME_MODE, DIRECTION, Direction } from './shared/constants.js';
 import {
   BombermanGameState,
   BombermanPlayerData,
-  BombermanSettings,
-  createInitialGameState,
-  createInitialPlayerData,
-  DEFAULT_SETTINGS,
-  CellType,
-  Bomb,
-  Explosion,
-  PowerUp,
-  PowerUpType
+  SerializedRoom,
+  SerializedPlayer,
+  SerializedBomb,
+  SerializedExplosion,
+  createDefaultPlayerData,
+  createDefaultGameState,
 } from './types.js';
-import { playerReadySchema, gameStartSchema, playerMoveSchema, playerPlaceBombSchema, playerThrowBombSchema, playerPickupBombSchema } from './schemas.js';
-import { randomUUID } from 'crypto';
-
-const PLAYER_COLORS = ['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF', '#FFA500', '#800080'];
+import { MapGenerator } from './game/MapGenerator.js';
+import { GameLoop } from './game/GameLoop.js';
+import { BombManager } from './game/BombManager.js';
+import { PlayerManager, MoveResult } from './game/PlayerManager.js';
+import { CurseManager } from './game/CurseManager.js';
+import { SuddenDeathManager } from './game/SuddenDeathManager.js';
 
 class BombermanPlugin implements GamePlugin {
+  // Plugin metadata
   id = 'bomberman';
   name = 'Bomberman';
   version = '1.0.0';
-  description = 'Classic Bomberman clone';
+  description = 'Classic Bomberman multiplayer with power-ups, kick, and throw mechanics';
   author = 'GameBuddies';
   namespace = '/bomberman';
   basePath = '/bomberman';
 
+  // Default settings
   defaultSettings: RoomSettings = {
-    minPlayers: 2,
-    maxPlayers: 4,
+    minPlayers: GAME_CONFIG.MIN_PLAYERS,
+    maxPlayers: GAME_CONFIG.MAX_PLAYERS,
     gameSpecific: {
-      ...DEFAULT_SETTINGS
-    } as BombermanSettings
+      gameMode: GAME_MODE.LAST_MAN_STANDING,
+    }
   };
 
+  // Private properties
   private io: any;
-  private intervals = new Map<string, NodeJS.Timeout>();
+  private gameLoops = new Map<string, GameLoop>();
+  private respawnTimers = new Map<string, NodeJS.Timeout>();
+
+  // ============================================================================
+  // LIFECYCLE HOOKS
+  // ============================================================================
 
   async onInitialize(io: any): Promise<void> {
     this.io = io;
@@ -56,557 +68,559 @@ class BombermanPlugin implements GamePlugin {
 
   onRoomCreate(room: Room): void {
     console.log(`[${this.name}] Room created: ${room.code}`);
-    const settings = room.settings.gameSpecific as BombermanSettings;
-    room.gameState.data = createInitialGameState(settings);
+
+    // Initialize game state
+    room.gameState.data = createDefaultGameState();
     room.gameState.phase = 'lobby';
+
+    const gameState = room.gameState.data as BombermanGameState;
+
+    // Initialize host player data (host is already in room.players but onPlayerJoin is not called)
+    room.players.forEach((player) => {
+      if (!player.gameData) {
+        const spawnIndex = 0;
+        gameState.usedSpawnIndices.add(spawnIndex);
+        const spawn = GAME_CONFIG.SPAWN_POSITIONS[spawnIndex];
+        const color = GAME_CONFIG.PLAYER_COLORS[spawnIndex];
+        player.gameData = createDefaultPlayerData(spawnIndex, spawn, color);
+        console.log(`[${this.name}] Initialized host ${player.name} with spawn ${spawnIndex}`);
+      }
+    });
+
+    // Generate map for the host
+    if (room.players.size >= 1) {
+      gameState.tiles = MapGenerator.generate(GAME_CONFIG.MAX_PLAYERS);
+      console.log(`[${this.name}] Generated map for room ${room.code}`);
+    }
+
+    // Start game loop
+    this.startGameLoop(room);
   }
 
   onPlayerJoin(room: Room, player: Player, isReconnecting?: boolean): void {
-    console.log(`[${this.name}] Player ${player.name} ${isReconnecting ? 'reconnected' : 'joined'}`);
+    console.log(`[${this.name}] Player ${player.name} ${isReconnecting ? 'reconnected to' : 'joined'} room ${room.code}`);
 
-    if (!player.gameData) {
-      const pData = createInitialPlayerData();
-      const playerIndex = room.players.size - 1;
-      pData.color = PLAYER_COLORS[playerIndex % PLAYER_COLORS.length];
-      player.gameData = pData;
+    const gameState = room.gameState.data as BombermanGameState;
+
+    if (!isReconnecting) {
+      // Find available spawn index
+      let spawnIndex = 0;
+      for (let i = 0; i < GAME_CONFIG.MAX_PLAYERS; i++) {
+        if (!gameState.usedSpawnIndices.has(i)) {
+          spawnIndex = i;
+          break;
+        }
+      }
+      gameState.usedSpawnIndices.add(spawnIndex);
+
+      const spawn = GAME_CONFIG.SPAWN_POSITIONS[spawnIndex];
+      const color = GAME_CONFIG.PLAYER_COLORS[spawnIndex];
+
+      // Initialize player data
+      player.gameData = createDefaultPlayerData(spawnIndex, spawn, color);
+
+      // Generate map when first player joins
+      if (room.players.size === 1) {
+        gameState.tiles = MapGenerator.generate(GAME_CONFIG.MAX_PLAYERS);
+      }
     }
 
+    // Broadcast updated state
+    this.broadcastRoomState(room);
+  }
+
+  onPlayerDisconnected(room: Room, player: Player): void {
+    console.log(`[${this.name}] Player ${player.name} disconnected from room ${room.code}`);
     this.broadcastRoomState(room);
   }
 
   onPlayerLeave(room: Room, player: Player): void {
-    console.log(`[${this.name}] Player ${player.name} left`);
+    console.log(`[${this.name}] Player ${player.name} removed from room ${room.code}`);
+
+    const gameState = room.gameState.data as BombermanGameState;
+    const playerData = player.gameData as BombermanPlayerData;
+
+    // Release spawn index
+    if (playerData) {
+      gameState.usedSpawnIndices.delete(playerData.spawnIndex);
+    }
+
+    // Clear any respawn timer for this player
+    const timerKey = `${room.code}:${player.id}:respawn`;
+    if (this.respawnTimers.has(timerKey)) {
+      clearTimeout(this.respawnTimers.get(timerKey)!);
+      this.respawnTimers.delete(timerKey);
+    }
+
+    // Check win condition
+    if (gameState.phase === 'playing') {
+      const winnerId = PlayerManager.checkWinCondition(room, gameState);
+      if (winnerId !== null) {
+        this.endGame(room, winnerId);
+      }
+    }
+
     this.broadcastRoomState(room);
   }
 
-  onRoomDestroy(room: Room): void {
-    this.clearIntervals(room.code);
+  onRoomDestroy?(room: Room): void {
+    console.log(`[${this.name}] Room ${room.code} is being destroyed`);
+
+    // Stop game loop
+    const gameLoop = this.gameLoops.get(room.code);
+    if (gameLoop) {
+      gameLoop.stop();
+      this.gameLoops.delete(room.code);
+    }
+
+    // Clear all respawn timers for this room
+    this.respawnTimers.forEach((timer, key) => {
+      if (key.startsWith(room.code)) {
+        clearTimeout(timer);
+        this.respawnTimers.delete(key);
+      }
+    });
   }
 
-  serializeRoom(room: Room, socketId: string): any {
+  // ============================================================================
+  // SERIALIZATION
+  // ============================================================================
+
+  serializeRoom(room: Room, socketId: string): SerializedRoom {
     const gameState = room.gameState.data as BombermanGameState;
-    const gameSettings = room.settings.gameSpecific as BombermanSettings;
+
+    // Serialize players
+    const players: SerializedPlayer[] = Array.from(room.players.values()).map(p => {
+      const data = p.gameData as BombermanPlayerData;
+      return {
+        id: p.id,
+        socketId: p.socketId,
+        name: p.name,
+        isHost: p.isHost,
+        connected: p.connected,
+        gridX: data?.gridX ?? 0,
+        gridY: data?.gridY ?? 0,
+        maxBombs: data?.maxBombs ?? 1,
+        bombsPlaced: data?.bombsPlaced ?? 0,
+        fireRange: data?.fireRange ?? 2,
+        speed: data?.speed ?? 150,
+        alive: data?.alive ?? true,
+        color: data?.color ?? 0xffffff,
+        kills: data?.kills ?? 0,
+        deaths: data?.deaths ?? 0,
+        hasKick: data?.hasKick ?? false,
+        hasThrow: data?.hasThrow ?? false,
+        stunnedUntil: data?.stunnedUntil ?? 0,
+        facingDir: data?.facingDir ?? DIRECTION.DOWN,
+        // New power-up flags
+        hasPunch: data?.hasPunch ?? false,
+        hasPierce: data?.hasPierce ?? false,
+        hasBombPass: data?.hasBombPass ?? false,
+        curseType: data?.curseType ?? null,
+        curseEndTime: data?.curseEndTime ?? 0,
+      };
+    });
+
+    // Serialize bombs
+    const bombs: SerializedBomb[] = [];
+    gameState.bombs.forEach((bomb) => {
+      bombs.push({
+        id: bomb.id,
+        ownerId: bomb.ownerId,
+        gridX: bomb.gridX,
+        gridY: bomb.gridY,
+        range: bomb.range,
+        timer: bomb.timer,
+        isMoving: bomb.isMoving,
+        moveDir: bomb.moveDir,
+        isFlying: bomb.isFlying,
+        flyDir: bomb.flyDir,
+        targetX: bomb.targetX,
+        targetY: bomb.targetY,
+        isPiercing: bomb.isPiercing,
+        isPunched: bomb.isPunched,
+      });
+    });
+
+    // Serialize explosions
+    const explosions: SerializedExplosion[] = [];
+    gameState.explosions.forEach((explosion) => {
+      explosions.push({
+        id: explosion.id,
+        gridX: explosion.gridX,
+        gridY: explosion.gridY,
+        timer: explosion.timer,
+      });
+    });
 
     return {
       code: room.code,
       hostId: room.hostId,
-      players: Array.from(room.players.values()).map(p => {
-        const pData = p.gameData as BombermanPlayerData;
-        return {
-          id: p.id,
-          socketId: p.socketId,
-          name: p.name,
-          isHost: p.isHost,
-          connected: p.connected,
-          isReady: pData?.isReady || false,
-          score: pData?.score || 0,
-          x: pData?.x,
-          y: pData?.y,
-          isAlive: pData?.isAlive,
-          color: pData?.color,
-          canKickBombs: pData?.canKickBombs || false,
-          canPickUpBombs: pData?.canPickUpBombs || false,
-          heldBomb: pData?.heldBomb || null,
-          facing: pData?.facing || 'down',
-          avatarUrl: p.avatarUrl
-        };
-      }),
-      state: gameState.phase,
-      settings: {
-        minPlayers: room.settings.minPlayers,
-        maxPlayers: room.settings.maxPlayers,
-        maxRounds: gameSettings.maxRounds,
-        timeLimit: gameSettings.timeLimit,
-        mapSize: gameSettings.mapSize,
-      },
-      gameData: {
-        currentRound: gameState.currentRound,
-        timeLeft: gameState.timeLeft,
-        grid: gameState.grid,
-        bombs: gameState.bombs,
-        explosions: gameState.explosions,
-        winnerId: gameState.winnerId,
-        powerups: gameState.powerups || []
-      },
       mySocketId: socketId,
-      isGameBuddiesRoom: room.isGameBuddiesRoom
+      players,
+      state: gameState.phase,
+      gameData: {
+        tiles: gameState.tiles,
+        bombs,
+        explosions,
+        countdown: gameState.countdown,
+        timeRemaining: gameState.timeRemaining,
+        gameMode: gameState.gameMode,
+        winnerId: gameState.winnerId,
+        // Sudden Death
+        suddenDeathActive: gameState.suddenDeathActive,
+        fallingBlocks: gameState.fallingBlocks.map(fb => ({
+          x: fb.x,
+          y: fb.y,
+          fallTime: fb.fallTime,
+        })),
+      },
     };
   }
 
+  // ============================================================================
+  // SOCKET HANDLERS
+  // ============================================================================
+
   socketHandlers: Record<string, SocketEventHandler> = {
-    'player:ready': async (socket: Socket, data: { ready: boolean }, room: Room, helpers: GameHelpers) => {
-      const validation = playerReadySchema.safeParse(data);
-      if (!validation.success) return;
+    /**
+     * Player movement
+     */
+    'player:move': async (socket: Socket, data: { direction: number }, room: Room) => {
+      const gameState = room.gameState.data as BombermanGameState;
+      if (gameState.phase !== 'playing') return;
 
       const player = Array.from(room.players.values()).find(p => p.socketId === socket.id);
-      if (player) {
-        if (!player.gameData) player.gameData = createInitialPlayerData();
-        (player.gameData as BombermanPlayerData).isReady = validation.data.ready;
+      if (!player) return;
+
+      const result = PlayerManager.handleMove(player, data.direction as Direction, room, gameState);
+
+      // If player walked into an explosion, kill them
+      if (result.walkedIntoExplosion) {
+        this.handlePlayerKill(room, player, player.id); // Self-kill (suicide by fire)
+      }
+
+      this.broadcastRoomState(room);
+    },
+
+    /**
+     * Place bomb
+     */
+    'player:bomb': async (socket: Socket, data: any, room: Room) => {
+      const gameState = room.gameState.data as BombermanGameState;
+      if (gameState.phase !== 'playing') return;
+
+      const player = Array.from(room.players.values()).find(p => p.socketId === socket.id);
+      if (!player) return;
+
+      const playerData = player.gameData as BombermanPlayerData;
+      if (!playerData.alive) return;
+
+      BombManager.placeBomb(room, player, gameState);
+      this.broadcastRoomState(room);
+    },
+
+    /**
+     * Throw bomb
+     */
+    'player:throw': async (socket: Socket, data: any, room: Room) => {
+      const gameState = room.gameState.data as BombermanGameState;
+      if (gameState.phase !== 'playing') return;
+
+      const player = Array.from(room.players.values()).find(p => p.socketId === socket.id);
+      if (!player) return;
+
+      const playerData = player.gameData as BombermanPlayerData;
+      if (!playerData.alive || !playerData.hasThrow) return;
+      if (playerData.stunnedUntil > Date.now()) return;
+
+      // Find bomb at player's position
+      const bomb = BombManager.findBombAt(gameState, playerData.gridX, playerData.gridY);
+      if (bomb) {
+        BombManager.throwBomb(bomb, player, gameState);
         this.broadcastRoomState(room);
       }
     },
 
-    'game:start': async (socket: Socket, data: any, room: Room, helpers: GameHelpers) => {
+    /**
+     * Punch bomb (boxing glove power-up)
+     */
+    'player:punch': async (socket: Socket, data: any, room: Room) => {
+      const gameState = room.gameState.data as BombermanGameState;
+      if (gameState.phase !== 'playing') return;
+
       const player = Array.from(room.players.values()).find(p => p.socketId === socket.id);
-      if (!player?.isHost) return;
-      this.startGame(room);
+      if (!player) return;
+
+      const playerData = player.gameData as BombermanPlayerData;
+      if (!playerData.alive || !playerData.hasPunch) return;
+      if (playerData.stunnedUntil > Date.now()) return;
+
+      // Punch bomb in front of player
+      const punched = BombManager.punchBomb(player, gameState, room, (hitPlayer) => {
+        PlayerManager.stunPlayer(hitPlayer);
+      });
+
+      if (punched) {
+        this.broadcastRoomState(room);
+      }
     },
 
-    'player:move': async (socket: Socket, data: any, room: Room, helpers: GameHelpers) => {
-      const validation = playerMoveSchema.safeParse(data);
-      if (!validation.success) return;
-      const { x, y } = validation.data;
-
+    /**
+     * Start game (host only)
+     */
+    'game:start': async (socket: Socket, data: any, room: Room) => {
       const player = Array.from(room.players.values()).find(p => p.socketId === socket.id);
-      if (!player || !player.gameData) return;
-
-      const pData = player.gameData as BombermanPlayerData;
-      const gameState = room.gameState.data as BombermanGameState;
-
-      if (gameState.phase !== 'playing' || !pData.isAlive) return;
-
-      const dist = Math.abs(pData.x - x) + Math.abs(pData.y - y);
-      if (dist !== 1) return;
-
-      const size = gameState.settings.mapSize;
-      if (x < 0 || x >= size || y < 0 || y >= size) return;
-
-      if (gameState.grid[y][x] !== 'empty') return;
-
-      const bombAtTarget = gameState.bombs.find(b => b.x === x && b.y === y);
-      if (bombAtTarget) {
-        if (pData.canKickBombs) {
-          const dx = x - pData.x;
-          const dy = y - pData.y;
-          this.kickBomb(gameState, bombAtTarget, dx, dy);
-          this.broadcastRoomState(room);
-        }
+      if (!player?.isHost) {
+        socket.emit('error', { message: 'Only the host can start the game' });
         return;
       }
 
-      // Calculate movement direction for facing
-      const dx = x - pData.x;
-      const dy = y - pData.y;
-
-      pData.x = x;
-      pData.y = y;
-
-      // Update facing direction based on movement
-      if (dx > 0) pData.facing = 'right';
-      else if (dx < 0) pData.facing = 'left';
-      else if (dy > 0) pData.facing = 'down';
-      else if (dy < 0) pData.facing = 'up';
-
-      const powerUpIndex = gameState.powerups.findIndex(p => p.x === x && p.y === y);
-      if (powerUpIndex !== -1) {
-        const powerUp = gameState.powerups[powerUpIndex];
-        gameState.powerups.splice(powerUpIndex, 1);
-
-        switch (powerUp.type) {
-          case 'bomb_range':
-            pData.bombRange++;
-            break;
-          case 'bomb_capacity':
-            pData.bombCapacity++;
-            break;
-          case 'speed':
-            break;
-          case 'kick_bombs':
-            pData.canKickBombs = true;
-            break;
-          case 'pickup_bombs':
-            pData.canPickUpBombs = true;
-            break;
-        }
-      }
-
-      this.broadcastRoomState(room);
-    },
-
-    'player:placeBomb': async (socket: Socket, data: any, room: Room, helpers: GameHelpers) => {
-      const player = Array.from(room.players.values()).find(p => p.socketId === socket.id);
-      if (!player || !player.gameData) return;
-
-      const pData = player.gameData as BombermanPlayerData;
       const gameState = room.gameState.data as BombermanGameState;
-
-      if (gameState.phase !== 'playing' || !pData.isAlive) return;
-      if (pData.activeBombs >= pData.bombCapacity) return;
-      if (gameState.bombs.some(b => b.x === pData.x && b.y === pData.y)) return;
-
-      const bomb: Bomb = {
-        id: randomUUID(),
-        x: pData.x,
-        y: pData.y,
-        playerId: player.id,
-        range: pData.bombRange,
-        createdAt: Date.now()
-      };
-
-      gameState.bombs.push(bomb);
-      pData.activeBombs++;
-
-      this.broadcastRoomState(room);
-
-      setTimeout(() => {
-        this.explodeBomb(room, bomb);
-      }, 3000);
-    },
-
-    'player:pickupBomb': async (socket: Socket, data: any, room: Room, helpers: GameHelpers) => {
-      const player = Array.from(room.players.values()).find(p => p.socketId === socket.id);
-      if (!player || !player.gameData) return;
-
-      const pData = player.gameData as BombermanPlayerData;
-      const gameState = room.gameState.data as BombermanGameState;
-
-      if (gameState.phase !== 'playing' || !pData.isAlive) return;
-      if (!pData.canPickUpBombs || pData.heldBomb) return;
-
-      // Direction offsets based on facing
-      const dirs: Record<string, {dx: number, dy: number}> = {
-        up: {dx: 0, dy: -1},
-        down: {dx: 0, dy: 1},
-        left: {dx: -1, dy: 0},
-        right: {dx: 1, dy: 0}
-      };
-      const dir = dirs[pData.facing] || dirs.down;
-      const frontX = pData.x + dir.dx;
-      const frontY = pData.y + dir.dy;
-
-      // Check current position first, then cell in front
-      let bombIndex = gameState.bombs.findIndex(b => b.x === pData.x && b.y === pData.y);
-      if (bombIndex === -1) {
-        bombIndex = gameState.bombs.findIndex(b => b.x === frontX && b.y === frontY);
-      }
-      if (bombIndex === -1) return;
-
-      pData.heldBomb = gameState.bombs[bombIndex];
-      gameState.bombs.splice(bombIndex, 1);
-
-      this.broadcastRoomState(room);
-    },
-
-    'player:throwBomb': async (socket: Socket, data: any, room: Room, helpers: GameHelpers) => {
-      const validation = playerThrowBombSchema.safeParse(data);
-      if (!validation.success) return;
-
-      const player = Array.from(room.players.values()).find(p => p.socketId === socket.id);
-      if (!player || !player.gameData) return;
-
-      const pData = player.gameData as BombermanPlayerData;
-      const gameState = room.gameState.data as BombermanGameState;
-
-      if (gameState.phase !== 'playing' || !pData.isAlive) return;
-      if (!pData.heldBomb) return;
-
-      const { direction } = validation.data;
-      const dirs: Record<string, {dx: number, dy: number}> = {
-        up: {dx: 0, dy: -1},
-        down: {dx: 0, dy: 1},
-        left: {dx: -1, dy: 0},
-        right: {dx: 1, dy: 0}
-      };
-      const {dx, dy} = dirs[direction];
-      const mapSize = gameState.settings.mapSize;
-
-      let targetX = pData.x + dx;
-      let targetY = pData.y + dy;
-
-      while (targetX >= 0 && targetX < mapSize && targetY >= 0 && targetY < mapSize) {
-        const cell = gameState.grid[targetY][targetX];
-        const hasBomb = gameState.bombs.some(b => b.x === targetX && b.y === targetY);
-
-        if (cell === 'empty' && !hasBomb) break;
-
-        targetX += dx;
-        targetY += dy;
+      if (gameState.phase !== 'lobby') {
+        socket.emit('error', { message: 'Game is not in lobby' });
+        return;
       }
 
-      if (targetX < 0 || targetX >= mapSize || targetY < 0 || targetY >= mapSize) {
-        targetX = pData.x;
-        targetY = pData.y;
+      const connectedPlayers = Array.from(room.players.values()).filter(p => p.connected);
+      if (connectedPlayers.length < GAME_CONFIG.MIN_PLAYERS) {
+        socket.emit('error', { message: `Need at least ${GAME_CONFIG.MIN_PLAYERS} players` });
+        return;
       }
 
-      // Store throw origin for client animation
-      (pData.heldBomb as any).throwFromX = pData.x;
-      (pData.heldBomb as any).throwFromY = pData.y;
-      (pData.heldBomb as any).thrownAt = Date.now();
-      pData.heldBomb.x = targetX;
-      pData.heldBomb.y = targetY;
-      gameState.bombs.push(pData.heldBomb);
-      pData.heldBomb = null;
-
-      this.broadcastRoomState(room);
+      // Start countdown
+      this.startCountdown(room);
     },
 
-    'game:restart': async (socket: Socket, data: any, room: Room, helpers: GameHelpers) => {
+    /**
+     * Set game mode (host only)
+     */
+    'game:setMode': async (socket: Socket, data: { mode: number }, room: Room) => {
       const player = Array.from(room.players.values()).find(p => p.socketId === socket.id);
       if (!player?.isHost) return;
 
       const gameState = room.gameState.data as BombermanGameState;
+      if (gameState.phase !== 'lobby') return;
 
-      if (gameState.currentRound >= gameState.settings.maxRounds) {
-        gameState.phase = 'lobby';
-        gameState.currentRound = 0;
-        gameState.winnerId = null;
-        gameState.grid = [];
-        gameState.bombs = [];
-        gameState.explosions = [];
-        gameState.powerups = [];
+      gameState.gameMode = data.mode;
+      this.broadcastRoomState(room);
+    },
 
-        room.players.forEach(p => {
-          const pData = p.gameData as BombermanPlayerData;
-          pData.score = 0;
-          pData.isReady = false;
-          pData.isAlive = true;
-          pData.activeBombs = 0;
-          pData.bombCapacity = 1;
-          pData.bombRange = 1;
-          pData.canKickBombs = false;
-          pData.canPickUpBombs = false;
-          pData.heldBomb = null;
-        });
-
-        room.gameState.phase = 'lobby';
-      } else {
-        this.startGame(room);
+    /**
+     * Restart game (host only)
+     */
+    'game:restart': async (socket: Socket, data: any, room: Room) => {
+      const player = Array.from(room.players.values()).find(p => p.socketId === socket.id);
+      if (!player?.isHost) {
+        socket.emit('error', { message: 'Only the host can restart the game' });
+        return;
       }
 
-      this.broadcastRoomState(room);
-    }
+      this.resetGame(room);
+    },
   };
 
-  private kickBomb(gameState: BombermanGameState, bomb: Bomb, dx: number, dy: number) {
-    let newX = bomb.x;
-    let newY = bomb.y;
+  // ============================================================================
+  // GAME LOOP
+  // ============================================================================
 
-    while (true) {
-      const nextX = newX + dx;
-      const nextY = newY + dy;
+  private startGameLoop(room: Room): void {
+    const gameLoop = new GameLoop();
+    this.gameLoops.set(room.code, gameLoop);
 
-      if (nextX < 0 || nextX >= gameState.settings.mapSize ||
-          nextY < 0 || nextY >= gameState.settings.mapSize) break;
-
-      if (gameState.grid[nextY][nextX] !== 'empty') break;
-
-      if (gameState.bombs.some(b => b.id !== bomb.id && b.x === nextX && b.y === nextY)) break;
-
-      newX = nextX;
-      newY = nextY;
-    }
-
-    bomb.x = newX;
-    bomb.y = newY;
+    gameLoop.start((deltaTime) => {
+      this.update(room, deltaTime);
+    }, GAME_CONFIG.TICK_RATE);
   }
 
-  private startGame(room: Room) {
-    const gameState = room.gameState.data as BombermanGameState;
-    const settings = room.settings.gameSpecific as BombermanSettings;
-
-    gameState.phase = 'playing';
-    gameState.currentRound++;
-    gameState.timeLeft = settings.timeLimit;
-    gameState.bombs = [];
-    gameState.explosions = [];
-    gameState.powerups = [];
-    gameState.winnerId = null;
-
-    this.generateGrid(gameState);
-
-    const players = Array.from(room.players.values());
-    const spawnPoints = [
-      { x: 0, y: 0 },
-      { x: settings.mapSize - 1, y: settings.mapSize - 1 },
-      { x: 0, y: settings.mapSize - 1 },
-      { x: settings.mapSize - 1, y: 0 }
-    ];
-
-    players.forEach((p, index) => {
-      const pData = p.gameData as BombermanPlayerData;
-      pData.isAlive = true;
-      pData.activeBombs = 0;
-      pData.canKickBombs = false;
-      pData.canPickUpBombs = false;
-      pData.heldBomb = null;
-      const spawn = spawnPoints[index % spawnPoints.length];
-      pData.x = spawn.x;
-      pData.y = spawn.y;
-
-      if (gameState.grid[spawn.y] && gameState.grid[spawn.y][spawn.x]) {
-        gameState.grid[spawn.y][spawn.x] = 'empty';
-      }
-      if (spawn.x + 1 < settings.mapSize && gameState.grid[spawn.y]) gameState.grid[spawn.y][spawn.x + 1] = 'empty';
-      if (spawn.y + 1 < settings.mapSize && gameState.grid[spawn.y + 1]) gameState.grid[spawn.y + 1][spawn.x] = 'empty';
-      if (spawn.x - 1 >= 0 && gameState.grid[spawn.y]) gameState.grid[spawn.y][spawn.x - 1] = 'empty';
-      if (spawn.y - 1 >= 0 && gameState.grid[spawn.y - 1]) gameState.grid[spawn.y - 1][spawn.x] = 'empty';
-    });
-
-    room.gameState.phase = 'playing';
-    this.startTimer(room);
-    this.broadcastRoomState(room);
-  }
-
-  private generateGrid(gameState: BombermanGameState) {
-    const size = gameState.settings.mapSize;
-    const grid: CellType[][] = [];
-
-    for (let y = 0; y < size; y++) {
-      const row: CellType[] = [];
-      for (let x = 0; x < size; x++) {
-        if (x % 2 === 1 && y % 2 === 1) {
-          row.push('wall');
-        } else {
-          row.push(Math.random() < 0.7 ? 'block' : 'empty');
-        }
-      }
-      grid.push(row);
-    }
-    gameState.grid = grid;
-  }
-
-  private explodeBomb(room: Room, bomb: Bomb) {
+  private update(room: Room, deltaTime: number): void {
     const gameState = room.gameState.data as BombermanGameState;
 
-    const bombIndex = gameState.bombs.findIndex(b => b.id === bomb.id);
-    if (bombIndex === -1) return;
-    gameState.bombs.splice(bombIndex, 1);
+    switch (gameState.phase) {
+      case 'countdown':
+        this.updateCountdown(room, deltaTime);
+        break;
+      case 'playing':
+        this.updatePlaying(room, deltaTime);
+        break;
+    }
+  }
 
-    const player = Array.from(room.players.values()).find(p => p.id === bomb.playerId);
-    if (player) {
-      (player.gameData as BombermanPlayerData).activeBombs--;
+  private updateCountdown(room: Room, deltaTime: number): void {
+    const gameState = room.gameState.data as BombermanGameState;
+
+    gameState.countdown -= deltaTime;
+    if (gameState.countdown <= 0) {
+      gameState.countdown = 0;
+      gameState.phase = 'playing';
+
+      if (gameState.gameMode === GAME_MODE.DEATHMATCH) {
+        gameState.timeRemaining = GAME_CONFIG.DEATHMATCH_TIME;
+      }
+
+      console.log(`[${this.name}] Game started in room ${room.code}!`);
+      this.broadcastRoomState(room);
+    } else {
+      // During countdown, only broadcast at 10Hz (every 100ms) for countdown display
+      const now = Date.now();
+      const lastBroadcast = (gameState as any)._lastBroadcast || 0;
+      if (now - lastBroadcast >= 100) {
+        (gameState as any)._lastBroadcast = now;
+        this.broadcastRoomState(room);
+      }
+    }
+  }
+
+  private updatePlaying(room: Room, deltaTime: number): void {
+    const gameState = room.gameState.data as BombermanGameState;
+
+    // Update deathmatch timer
+    if (gameState.gameMode === GAME_MODE.DEATHMATCH) {
+      gameState.timeRemaining -= deltaTime;
+      if (gameState.timeRemaining <= 0) {
+        const winnerId = PlayerManager.getDeathmatchWinner(room);
+        this.endGame(room, winnerId);
+        return;
+      }
     }
 
-    const explosionId = randomUUID();
-    const affectedCells: {x: number, y: number}[] = [{x: bomb.x, y: bomb.y}];
-    const chainBombs: Bomb[] = [];
-
-    const directions = [{dx: 0, dy: -1}, {dx: 0, dy: 1}, {dx: -1, dy: 0}, {dx: 1, dy: 0}];
-
-    directions.forEach(dir => {
-      for (let i = 1; i <= bomb.range; i++) {
-        const tx = bomb.x + dir.dx * i;
-        const ty = bomb.y + dir.dy * i;
-
-        if (tx < 0 || tx >= gameState.settings.mapSize || ty < 0 || ty >= gameState.settings.mapSize) break;
-
-        const cell = gameState.grid[ty][tx];
-
-        if (cell === 'wall') break;
-
-        affectedCells.push({x: tx, y: ty});
-
-        const hitBomb = gameState.bombs.find(b => b.x === tx && b.y === ty);
-        if (hitBomb && !chainBombs.includes(hitBomb)) {
-          chainBombs.push(hitBomb);
-        }
-
-        if (cell === 'block') {
-          gameState.grid[ty][tx] = 'empty';
-
-          if (Math.random() < 0.3) {
-            const powerUpTypes: PowerUpType[] = ['bomb_range', 'bomb_capacity', 'speed', 'kick_bombs', 'pickup_bombs'];
-            const randomType = powerUpTypes[Math.floor(Math.random() * powerUpTypes.length)];
-            const powerUp: PowerUp = {
-              id: randomUUID(),
-              x: tx,
-              y: ty,
-              type: randomType
-            };
-            gameState.powerups.push(powerUp);
-          }
-
-          break;
-        }
-      }
+    // Update curse effects for all players
+    room.players.forEach((player) => {
+      CurseManager.updateCurse(player, room, gameState);
     });
 
-    affectedCells.forEach(pos => {
-      gameState.explosions.push({
-        id: explosionId,
-        x: pos.x,
-        y: pos.y,
-        createdAt: Date.now()
+    // Update sudden death (arena shrinking)
+    SuddenDeathManager.update(gameState, room, (player, killerId) => {
+      this.handlePlayerKill(room, player, killerId);
+    });
+
+    // Update moving bombs (kick)
+    BombManager.updateMovingBombs(gameState, room, (player) => {
+      PlayerManager.stunPlayer(player);
+    });
+
+    // Update flying bombs (throw)
+    BombManager.updateFlyingBombs(gameState, room, (player) => {
+      PlayerManager.stunPlayer(player);
+    });
+
+    // Update bombs
+    BombManager.updateBombs(deltaTime, room, gameState, (bomb) => {
+      // After explosion, check for kills
+      PlayerManager.checkExplosionKills(bomb.ownerId, room, gameState, (player, killerId) => {
+        this.handlePlayerKill(room, player, killerId);
       });
     });
 
-    room.players.forEach(p => {
-      const pData = p.gameData as BombermanPlayerData;
-      if (pData.isAlive) {
-        if (affectedCells.some(cell => cell.x === pData.x && cell.y === pData.y)) {
-          pData.isAlive = false;
-        }
-      }
-    });
+    // Update explosions
+    BombManager.updateExplosions(deltaTime, gameState);
 
-    chainBombs.forEach((chainBomb, index) => {
-      setTimeout(() => {
-        this.explodeBomb(room, chainBomb);
-      }, 50 * (index + 1));
-    });
-
-    setTimeout(() => {
-      gameState.explosions = gameState.explosions.filter(e => e.id !== explosionId);
+    // Broadcast state at 20Hz (every 50ms) to reduce client load
+    // Game runs at 60Hz but clients don't need that many updates
+    const now = Date.now();
+    const lastBroadcast = (gameState as any)._lastBroadcast || 0;
+    if (now - lastBroadcast >= 50) {
+      (gameState as any)._lastBroadcast = now;
       this.broadcastRoomState(room);
-    }, 500);
+    }
+  }
 
-    this.checkWin(room);
+  // ============================================================================
+  // GAME LOGIC
+  // ============================================================================
+
+  private startCountdown(room: Room): void {
+    const gameState = room.gameState.data as BombermanGameState;
+
+    gameState.countdown = GAME_CONFIG.COUNTDOWN_TIME;
+    gameState.phase = 'countdown';
+
+    console.log(`[${this.name}] Countdown started in room ${room.code}!`);
     this.broadcastRoomState(room);
   }
 
-  private checkWin(room: Room) {
+  private handlePlayerKill(room: Room, player: Player, killerId: string): void {
     const gameState = room.gameState.data as BombermanGameState;
-    const alivePlayers = Array.from(room.players.values()).filter(p => (p.gameData as BombermanPlayerData).isAlive);
 
-    if (alivePlayers.length <= 1 && room.players.size > 1) {
-       if (alivePlayers.length === 1) {
-         const winner = alivePlayers[0];
-         (winner.gameData as BombermanPlayerData).score++;
-         gameState.winnerId = winner.id;
-       } else {
-         gameState.winnerId = null;
-       }
+    PlayerManager.killPlayer(player, killerId, room, gameState);
 
-       gameState.phase = 'ended';
-       this.clearIntervals(room.code);
-       this.broadcastRoomState(room);
+    // Handle based on game mode
+    if (gameState.gameMode === GAME_MODE.DEATHMATCH) {
+      // Respawn after delay
+      const timerKey = `${room.code}:${player.id}:respawn`;
+      const timer = setTimeout(() => {
+        PlayerManager.respawnPlayer(player);
+        this.respawnTimers.delete(timerKey);
+        this.broadcastRoomState(room);
+      }, 2000);
+      this.respawnTimers.set(timerKey, timer);
+    } else {
+      // Last man standing - check win
+      const winnerId = PlayerManager.checkWinCondition(room, gameState);
+      if (winnerId !== null) {
+        this.endGame(room, winnerId);
+      }
     }
   }
 
-  private startTimer(room: Room) {
-    this.clearIntervals(room.code);
-    const interval = setInterval(() => {
-       const gameState = room.gameState.data as BombermanGameState;
-       gameState.timeLeft--;
-       if (gameState.timeLeft <= 0) {
-         this.endGame(room);
-       } else {
-         this.broadcastRoomState(room);
-       }
-    }, 1000);
-    this.intervals.set(room.code, interval);
+  private endGame(room: Room, winnerId: string): void {
+    const gameState = room.gameState.data as BombermanGameState;
+
+    gameState.winnerId = winnerId;
+    gameState.phase = 'ended';
+
+    const winner = room.players.get(winnerId);
+    console.log(`[${this.name}] Game ended in room ${room.code}! Winner: ${winner?.name || 'None'}`);
+
+    this.broadcastRoomState(room);
+
+    // Auto-reset after delay
+    setTimeout(() => {
+      this.resetGame(room);
+    }, 5000);
   }
 
-  private endGame(room: Room) {
-      const gameState = room.gameState.data as BombermanGameState;
-      gameState.phase = 'ended';
-      this.clearIntervals(room.code);
-      this.broadcastRoomState(room);
+  private resetGame(room: Room): void {
+    const gameState = room.gameState.data as BombermanGameState;
+
+    // Clear all bombs and explosions
+    gameState.bombs.clear();
+    gameState.explosions.clear();
+
+    // Reset players
+    room.players.forEach((player) => {
+      PlayerManager.resetPlayer(player);
+    });
+
+    // Regenerate map
+    gameState.tiles = MapGenerator.generate(GAME_CONFIG.MAX_PLAYERS);
+
+    // Reset game state
+    gameState.winnerId = null;
+    gameState.phase = 'lobby';
+    gameState.countdown = 0;
+    gameState.timeRemaining = 0;
+
+    // Reset sudden death
+    SuddenDeathManager.reset(gameState);
+
+    console.log(`[${this.name}] Game reset in room ${room.code}!`);
+    this.broadcastRoomState(room);
   }
 
-  private clearIntervals(roomCode: string) {
-    if (this.intervals.has(roomCode)) {
-      clearInterval(this.intervals.get(roomCode)!);
-      this.intervals.delete(roomCode);
-    }
-  }
+  // ============================================================================
+  // HELPERS
+  // ============================================================================
 
   private broadcastRoomState(room: Room): void {
     if (!this.io) return;
+
     const namespace = this.io.of(this.namespace);
 
-    Array.from(room.players.values()).forEach(player => {
-      namespace.to(player.socketId).emit('roomStateUpdated', this.serializeRoom(room, player.socketId));
+    // Send personalized state to each player
+    room.players.forEach(player => {
+      const serialized = this.serializeRoom(room, player.socketId);
+      namespace.to(player.socketId).emit('roomStateUpdated', serialized);
     });
   }
 }

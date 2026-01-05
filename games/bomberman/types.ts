@@ -1,104 +1,244 @@
-/**
- * Bomberman Game Types
- */
+import { GamePhase, Direction, CurseType } from './shared/constants.js';
 
-export type GamePhase = 'lobby' | 'playing' | 'ended';
+// ============================================
+// Game State Types
+// ============================================
 
-export interface BombermanSettings {
-  maxRounds: number;
-  timeLimit: number; // in seconds
-  mapSize: number;
-}
-
-export type CellType = 'empty' | 'wall' | 'block';
-
-export interface Bomb {
-  id: string;
+export interface FallingBlock {
   x: number;
   y: number;
-  playerId: string;
-  range: number;
-  createdAt: number;
-}
-
-export interface Explosion {
-  id: string;
-  x: number;
-  y: number;
-  createdAt: number;
-}
-
-export type PowerUpType = 'bomb_range' | 'bomb_capacity' | 'speed' | 'kick_bombs' | 'pickup_bombs';
-
-export interface PowerUp {
-  id: string;
-  x: number;
-  y: number;
-  type: PowerUpType;
+  fallTime: number;
 }
 
 export interface BombermanGameState {
   phase: GamePhase;
-  currentRound: number;
-  grid: CellType[][];
-  bombs: Bomb[];
-  explosions: Explosion[];
-  powerups: PowerUp[];
-  settings: BombermanSettings;
-  timeLeft: number;
+  tiles: number[];
+  bombs: Map<string, BombData>;
+  explosions: Map<string, ExplosionData>;
+  countdown: number;
+  timeRemaining: number;
+  gameMode: number;
   winnerId: string | null;
+  usedSpawnIndices: Set<number>;
+  bombIdCounter: number;
+  explosionIdCounter: number;
+  // Sudden Death state
+  suddenDeathActive: boolean;
+  lastBlockFallTime: number;
+  fallingBlockIndex: number;
+  fallingBlocks: FallingBlock[];
 }
+
+// ============================================
+// Player Data (stored in player.gameData)
+// ============================================
 
 export interface BombermanPlayerData {
-  isReady: boolean;
-  score: number;
-  x: number;
-  y: number;
-  isAlive: boolean;
-  bombCapacity: number;
-  bombRange: number;
-  activeBombs: number;
-  color: string;
-  canKickBombs: boolean;
-  canPickUpBombs: boolean;
-  heldBomb: Bomb | null;
-  facing: 'up' | 'down' | 'left' | 'right';
+  gridX: number;
+  gridY: number;
+  maxBombs: number;
+  bombsPlaced: number;
+  fireRange: number;
+  speed: number;
+  alive: boolean;
+  color: number;
+  kills: number;
+  deaths: number;
+  hasKick: boolean;
+  hasThrow: boolean;
+  stunnedUntil: number;
+  facingDir: Direction;
+  spawnIndex: number;
+  lastMoveTime: number;
+  // New power-up flags
+  hasPunch: boolean;
+  hasPierce: boolean;
+  hasBombPass: boolean;
+  // Curse state
+  curseType: CurseType | null;
+  curseEndTime: number;
+  originalSpeed: number; // To restore after curse ends
 }
 
-export const DEFAULT_SETTINGS: BombermanSettings = {
-  maxRounds: 3,
-  timeLimit: 180,
-  mapSize: 15
-};
+// ============================================
+// Entity Types
+// ============================================
 
-export function createInitialGameState(settings: BombermanSettings): BombermanGameState {
+export interface BombData {
+  id: string;
+  ownerId: string;
+  gridX: number;
+  gridY: number;
+  range: number;
+  timer: number;
+  isMoving: boolean;
+  moveDir: Direction;
+  isFlying: boolean;
+  flyDir: Direction;
+  targetX: number;
+  targetY: number;
+  placedAt: number;
+  lastSlideTime: number;
+  lastFlyTime: number;
+  // New flags
+  isPiercing: boolean; // Explosion penetrates soft blocks
+  isPunched: boolean;  // For client punch animation
+}
+
+export interface ExplosionData {
+  id: string;
+  gridX: number;
+  gridY: number;
+  timer: number;
+  createdAt: number;
+}
+
+// ============================================
+// Serialized Types (for client transmission)
+// ============================================
+
+export interface SerializedPlayer {
+  id: string;
+  socketId: string;
+  name: string;
+  isHost: boolean;
+  connected: boolean;
+  // Game data
+  gridX: number;
+  gridY: number;
+  maxBombs: number;
+  bombsPlaced: number;
+  fireRange: number;
+  speed: number;
+  alive: boolean;
+  color: number;
+  kills: number;
+  deaths: number;
+  hasKick: boolean;
+  hasThrow: boolean;
+  stunnedUntil: number;
+  facingDir: number;
+  // New flags
+  hasPunch: boolean;
+  hasPierce: boolean;
+  hasBombPass: boolean;
+  curseType: number | null;
+  curseEndTime: number;
+}
+
+export interface SerializedBomb {
+  id: string;
+  ownerId: string;
+  gridX: number;
+  gridY: number;
+  range: number;
+  timer: number;
+  isMoving: boolean;
+  moveDir: number;
+  isFlying: boolean;
+  flyDir: number;
+  targetX: number;
+  targetY: number;
+  isPiercing: boolean;
+  isPunched: boolean;
+}
+
+export interface SerializedExplosion {
+  id: string;
+  gridX: number;
+  gridY: number;
+  timer: number;
+}
+
+export interface SerializedFallingBlock {
+  x: number;
+  y: number;
+  fallTime: number;
+}
+
+export interface SerializedGameData {
+  tiles: number[];
+  bombs: SerializedBomb[];
+  explosions: SerializedExplosion[];
+  countdown: number;
+  timeRemaining: number;
+  gameMode: number;
+  winnerId: string | null;
+  // Sudden Death
+  suddenDeathActive: boolean;
+  fallingBlocks: SerializedFallingBlock[];
+}
+
+export interface SerializedRoom {
+  code: string;
+  hostId: string;
+  mySocketId: string;
+  players: SerializedPlayer[];
+  state: GamePhase;
+  gameData: SerializedGameData;
+}
+
+// ============================================
+// Socket Event Payloads
+// ============================================
+
+export interface MovePayload {
+  direction: number;
+}
+
+export interface SetModePayload {
+  mode: number;
+}
+
+// ============================================
+// Default Factory Functions
+// ============================================
+
+export function createDefaultPlayerData(spawnIndex: number, spawn: { x: number; y: number }, color: number): BombermanPlayerData {
   return {
-    phase: 'lobby',
-    currentRound: 0,
-    grid: [],
-    bombs: [],
-    explosions: [],
-    powerups: [],
-    settings,
-    timeLeft: settings.timeLimit,
-    winnerId: null
+    gridX: spawn.x,
+    gridY: spawn.y,
+    maxBombs: 1,
+    bombsPlaced: 0,
+    fireRange: 2,
+    speed: 150,
+    alive: true,
+    color,
+    kills: 0,
+    deaths: 0,
+    hasKick: false,
+    hasThrow: false,
+    stunnedUntil: 0,
+    facingDir: 2, // DOWN
+    spawnIndex,
+    lastMoveTime: 0,
+    // New flags
+    hasPunch: false,
+    hasPierce: false,
+    hasBombPass: false,
+    curseType: null,
+    curseEndTime: 0,
+    originalSpeed: 150,
   };
 }
 
-export function createInitialPlayerData(): BombermanPlayerData {
+export function createDefaultGameState(): BombermanGameState {
   return {
-    isReady: false,
-    score: 0,
-    x: 0,
-    y: 0,
-    isAlive: true,
-    bombCapacity: 1,
-    bombRange: 1,
-    activeBombs: 0,
-    color: '#000000', // Placeholder
-    canKickBombs: false,
-    canPickUpBombs: false,
-    heldBomb: null,
-    facing: 'down'
+    phase: 'lobby',
+    tiles: [],
+    bombs: new Map(),
+    explosions: new Map(),
+    countdown: 0,
+    timeRemaining: 0,
+    gameMode: 0,
+    winnerId: null,
+    usedSpawnIndices: new Set(),
+    bombIdCounter: 0,
+    explosionIdCounter: 0,
+    // Sudden Death
+    suddenDeathActive: false,
+    lastBlockFallTime: 0,
+    fallingBlockIndex: 0,
+    fallingBlocks: [],
   };
 }
