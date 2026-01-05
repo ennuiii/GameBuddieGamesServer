@@ -590,6 +590,7 @@ class CanvasChaosPlugin implements GamePlugin {
       gameState.round = 0;
       gameState.timeRemaining = 0;
       gameState.modeData = null;  // Reset mode data for fresh start
+      gameState.mode = null;     // Reset mode selection
       room.gameState.phase = 'lobby';
 
       // Reset player states AND scores for fresh start
