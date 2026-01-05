@@ -12,6 +12,7 @@ export type GameMode = 'freeze-frame' | 'artistic-diff' | 'evolution';
 export type GamePhase =
   | 'lobby'
   | 'mode-select'
+  | 'prompt-submission'  // Players submit prompts/modifiers for the round
   | 'playing'
   | 'drawing'
   | 'naming'     // Evolution: submit creature names (20s)
@@ -19,6 +20,21 @@ export type GamePhase =
   | 'reveal'
   | 'results'
   | 'ended';
+
+// ============================================================================
+// PLAYER PROMPT SUBMISSIONS
+// ============================================================================
+
+export interface PlayerPromptSubmission {
+  playerId: string;
+  playerName: string;
+  prompt: string;           // Base prompt (all modes)
+  modifier?: string;        // Secret twist (Artistic Diff only)
+  used: boolean;            // Has this prompt been used in a round?
+}
+
+// Map of playerId -> submission
+export type PromptSubmissionsMap = Map<string, PlayerPromptSubmission>;
 
 // ============================================================================
 // PLAYER DATA
@@ -46,6 +62,9 @@ export interface CanvasChaosGameState {
 
   // Host-controlled round progression
   awaitingNextRound: boolean;  // True when reveal is done, waiting for host to start next round
+
+  // Player-submitted prompts for the game (collected once at start)
+  promptSubmissions: PromptSubmissionsMap;
 
   // Mode-specific data
   modeData: FreezeFrameData | ArtisticDiffData | EvolutionData | null;
@@ -135,6 +154,8 @@ export interface CanvasChaosSettings {
   // General
   defaultMode: GameMode;
   roundsPerGame: number;
+  useDatabasePrompts: boolean;   // Skip player prompts, use DB instead
+  promptSubmissionTime: number;  // Seconds for prompt submission phase
 
   // Drawing
   drawingTime: number;            // Seconds
@@ -166,6 +187,7 @@ export function createInitialGameState(): CanvasChaosGameState {
     totalRounds: 3,
     timeRemaining: 0,
     awaitingNextRound: false,
+    promptSubmissions: new Map(),
     modeData: null,
   };
 }

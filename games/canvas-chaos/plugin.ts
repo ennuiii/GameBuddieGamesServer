@@ -37,6 +37,7 @@ import { contentService } from './services/contentService.js';
 
 import {
   selectModeSchema,
+  submitPromptSchema,
   submitDrawingSchema,
   captureFrameSchema,
   submitVoteSchema,
@@ -240,6 +241,15 @@ class CanvasChaosPlugin implements GamePlugin {
       totalRounds: gameState.totalRounds,
       timeRemaining: gameState.timeRemaining,
       awaitingNextRound: gameState.awaitingNextRound,
+      // Serialize promptSubmissions Map to object for client
+      promptSubmissions: gameState.promptSubmissions
+        ? Object.fromEntries(
+            Array.from(gameState.promptSubmissions.entries()).map(([id, sub]) => [
+              id,
+              { playerId: sub.playerId, playerName: sub.playerName, prompt: sub.prompt, modifier: sub.modifier, used: sub.used }
+            ])
+          )
+        : {},
     };
 
     if (!gameState.modeData) {
@@ -449,6 +459,54 @@ class CanvasChaosPlugin implements GamePlugin {
       this.broadcastRoomState(room);
     },
 
+    'prompt:submit': async (socket: Socket, data: any, room: Room, helpers: GameHelpers) => {
+      const player = this.getPlayer(room, socket.id);
+      if (!player) return;
+
+      const gameState = room.gameState.data as CanvasChaosGameState;
+
+      // Only accept during prompt-submission phase
+      if (gameState.phase !== 'prompt-submission') {
+        socket.emit('error', { message: 'Not in prompt submission phase' });
+        return;
+      }
+
+      const parsed = submitPromptSchema.safeParse(data);
+      if (!parsed.success) {
+        socket.emit('error', { message: 'Invalid prompt data' });
+        return;
+      }
+
+      // Check if already submitted
+      if (gameState.promptSubmissions.has(player.id)) {
+        socket.emit('error', { message: 'You have already submitted a prompt' });
+        return;
+      }
+
+      // Store the submission
+      const submission: PlayerPromptSubmission = {
+        playerId: player.id,
+        playerName: player.name,
+        prompt: parsed.data.prompt,
+        modifier: parsed.data.modifier,
+        used: false,
+      };
+
+      gameState.promptSubmissions.set(player.id, submission);
+
+      helpers.sendToRoom(room.code, 'prompt:submitted', { playerName: player.name });
+      console.log(`[${this.name}] ${player.name} submitted prompt: "${parsed.data.prompt}"${parsed.data.modifier ? ` with modifier: "${parsed.data.modifier}"` : ''}`);
+
+      // Check if all connected players have submitted
+      const connectedPlayers = Array.from(room.players.values()).filter(p => p.connected);
+      if (gameState.promptSubmissions.size >= connectedPlayers.length) {
+        this.clearRoomTimers(room.code);
+        await this.transitionToNextPhase(room);
+      }
+
+      this.broadcastRoomState(room);
+    },
+
     'game:start': async (socket: Socket, data: any, room: Room, helpers: GameHelpers) => {
       const player = this.getPlayer(room, socket.id);
       if (!player?.isHost) {
@@ -481,14 +539,36 @@ class CanvasChaosPlugin implements GamePlugin {
         gameState.totalRounds = settings.roundsPerGame;
       }
 
+
+      // Enforce rounds <= players (each player's prompt is used once)
+      if (gameState.totalRounds > connectedPlayers.length) {
+        gameState.totalRounds = connectedPlayers.length;
+        console.log(`[${this.name}] Capped rounds to ${connectedPlayers.length} (player count)`);
+      }
+
       // Initialize mode-specific data
       this.initializeModeData(room, gameState);
 
-      // Start first round
-      await this.startRound(room);
+      // Clear any old prompt submissions
+      gameState.promptSubmissions = new Map();
 
-      helpers.sendToRoom(room.code, 'game:started', { mode: gameState.mode });
-      console.log(`[${this.name}] Game started in room ${room.code} with mode ${gameState.mode}`);
+      // Check if we should use database prompts or player submissions
+      const useDbPrompts = settings.useDatabasePrompts ?? false;
+      if (useDbPrompts) {
+        // Skip prompt submission phase, go directly to first round
+        await this.startRound(room);
+        helpers.sendToRoom(room.code, 'game:started', { mode: gameState.mode });
+        console.log(`[${this.name}] Game started with DB prompts in room ${room.code}`);
+      } else {
+        // Enter prompt-submission phase
+        gameState.phase = 'prompt-submission';
+        gameState.timeRemaining = settings.promptSubmissionTime || 30;
+        this.startTimer(room);
+        helpers.sendToRoom(room.code, 'game:started', { mode: gameState.mode });
+        console.log(`[${this.name}] Game started - prompt submission phase in room ${room.code}`);
+      }
+
+      this.broadcastRoomState(room);
     },
 
     'game:backToLobby': async (socket: Socket, data: any, room: Room, helpers: GameHelpers) => {
@@ -568,11 +648,24 @@ class CanvasChaosPlugin implements GamePlugin {
         modeData.subjectHistory.push(modeData.subjectPlayerId!);
       }
 
-      // Select random prompt if enabled
+      // Use player-submitted prompts if available, otherwise fallback to DB
       const settings = room.settings.gameSpecific as CanvasChaosSettings;
       if (settings.freezeFramePrompts) {
-        modeData.prompt = await contentService.getRandomFreezeFramePrompt(room.settings.language || 'en');
+        const promptSubmissions = gameState.promptSubmissions;
+        const unusedPrompts = Array.from(promptSubmissions.values()).filter(sub => !sub.used);
+
+        if (unusedPrompts.length > 0) {
+          const selectedPromptSub = unusedPrompts[Math.floor(Math.random() * unusedPrompts.length)];
+          modeData.prompt = selectedPromptSub.prompt;
+          selectedPromptSub.used = true;
+          console.log(`[${this.name}] FreezeFrame using player prompt: "${modeData.prompt}"`);
+        } else {
+          // Fallback to DB
+          modeData.prompt = await contentService.getRandomFreezeFramePrompt(room.settings.language || 'en');
+          console.log(`[${this.name}] FreezeFrame using DB prompt`);
+        }
       }
+
 
       gameState.phase = 'drawing';
       gameState.timeRemaining = settings.drawingTime;
@@ -618,8 +711,19 @@ class CanvasChaosPlugin implements GamePlugin {
       }
 
       const settings = room.settings.gameSpecific as CanvasChaosSettings;
+      // Use player-submitted prompts if available
       if (settings.freezeFramePrompts) {
-        modeData.prompt = await contentService.getRandomFreezeFramePrompt(room.settings.language || 'en');
+        const promptSubmissions = gameState.promptSubmissions;
+        const unusedPrompts = Array.from(promptSubmissions.values()).filter(sub => !sub.used);
+
+        if (unusedPrompts.length > 0) {
+          const selectedPromptSub = unusedPrompts[Math.floor(Math.random() * unusedPrompts.length)];
+          modeData.prompt = selectedPromptSub.prompt;
+          selectedPromptSub.used = true;
+          console.log(`[${this.name}] FreezeFrame using player prompt (error path): "${modeData.prompt}"`);
+        } else {
+          modeData.prompt = await contentService.getRandomFreezeFramePrompt(room.settings.language || 'en');
+        }
       }
 
       gameState.phase = 'drawing';
@@ -1032,9 +1136,37 @@ class CanvasChaosPlugin implements GamePlugin {
       ? availablePlayers[Math.floor(Math.random() * availablePlayers.length)]
       : connectedPlayers[Math.floor(Math.random() * connectedPlayers.length)];
 
-    // Select prompt and modifier from database
-    modeData.prompt = await contentService.getRandomArtisticDiffPrompt(room.settings.language || 'en');
-    modeData.modifier = await contentService.getRandomModifier(settings.modifierDifficulty, room.settings.language || 'en');
+    // Use player-submitted prompts if available, otherwise fallback to DB
+    const promptSubmissions = gameState.promptSubmissions;
+    const unusedPrompts = Array.from(promptSubmissions.values()).filter(sub => !sub.used);
+
+    // For Artistic Diff: modifier player gets their OWN twist, but someone else's prompt
+    // So we prefer prompts NOT from the modifier player
+    const promptsNotFromModifier = unusedPrompts.filter(sub => sub.playerId !== modifierPlayer.id);
+    const promptPool = promptsNotFromModifier.length > 0 ? promptsNotFromModifier : unusedPrompts;
+
+    if (promptPool.length > 0) {
+      // Select random prompt from pool
+      const selectedPromptSub = promptPool[Math.floor(Math.random() * promptPool.length)];
+      modeData.prompt = selectedPromptSub.prompt;
+      selectedPromptSub.used = true;
+
+      // Modifier player uses their OWN submitted modifier
+      const modifierPlayerSub = promptSubmissions.get(modifierPlayer.id);
+      if (modifierPlayerSub && modifierPlayerSub.modifier) {
+        modeData.modifier = modifierPlayerSub.modifier;
+      } else {
+        // Fallback to DB modifier if player didn't submit one
+        modeData.modifier = await contentService.getRandomModifier(settings.modifierDifficulty, room.settings.language || 'en');
+      }
+
+      console.log(`[${this.name}] Using player prompt: "${modeData.prompt}" with modifier: "${modeData.modifier}"`);
+    } else {
+      // No player prompts available - use database
+      modeData.prompt = await contentService.getRandomArtisticDiffPrompt(room.settings.language || 'en');
+      modeData.modifier = await contentService.getRandomModifier(settings.modifierDifficulty, room.settings.language || 'en');
+      console.log(`[${this.name}] Using DB prompt (no player prompts available)`);
+    }
 
     // Assign modifier to one player
     modeData.modifierPlayerId = modifierPlayer.id;
@@ -1157,6 +1289,37 @@ class CanvasChaosPlugin implements GamePlugin {
     setTimeout(() => this.transitionLock.delete(lockKey), 100);
 
     switch (gameState.phase) {
+
+      case 'prompt-submission':
+        // Fill missing submissions with DB prompts
+        const connectedForPrompts = Array.from(room.players.values()).filter(p => p.connected);
+        for (const player of connectedForPrompts) {
+          if (!gameState.promptSubmissions.has(player.id)) {
+            // Get random DB prompt as fallback
+            let fallbackPrompt = 'Draw something creative!';
+            let fallbackModifier = 'but make it funny';
+            try {
+              const dbPrompt = await contentService.getRandomArtisticDiffPrompt(room.settings.language || 'en');
+              if (dbPrompt) fallbackPrompt = dbPrompt;
+              const dbModifier = await contentService.getRandomModifier(settings.modifierDifficulty || 'medium', room.settings.language || 'en');
+              if (dbModifier) fallbackModifier = dbModifier;
+            } catch (e) {
+              console.log(`[${this.name}] Failed to get DB fallback prompt`);
+            }
+            gameState.promptSubmissions.set(player.id, {
+              playerId: player.id,
+              playerName: player.name,
+              prompt: fallbackPrompt,
+              modifier: fallbackModifier,
+              used: false,
+            });
+          }
+        }
+        console.log(`[${this.name}] Prompt submission complete: ${gameState.promptSubmissions.size} prompts collected`);
+        // Now start the actual round
+        await this.startRound(room);
+        return;
+
       case 'drawing':
         // EDGE CASE: Check for no/insufficient submissions before voting
         if (gameState.mode === 'freeze-frame' || gameState.mode === 'artistic-diff') {
@@ -1236,7 +1399,18 @@ class CanvasChaosPlugin implements GamePlugin {
 
               // Select mutation prompt
               if (settings.useMutationPrompts) {
-                modeData.mutationPrompt = await contentService.getRandomEvolutionPrompt(room.settings.language || 'en');
+                // Use player-submitted prompts if available
+                const promptSubmissions = gameState.promptSubmissions;
+                const unusedPrompts = Array.from(promptSubmissions.values()).filter(sub => !sub.used);
+              
+                if (unusedPrompts.length > 0) {
+                  const selectedPromptSub = unusedPrompts[Math.floor(Math.random() * unusedPrompts.length)];
+                  modeData.mutationPrompt = selectedPromptSub.prompt;
+                  selectedPromptSub.used = true;
+                  console.log(`[${this.name}] Evolution using player mutation prompt: "${modeData.mutationPrompt}"`);
+                } else {
+                  modeData.mutationPrompt = await contentService.getRandomEvolutionPrompt(room.settings.language || 'en');
+                }
               }
 
               // Reset submission state
@@ -1789,7 +1963,18 @@ class CanvasChaosPlugin implements GamePlugin {
       modeData.currentArtistName = nextArtist.name;
 
       if (settings.useMutationPrompts) {
-        modeData.mutationPrompt = await contentService.getRandomEvolutionPrompt(room.settings.language || 'en');
+        // Use player-submitted prompts if available
+        const promptSubmissions = gameState.promptSubmissions;
+        const unusedPrompts = Array.from(promptSubmissions.values()).filter(sub => !sub.used);
+      
+        if (unusedPrompts.length > 0) {
+          const selectedPromptSub = unusedPrompts[Math.floor(Math.random() * unusedPrompts.length)];
+          modeData.mutationPrompt = selectedPromptSub.prompt;
+          selectedPromptSub.used = true;
+          console.log(`[${this.name}] Evolution using player mutation prompt: "${modeData.mutationPrompt}"`);
+        } else {
+          modeData.mutationPrompt = await contentService.getRandomEvolutionPrompt(room.settings.language || 'en');
+        }
       }
 
       // Reset submission state

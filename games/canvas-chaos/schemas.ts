@@ -61,6 +61,15 @@ export const voteNameSchema = z.object({
 });
 
 // ============================================================================
+// PROMPT SUBMISSION
+// ============================================================================
+
+export const submitPromptSchema = z.object({
+  prompt: z.string().min(3, 'Prompt too short').max(100, 'Prompt too long'),
+  modifier: z.string().min(3, 'Modifier too short').max(50, 'Modifier too long').optional(),
+});
+
+// ============================================================================
 // ROUND CONTROL
 // ============================================================================
 
@@ -74,6 +83,8 @@ export const roundNextSchema = z.object({}).optional();
 export const updateSettingsSchema = z.object({
   defaultMode: z.enum(['freeze-frame', 'artistic-diff', 'evolution']).optional(),
   roundsPerGame: z.number().int().min(1).max(10).optional(),
+  useDatabasePrompts: z.boolean().optional(),
+  promptSubmissionTime: z.number().int().min(15).max(60).optional(),
   drawingTime: z.number().int().min(15).max(120).optional(),
   votingTime: z.number().int().min(10).max(60).optional(),
   freezeFramePrompts: z.boolean().optional(),
