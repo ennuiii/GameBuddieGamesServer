@@ -564,6 +564,7 @@ class CanvasChaosPlugin implements GamePlugin {
         console.log(`[${this.name}] Game started with DB prompts in room ${room.code}`);
       } else {
         // Enter prompt-submission phase
+        room.gameState.phase = 'playing';  // Client routing - show GamePage
         gameState.phase = 'prompt-submission';
         gameState.timeRemaining = settings.promptSubmissionTime || 30;
         this.startTimer(room);
