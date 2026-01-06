@@ -167,6 +167,7 @@ class CanvasChaosPlugin implements GamePlugin {
                 playerId: player.id,
                 playerName: player.name,
                 imageData: playerData.currentDrawing,
+                timestamp: Date.now(),
               });
               playerData.hasSubmitted = true;
             }
