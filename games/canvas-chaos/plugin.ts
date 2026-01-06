@@ -604,6 +604,7 @@ class CanvasChaosPlugin implements GamePlugin {
       gameState.timeRemaining = 0;
       gameState.modeData = null;  // Reset mode data for fresh start
       gameState.mode = null;     // Reset mode selection
+      gameState.roundHistory = []; // Clear gallery history for new game
       room.gameState.phase = 'lobby';
 
       // Reset player states AND scores for fresh start
@@ -1647,6 +1648,8 @@ class CanvasChaosPlugin implements GamePlugin {
           // Host will click "Next Round" button to continue
           console.log(`[${this.name}] Round ${gameState.round} complete, awaiting host to start round ${gameState.round + 1}`);
         } else {
+          // Clear modeData to prevent duplicate artwork in gallery
+          gameState.modeData = null;
           this.endGame(room, 'All rounds completed');
         }
         break;
