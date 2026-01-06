@@ -158,10 +158,18 @@ class CanvasChaosPlugin implements GamePlugin {
 
         case 'artistic-diff': {
           const modeData = gameState.modeData as ArtisticDiffData;
-          // If modifier disconnected during drawing, mark their submission as auto-submitted
+          // FIX #21: Auto-submit modifier's drawing on disconnect so voting works
           if (modeData.modifierPlayerId === player.id && gameState.phase === 'drawing') {
-            console.log(`[${this.name}] Modifier player disconnected during drawing`);
-            // Let the game continue - votes will just not find the modifier
+            console.log(`[${this.name}] Modifier player disconnected during drawing - auto-submitting`);
+            const playerData = player.gameData as CanvasChaosPlayerData | undefined;
+            if (playerData?.currentDrawing && !playerData.hasSubmitted) {
+              modeData.submissions.set(player.id, {
+                playerId: player.id,
+                playerName: player.name,
+                imageData: playerData.currentDrawing,
+              });
+              playerData.hasSubmitted = true;
+            }
           }
           break;
         }
@@ -842,6 +850,12 @@ class CanvasChaosPlugin implements GamePlugin {
 
       const playerData = this.ensurePlayerData(player);
 
+      // FIX #19: Prevent double-voting
+      if (playerData.votedFor !== null) {
+        socket.emit("error", { message: "You have already voted" });
+        return;
+      }
+
       // FIX #5: Validate vote target exists before accepting vote
       switch (gameState.mode) {
         case 'freeze-frame': {
@@ -1225,6 +1239,9 @@ class CanvasChaosPlugin implements GamePlugin {
     const gameState = room.gameState.data as CanvasChaosGameState;
     const connectedPlayers = Array.from(room.players.values()).filter(p => p.connected);
 
+    // FIX #20: Prevent .every() returning true on empty array
+    if (connectedPlayers.length === 0) return false;
+
     switch (gameState.mode) {
       case 'freeze-frame': {
         const modeData = gameState.modeData as FreezeFrameData;
@@ -1253,6 +1270,9 @@ class CanvasChaosPlugin implements GamePlugin {
   private checkAllVoted(room: Room): boolean {
     const gameState = room.gameState.data as CanvasChaosGameState;
     const connectedPlayers = Array.from(room.players.values()).filter(p => p.connected);
+
+    // FIX #20: Prevent .every() returning true on empty array
+    if (connectedPlayers.length === 0) return false;
 
     switch (gameState.mode) {
       case 'freeze-frame': {
