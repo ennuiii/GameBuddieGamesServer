@@ -1876,7 +1876,10 @@ class CanvasChaosPlugin implements GamePlugin {
       if (gameState.timeRemaining <= 0) {
         clearInterval(interval);
         this.intervals.delete(timerKey);
-        await this.transitionToNextPhase(room);
+        // Grace period for auto-submit network latency
+        setTimeout(async () => {
+          await this.transitionToNextPhase(room);
+        }, 1500);
       }
     }, 1000);
 
