@@ -50,6 +50,20 @@ export interface CanvasChaosPlayerData {
 }
 
 // ============================================================================
+// ROUND HISTORY (for artwork gallery at game end)
+// ============================================================================
+
+export interface RoundHistoryEntry {
+  round: number;
+  mode: GameMode;
+  artworks: Array<{
+    playerId: string;
+    playerName: string;
+    imageData: string;
+  }>;
+}
+
+// ============================================================================
 // GAME STATE
 // ============================================================================
 
@@ -68,6 +82,9 @@ export interface CanvasChaosGameState {
 
   // Mode-specific data
   modeData: FreezeFrameData | ArtisticDiffData | EvolutionData | null;
+
+  // Round history for artwork gallery (preserved across rounds)
+  roundHistory: RoundHistoryEntry[];
 }
 
 // ============================================================================
@@ -189,6 +206,7 @@ export function createInitialGameState(): CanvasChaosGameState {
     awaitingNextRound: false,
     promptSubmissions: new Map(),
     modeData: null,
+    roundHistory: [],
   };
 }
 

@@ -27,6 +27,7 @@ import {
   EvolutionData,
   DrawingSubmission,
   PlayerPromptSubmission,
+  RoundHistoryEntry,
   createInitialGameState,
   createInitialPlayerData,
   createFreezeFrameData,
@@ -262,6 +263,8 @@ class CanvasChaosPlugin implements GamePlugin {
             ])
           )
         : {},
+      // Include round history for artwork gallery
+      roundHistory: gameState.roundHistory || [],
     };
 
     if (!gameState.modeData) {
@@ -1070,6 +1073,68 @@ class CanvasChaosPlugin implements GamePlugin {
     return Array.from(room.players.values()).find(p => p.socketId === socketId);
   }
 
+  /**
+   * Save current round drawings to history before clearing modeData
+   */
+  private saveRoundToHistory(gameState: CanvasChaosGameState): void {
+    if (!gameState.mode || !gameState.modeData) return;
+
+    const artworks: RoundHistoryEntry["artworks"] = [];
+
+    switch (gameState.mode) {
+      case "freeze-frame": {
+        const data = gameState.modeData as FreezeFrameData;
+        data.submissions.forEach((sub) => {
+          if (sub.imageData) {
+            artworks.push({
+              playerId: sub.playerId,
+              playerName: sub.playerName,
+              imageData: sub.imageData,
+            });
+          }
+        });
+        break;
+      }
+      case "artistic-diff": {
+        const data = gameState.modeData as ArtisticDiffData;
+        data.submissions.forEach((sub) => {
+          if (sub.imageData) {
+            artworks.push({
+              playerId: sub.playerId,
+              playerName: sub.playerName,
+              imageData: sub.imageData,
+            });
+          }
+        });
+        break;
+      }
+      case "evolution": {
+        const data = gameState.modeData as EvolutionData;
+        if (data.chain?.layers) {
+          data.chain.layers.forEach((layer) => {
+            if (layer.canvasData) {
+              artworks.push({
+                playerId: layer.artistId,
+                playerName: layer.artistName,
+                imageData: layer.canvasData,
+              });
+            }
+          });
+        }
+        break;
+      }
+    }
+
+    if (artworks.length > 0) {
+      gameState.roundHistory.push({
+        round: gameState.round,
+        mode: gameState.mode,
+        artworks,
+      });
+      console.log(`[Canvas Chaos] Saved ${artworks.length} artworks from round ${gameState.round} to history`);
+    }
+  }
+
   private initializeModeData(room: Room, gameState: CanvasChaosGameState): void {
     switch (gameState.mode) {
       case 'freeze-frame':
@@ -1571,6 +1636,8 @@ class CanvasChaosPlugin implements GamePlugin {
         break;
 
       case 'reveal':
+        // Save drawings to history before potentially starting a new round
+        this.saveRoundToHistory(gameState);
         // Check if more rounds
         if (gameState.round < gameState.totalRounds) {
           // DON'T auto-start next round - wait for host to trigger
