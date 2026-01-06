@@ -1631,7 +1631,7 @@ class CanvasChaosPlugin implements GamePlugin {
         this.calculateScores(room);
         gameState.phase = 'reveal';
         room.gameState.phase = 'playing'; // Keep as 'playing' for client routing
-        gameState.timeRemaining = 10; // 10 seconds to view results
+        gameState.timeRemaining = 1; // 1 second before next round button appears
         this.startTimer(room);
         break;
 
