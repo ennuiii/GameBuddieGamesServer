@@ -1606,6 +1606,7 @@ class CanvasChaosPlugin implements GamePlugin {
   private calculateFreezeFrameScores(room: Room): void {
     const gameState = room.gameState.data as CanvasChaosGameState;
     const modeData = gameState.modeData as FreezeFrameData;
+    const scoreEvents: Array<{playerId: string, playerName: string, points: number, reason: string}> = [];
 
     // Count votes for each submission
     const voteCounts = new Map<string, number>();
@@ -1621,6 +1622,7 @@ class CanvasChaosPlugin implements GamePlugin {
       const winner = Array.from(room.players.values()).find(p => p.id === sortedByVotes[0][0]);
       if (winner) {
         this.ensurePlayerData(winner).score += 100;
+        scoreEvents.push({ playerId: winner.id, playerName: winner.name, points: 100, reason: 'Most votes - Winner!' });
       }
     }
 
@@ -1628,6 +1630,7 @@ class CanvasChaosPlugin implements GamePlugin {
       const runnerUp = Array.from(room.players.values()).find(p => p.id === sortedByVotes[1][0]);
       if (runnerUp) {
         this.ensurePlayerData(runnerUp).score += 50;
+        scoreEvents.push({ playerId: runnerUp.id, playerName: runnerUp.name, points: 50, reason: 'Runner-up' });
       }
     }
 
@@ -1636,13 +1639,21 @@ class CanvasChaosPlugin implements GamePlugin {
       const player = Array.from(room.players.values()).find(p => p.id === playerId);
       if (player) {
         this.ensurePlayerData(player).score += 25;
+        scoreEvents.push({ playerId: player.id, playerName: player.name, points: 25, reason: 'Participation' });
       }
     });
+
+    // Broadcast score events
+    if (this.io) {
+      const namespace = this.io.of(this.namespace);
+      namespace.to(room.code).emit('score:breakdown', { events: scoreEvents });
+    }
   }
 
   private calculateArtisticDiffScores(room: Room): void {
     const gameState = room.gameState.data as CanvasChaosGameState;
     const modeData = gameState.modeData as ArtisticDiffData;
+    const scoreEvents: Array<{playerId: string, playerName: string, points: number, reason: string}> = [];
 
     // Count correct vs incorrect guesses
     let correctGuesses = 0;
@@ -1658,8 +1669,10 @@ class CanvasChaosPlugin implements GamePlugin {
 
     // Modifier player gets points for each person they fooled
     const modifierPlayer = Array.from(room.players.values()).find(p => p.id === modeData.modifierPlayerId);
-    if (modifierPlayer) {
-      this.ensurePlayerData(modifierPlayer).score += wrongGuesses * 50;
+    if (modifierPlayer && wrongGuesses > 0) {
+      const points = wrongGuesses * 50;
+      this.ensurePlayerData(modifierPlayer).score += points;
+      scoreEvents.push({ playerId: modifierPlayer.id, playerName: modifierPlayer.name, points, reason: `Fooled ${wrongGuesses} player${wrongGuesses > 1 ? 's' : ''}!` });
     }
 
     // Voters get points for correct guesses
@@ -1668,6 +1681,7 @@ class CanvasChaosPlugin implements GamePlugin {
         const voter = Array.from(room.players.values()).find(p => p.id === voterId);
         if (voter) {
           this.ensurePlayerData(voter).score += 75;
+          scoreEvents.push({ playerId: voter.id, playerName: voter.name, points: 75, reason: 'Spotted the modifier!' });
         }
       }
     });
@@ -1677,13 +1691,21 @@ class CanvasChaosPlugin implements GamePlugin {
       const player = Array.from(room.players.values()).find(p => p.id === playerId);
       if (player) {
         this.ensurePlayerData(player).score += 25;
+        scoreEvents.push({ playerId: player.id, playerName: player.name, points: 25, reason: 'Participation' });
       }
     });
+
+    // Broadcast score events
+    if (this.io) {
+      const namespace = this.io.of(this.namespace);
+      namespace.to(room.code).emit('score:breakdown', { events: scoreEvents });
+    }
   }
 
   private calculateEvolutionScores(room: Room): void {
     const gameState = room.gameState.data as CanvasChaosGameState;
     const modeData = gameState.modeData as EvolutionData;
+    const scoreEvents: Array<{playerId: string, playerName: string, points: number, reason: string}> = [];
 
     // Count votes for best mutation
     const mutationVotes = new Map<number, number>();
@@ -1708,6 +1730,7 @@ class CanvasChaosPlugin implements GamePlugin {
         const winner = Array.from(room.players.values()).find(p => p.id === winningLayer.artistId);
         if (winner) {
           this.ensurePlayerData(winner).score += 150;
+          scoreEvents.push({ playerId: winner.id, playerName: winner.name, points: 150, reason: 'Best mutation!' });
         }
       }
     }
@@ -1733,6 +1756,7 @@ class CanvasChaosPlugin implements GamePlugin {
       const winner = Array.from(room.players.values()).find(p => p.id === bestNameSubmitter);
       if (winner) {
         this.ensurePlayerData(winner).score += 100;
+        scoreEvents.push({ playerId: winner.id, playerName: winner.name, points: 100, reason: 'Best creature name!' });
       }
       // Set the winning name
       modeData.chain.finalName = modeData.nameSubmissions.get(bestNameSubmitter) || 'Unnamed Creature';
@@ -1743,8 +1767,15 @@ class CanvasChaosPlugin implements GamePlugin {
       const player = Array.from(room.players.values()).find(p => p.id === layer.artistId);
       if (player) {
         this.ensurePlayerData(player).score += 25;
+        scoreEvents.push({ playerId: player.id, playerName: player.name, points: 25, reason: 'Participation' });
       }
     });
+
+    // Broadcast score events
+    if (this.io) {
+      const namespace = this.io.of(this.namespace);
+      namespace.to(room.code).emit('score:breakdown', { events: scoreEvents });
+    }
   }
 
   private endGame(room: Room, reason?: string): void {
