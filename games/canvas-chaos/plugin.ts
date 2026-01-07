@@ -88,6 +88,8 @@ class CanvasChaosPlugin implements GamePlugin {
   private timers = new Map<string, NodeJS.Timeout>();
   private intervals = new Map<string, NodeJS.Timeout>();
   private transitionLock = new Map<string, boolean>(); // FIX #6: Prevent double transitions
+  private disconnectGraceTimers = new Map<string, NodeJS.Timeout>(); // Grace period for F5 refresh
+  private readonly DISCONNECT_GRACE_PERIOD_MS = 8000; // 8 seconds to reconnect before ending game
 
   // Helper to ensure player gameData is initialized
   private ensurePlayerData(player: Player): CanvasChaosPlayerData {
@@ -116,6 +118,15 @@ class CanvasChaosPlugin implements GamePlugin {
 
   onPlayerJoin(room: Room, player: Player, isReconnecting?: boolean): void {
     console.log(`[${this.name}] Player ${player.name} ${isReconnecting ? 'reconnected to' : 'joined'} room ${room.code}`);
+
+    // Cancel any pending grace timer for this room (player reconnected in time!)
+    const graceTimerKey = `${room.code}:grace`;
+    const existingTimer = this.disconnectGraceTimers.get(graceTimerKey);
+    if (existingTimer) {
+      clearTimeout(existingTimer);
+      this.disconnectGraceTimers.delete(graceTimerKey);
+      console.log(`[${this.name}] Cancelled disconnect grace timer - player reconnected`);
+    }
 
     // FIX #3: Preserve existing game data on reconnect
     if (isReconnecting && player.gameData) {
@@ -177,8 +188,26 @@ class CanvasChaosPlugin implements GamePlugin {
         }
       }
 
-      // Check if we still have enough players for the mode
-      this.checkMinimumPlayersForMode(room);
+      // Check if we still have enough players for the mode - with grace period for F5 refresh
+      const graceTimerKey = `${room.code}:grace`;
+
+      // Clear any existing grace timer (if another player disconnected recently)
+      const existingGraceTimer = this.disconnectGraceTimers.get(graceTimerKey);
+      if (existingGraceTimer) {
+        clearTimeout(existingGraceTimer);
+      }
+
+      // Set a new grace timer - allows time for F5 refresh reconnection
+      const graceTimer = setTimeout(() => {
+        this.disconnectGraceTimers.delete(graceTimerKey);
+        // Re-check if we still don't have enough players after grace period
+        if (room.gameState.phase === 'playing') {
+          this.checkMinimumPlayersForMode(room);
+        }
+      }, this.DISCONNECT_GRACE_PERIOD_MS);
+
+      this.disconnectGraceTimers.set(graceTimerKey, graceTimer);
+      console.log(`[${this.name}] Started ${this.DISCONNECT_GRACE_PERIOD_MS}ms grace period before checking minimum players`);
     }
 
     this.broadcastRoomState(room);
