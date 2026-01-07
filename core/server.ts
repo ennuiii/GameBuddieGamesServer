@@ -565,10 +565,21 @@ class UnifiedGameServer {
         }
 
         // NORMAL CREATE PATH
+        // SECURITY: Validate premium status server-side (don't trust client)
+        let validatedPremiumTier = 'free';
+        if (data.sessionToken) {
+          try {
+            validatedPremiumTier = await gameBuddiesService.validatePremiumStatus(data.sessionToken);
+            console.log(`💎 [PREMIUM] Validated tier: ${validatedPremiumTier} (client claimed: ${data.premiumTier})`);
+          } catch (err) {
+            console.warn(`[PREMIUM] Validation failed, defaulting to free:`, err);
+          }
+        }
+
         const player: Player = this.createPlayer(
           socket.id,
           nameValidation.sanitizedValue!,
-          data.premiumTier,
+          validatedPremiumTier,
           resolvedPlayerId
         );
         player.isHost = true;
@@ -596,7 +607,7 @@ class UnifiedGameServer {
           room.gameBuddiesData = {
             ...(room.gameBuddiesData || {}),
             sessionToken: data.sessionToken,
-            premiumTier: data.premiumTier,
+            premiumTier: validatedPremiumTier, // Use validated tier, not client-provided
           };
         }
 
@@ -844,6 +855,17 @@ class UnifiedGameServer {
           return;
         }
 
+        // SECURITY: Validate premium status server-side (don't trust client)
+        let validatedPremiumTier = 'free';
+        if (data.sessionToken) {
+          try {
+            validatedPremiumTier = await gameBuddiesService.validatePremiumStatus(data.sessionToken);
+            console.log(`💎 [PREMIUM] room:join validated tier: ${validatedPremiumTier} (client claimed: ${data.premiumTier})`);
+          } catch (err) {
+            console.warn(`[PREMIUM] room:join validation failed, defaulting to free:`, err);
+          }
+        }
+
         // Check if reconnecting with session token
         let player: Player;
         let sessionToken: string;
@@ -914,7 +936,7 @@ class UnifiedGameServer {
               
               // Use the ID from the session/data if available
               const playerId = session.playerId || data.playerId || randomUUID();
-              player = this.createPlayer(socket.id, nameValidation.sanitizedValue!, data.premiumTier, playerId);
+              player = this.createPlayer(socket.id, nameValidation.sanitizedValue!, validatedPremiumTier, playerId);
               player.isGuest = !(data.playerId || data.userId || session.playerId);
               player.userId = data.userId || data.playerId || session.playerId || player.userId;
               player.avatarUrl = data.avatarUrl;
@@ -931,7 +953,7 @@ class UnifiedGameServer {
             player = this.createPlayer(
               socket.id,
               nameValidation.sanitizedValue!,
-              data.premiumTier,
+              validatedPremiumTier,
               data.playerId || session?.playerId
             );
             player.isGuest = !(data.playerId || data.userId || session?.playerId);
@@ -940,15 +962,12 @@ class UnifiedGameServer {
             sessionToken = this.sessionManager.createSession(player.id, room.code);
           }
         } else {
-          // New player
-          // SECURITY: Validate premium for new players
-          let newPlayerTier = data.premiumTier || 'free';
-          // (Skip API validation for now to avoid async delay, trust client for initial join, server validates later)
-          
+          // New player (no session token)
+          // Note: validatedPremiumTier remains 'free' since no sessionToken to validate
           player = this.createPlayer(
             socket.id,
             nameValidation.sanitizedValue!,
-            newPlayerTier,
+            validatedPremiumTier,
             data.playerId
           );
           player.isGuest = !(data.playerId || data.userId);
@@ -1289,6 +1308,13 @@ class UnifiedGameServer {
         }
 
         const returnAll = data.mode === 'group';
+
+        // Security: Only host can return all players
+        if (returnAll && !player.isHost) {
+          console.warn(`[GameBuddies] ⛔ Non-host ${player.name} tried to return all players`);
+          socket.emit('error', { message: 'Only the host can return all players' });
+          return;
+        }
 
         console.log(`[GameBuddies] ${player.name} requesting ${returnAll ? 'group' : 'individual'} return for room ${data.roomCode}`);
 

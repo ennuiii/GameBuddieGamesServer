@@ -1,4 +1,5 @@
 import Joi from 'joi';
+import crypto from 'crypto';
 import type { ValidationResult } from '../types/core.js';
 
 /**
@@ -156,12 +157,14 @@ export class ValidationService {
   /**
    * Generate random room code
    * Format: 6 uppercase alphanumeric characters
+   * Security: Uses crypto.randomBytes for unpredictable room codes
    */
   generateRoomCode(): string {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Excluding ambiguous chars
+    const randomBytes = crypto.randomBytes(6);
     let code = '';
     for (let i = 0; i < 6; i++) {
-      code += chars.charAt(Math.floor(Math.random() * chars.length));
+      code += chars.charAt(randomBytes[i] % chars.length);
     }
     return code;
   }
