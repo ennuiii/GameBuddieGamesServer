@@ -4,6 +4,7 @@
     "module": "ESNext",
     "lib": ["ES2022"],
     "moduleResolution": "node",
+    "useDefineForClassFields": false,
     "rootDir": ".",
     "outDir": "./dist",
     "esModuleInterop": true,
@@ -16,7 +17,9 @@
     "declarationMap": true,
     "sourceMap": true,
     "allowJs": true,
-    "checkJs": false
+    "checkJs": false,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
   },
   "include": ["core/**/*", "games/**/*"],
   "exclude": ["node_modules", "dist"]

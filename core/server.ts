@@ -36,6 +36,11 @@ import gameTemplatePlugin from '../games/game-template/plugin.js';
 import primeSuspectPlugin from '../games/hearts-gambit/plugin.js';
 import bombermanPlugin from '../games/bomberman/plugin.js';
 import canvasChaosPlugin from '../games/canvas-chaos/plugin.js';
+import hubPlugin from '../games/hub/plugin.js';
+
+// Colyseus (for Hub 2D world)
+import { ColyseusServer } from './colyseus/ColyseusServer.js';
+import { HubRoom } from '../games/hub/index.js';
 
 /**
  * Global error handlers to prevent server crashes
@@ -72,6 +77,9 @@ class UnifiedGameServer {
   // Configuration
   private port: number;
   private corsOrigins: string[];
+
+  // Colyseus server (for Hub 2D world)
+  private colyseusServer: ColyseusServer | null = null;
 
   // ⚡ OPTIMIZATION: Broadcast throttling per room
   // Limits broadcasts to 10/second per room to prevent event loop saturation
@@ -200,6 +208,7 @@ class UnifiedGameServer {
       'http://localhost:3002',
       'http://localhost:5173',
       'http://localhost:5199', // Bomberman
+      'http://localhost:5200', // Hub
       'https://gamebuddies.io',
       'https://gamebuddies-io.onrender.com',
     ];
@@ -1689,6 +1698,14 @@ class UnifiedGameServer {
       console.error('[Server] ✗ Failed to register Canvas Chaos game');
     }
 
+    // Register Hub (virtual world lobby)
+    const hubRegistered = await this.registerGame(hubPlugin);
+    if (hubRegistered) {
+      console.log('[Server] ✓ Hub game registered');
+    } else {
+      console.error('[Server] ✗ Failed to register Hub game');
+    }
+
     // TODO: Load games dynamically from games/ directory
     // For now, games will be imported and registered manually
 
@@ -1916,12 +1933,16 @@ class UnifiedGameServer {
     this.setupRootHandlers(); // <--- Call the new method
     await this.loadGamePlugins();
 
+    // Initialize Colyseus server for Hub 2D world
+    await this.initializeColyseus();
+
     this.httpServer.listen(this.port, () => {
       console.log('');
       console.log('🎮 ================================');
       console.log('🎮  Unified Game Server Started');
       console.log('🎮 ================================');
-      console.log(`🎮  Port: ${this.port}`);
+      console.log(`🎮  Socket.IO Port: ${this.port}`);
+      console.log(`🎮  Colyseus Port: ${this.colyseusServer?.getPort() || 'N/A'}`);
       console.log(`🎮  Environment: ${process.env.NODE_ENV || 'development'}`);
       console.log(`🎮  Games Loaded: ${this.gameRegistry.getGameIds().length}`);
       console.log('🎮 ================================');
@@ -1954,10 +1975,34 @@ class UnifiedGameServer {
   }
 
   /**
+   * Initialize Colyseus server for Hub 2D world
+   */
+  private async initializeColyseus(): Promise<void> {
+    console.log('[Server] Initializing Colyseus server...');
+
+    this.colyseusServer = new ColyseusServer({
+      corsOrigins: this.corsOrigins,
+    });
+
+    // Define Hub room with filterBy to allow joining by roomCode
+    this.colyseusServer.define('hub', HubRoom, ['roomCode']);
+
+    // Start Colyseus on its port
+    await this.colyseusServer.listen();
+
+    console.log('[Server] ✓ Colyseus server initialized (Hub room ready)');
+  }
+
+  /**
    * Graceful shutdown
    */
   async shutdown(): Promise<void> {
     console.log('[Server] Shutting down gracefully...');
+
+    // Shutdown Colyseus first
+    if (this.colyseusServer) {
+      await this.colyseusServer.shutdown();
+    }
 
     // Cleanup managers
     await this.gameRegistry.destroy();
