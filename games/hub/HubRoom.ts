@@ -1,4 +1,4 @@
-import { Room, Client } from '@colyseus/core';
+import { Room, Client } from 'colyseus';
 import { Player, HubState, ChatMessage, Conversation } from './schema/HubState.js';
 import { Message } from './Message.js';
 
