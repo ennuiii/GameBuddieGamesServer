@@ -108,8 +108,12 @@ export class HubRoom extends Room<HubState> {
 
     // START_CONVERSATION - Player A initiates conversation with Player B
     this.onMessage(Message.START_CONVERSATION, (client, message: { targetSessionId: string }) => {
+      console.log(`[Hub] START_CONVERSATION received from ${client.sessionId} for target ${message.targetSessionId}`);
+
       const initiator = this.state.players.get(client.sessionId);
       const target = this.state.players.get(message.targetSessionId);
+
+      console.log(`[Hub] Initiator found: ${!!initiator}, Target found: ${!!target}`);
 
       if (!initiator || !target) {
         console.log(`[Hub] START_CONVERSATION failed: player not found`);
@@ -118,11 +122,11 @@ export class HubRoom extends Room<HubState> {
 
       // Check neither player is already in a conversation
       if (initiator.conversationId) {
-        console.log(`[Hub] START_CONVERSATION failed: initiator already in conversation`);
+        console.log(`[Hub] START_CONVERSATION failed: initiator already in conversation ${initiator.conversationId}`);
         return;
       }
       if (target.conversationId) {
-        console.log(`[Hub] START_CONVERSATION failed: target already in conversation`);
+        console.log(`[Hub] START_CONVERSATION failed: target already in conversation ${target.conversationId}`);
         return;
       }
 
@@ -140,6 +144,8 @@ export class HubRoom extends Room<HubState> {
       target.conversationId = conversationId;
 
       console.log(`[Hub] Conversation ${conversationId} started between ${client.sessionId} and ${message.targetSessionId}`);
+      console.log(`[Hub] Initiator conversationId now: ${initiator.conversationId}`);
+      console.log(`[Hub] Target conversationId now: ${target.conversationId}`);
 
       // Notify both players
       this.notifyConversationUpdate(conversationId);
@@ -147,24 +153,43 @@ export class HubRoom extends Room<HubState> {
 
     // LEAVE_CONVERSATION - Player leaves their current conversation
     this.onMessage(Message.LEAVE_CONVERSATION, (client) => {
+      console.log(`[Hub] LEAVE_CONVERSATION received from ${client.sessionId}`);
+
       const player = this.state.players.get(client.sessionId);
-      if (!player || !player.conversationId) return;
+      if (!player) {
+        console.log(`[Hub] LEAVE_CONVERSATION failed: player not found`);
+        return;
+      }
+      if (!player.conversationId) {
+        console.log(`[Hub] LEAVE_CONVERSATION failed: player not in conversation`);
+        return;
+      }
 
       const conversationId = player.conversationId;
+      console.log(`[Hub] Player ${client.sessionId} leaving conversation ${conversationId}`);
+
       const conversation = this.state.conversations.get(conversationId);
-      if (!conversation) return;
+      if (!conversation) {
+        console.log(`[Hub] LEAVE_CONVERSATION: conversation not found, clearing player's conversationId anyway`);
+        player.conversationId = '';
+        return;
+      }
 
       // Clear player's conversation
+      console.log(`[Hub] Clearing conversationId for ${client.sessionId}`);
       player.conversationId = '';
 
       // Get remaining participants
       const remaining = this.getConversationParticipants(conversationId);
+      console.log(`[Hub] Remaining participants after ${client.sessionId} left:`, remaining);
 
       if (remaining.length <= 1) {
         // Only 1 or 0 players left - delete conversation
+        console.log(`[Hub] Only ${remaining.length} participant(s) left, deleting conversation`);
         if (remaining.length === 1) {
           const lastPlayer = this.state.players.get(remaining[0]);
           if (lastPlayer) {
+            console.log(`[Hub] Clearing conversationId for last player ${remaining[0]}`);
             lastPlayer.conversationId = '';
             // Notify last player they're no longer in conversation
             const lastClient = this.clients.find((c) => c.sessionId === remaining[0]);
@@ -179,7 +204,7 @@ export class HubRoom extends Room<HubState> {
           }
         }
         this.state.conversations.delete(conversationId);
-        console.log(`[Hub] Conversation ${conversationId} deleted (no participants)`);
+        console.log(`[Hub] Conversation ${conversationId} deleted`);
       } else {
         // Transfer host if needed
         if (conversation.hostId === client.sessionId) {
@@ -271,6 +296,37 @@ export class HubRoom extends Room<HubState> {
       console.log(`[Hub] Conversation ${message.conversationId} locked: ${message.locked}`);
       this.notifyConversationUpdate(message.conversationId);
     });
+
+    // GAME_INVITE - Player invites nearby players to play a game
+    this.onMessage(
+      Message.GAME_INVITE,
+      (client, message: {
+        gameType: string;
+        gameName: string;
+        hubRoomCode: string;
+        targetPlayers: string[];
+        inviterName: string;
+      }) => {
+        const { gameType, gameName, hubRoomCode, targetPlayers, inviterName } = message;
+
+        console.log(`[Hub] GAME_INVITE from ${client.sessionId} for ${gameName} to ${targetPlayers.length} players`);
+
+        // Send invite to each target player
+        targetPlayers.forEach((targetSessionId) => {
+          const targetClient = this.clients.find((c) => c.sessionId === targetSessionId);
+          if (targetClient) {
+            targetClient.send(Message.GAME_INVITE, {
+              gameType,
+              gameName,
+              hubRoomCode,
+              inviterName,
+              inviterSessionId: client.sessionId,
+            });
+            console.log(`[Hub] Game invite sent to ${targetSessionId} for ${gameName}`);
+          }
+        });
+      }
+    );
 
     console.log(`[Hub] Room "${this.roomCode}" created (Colyseus ID: ${this.roomId})`);
   }

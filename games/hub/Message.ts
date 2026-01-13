@@ -17,4 +17,6 @@ export enum Message {
   CONVERSATION_UPDATED = 10, // Conversation state changed
   JOIN_REQUESTED = 11,       // Someone wants to join (sent to host)
   JOIN_DENIED = 12,          // Join request was denied (sent to requester)
+  // Game invites
+  GAME_INVITE = 20,          // Invite nearby players to play a game
 }
