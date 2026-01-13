@@ -92,6 +92,7 @@ export class HubRoom extends Room<HubState> {
 
       const chatMessage = new ChatMessage();
       chatMessage.author = player.name || client.sessionId;
+      chatMessage.authorId = client.sessionId; // For correct bubble placement
       chatMessage.content = message.content.substring(0, 500); // Limit message length
       chatMessage.createdAt = Date.now();
 

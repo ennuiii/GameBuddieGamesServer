@@ -40,12 +40,14 @@ defineTypes(Player, {
  */
 export class ChatMessage extends Schema {
   author: string;
+  authorId: string; // sessionId of sender for correct bubble placement
   createdAt: number;
   content: string;
 
   constructor() {
     super();
     this.author = '';
+    this.authorId = '';
     this.createdAt = Date.now();
     this.content = '';
   }
@@ -53,6 +55,7 @@ export class ChatMessage extends Schema {
 
 defineTypes(ChatMessage, {
   author: 'string',
+  authorId: 'string',
   createdAt: 'number',
   content: 'string',
 });
