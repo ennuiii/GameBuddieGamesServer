@@ -195,7 +195,8 @@ export class RoomManager {
     }
 
     // Check if room has started (depending on game phase)
-    if (room.gameState.phase !== 'lobby' && room.gameState.phase !== 'waiting') {
+    // Skip this check if allowLateJoin is enabled (e.g., Hub virtual world)
+    if (!room.settings.allowLateJoin && room.gameState.phase !== 'lobby' && room.gameState.phase !== 'waiting') {
       console.warn(`[RoomManager] Cannot add player: Room ${roomCode} already started`);
       return false;
     }

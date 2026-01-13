@@ -15,6 +15,7 @@ export class Player extends Schema {
   y: number;
   anim: string;
   conversationId: string; // Empty = not in conversation, non-empty = ID of conversation
+  socketId: string; // Socket.IO socket ID - needed for WebRTC signaling mapping
 
   constructor() {
     super();
@@ -23,6 +24,7 @@ export class Player extends Schema {
     this.y = 300;
     this.anim = 'idle_down';
     this.conversationId = '';
+    this.socketId = '';
   }
 }
 
@@ -33,6 +35,7 @@ defineTypes(Player, {
   y: 'number',
   anim: 'string',
   conversationId: 'string',
+  socketId: 'string',
 });
 
 /**

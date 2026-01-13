@@ -1,4 +1,4 @@
-import { Room, Client } from 'colyseus';
+import { Room, Client } from '@colyseus/core';
 import { Player, HubState, ChatMessage, Conversation } from './schema/HubState.js';
 import { Message } from './Message.js';
 
@@ -7,6 +7,7 @@ const MAX_CONVERSATION_SIZE = 6; // P2P mesh limit
 export interface HubRoomOptions {
   roomCode?: string;
   playerName?: string;
+  socketId?: string; // Socket.IO socket ID for WebRTC mapping
 }
 
 /**
@@ -332,15 +333,16 @@ export class HubRoom extends Room<HubState> {
   }
 
   onJoin(client: Client, options: HubRoomOptions) {
-    console.log(`[Hub] Player ${client.sessionId} joined room ${this.roomCode}`);
+    console.log(`[Hub] Player ${client.sessionId} joined room ${this.roomCode} (socketId: ${options.socketId})`);
 
     const player = new Player();
     player.name = options.playerName || '';
     player.x = 400 + Math.random() * 100 - 50; // Spawn near center with slight randomness
     player.y = 300 + Math.random() * 100 - 50;
     player.anim = 'idle_down';
+    player.socketId = options.socketId || ''; // Store Socket.IO socket ID for WebRTC mapping
 
-    console.log(`[Hub] Creating player:`, { name: player.name, x: player.x, y: player.y, anim: player.anim });
+    console.log(`[Hub] Creating player:`, { name: player.name, x: player.x, y: player.y, anim: player.anim, socketId: player.socketId });
     console.log(`[Hub] State players before set:`, this.state.players.size);
 
     this.state.players.set(client.sessionId, player);

@@ -37,6 +37,7 @@ import primeSuspectPlugin from '../games/hearts-gambit/plugin.js';
 import bombermanPlugin from '../games/bomberman/plugin.js';
 import canvasChaosPlugin from '../games/canvas-chaos/plugin.js';
 import hubPlugin from '../games/hub/plugin.js';
+import jackpotCrusadersPlugin from '../games/jackpot-crusaders/plugin.js';
 
 // Colyseus (for Hub 2D world)
 import { ColyseusServer } from './colyseus/ColyseusServer.js';
@@ -1704,6 +1705,14 @@ class UnifiedGameServer {
       console.log('[Server] ✓ Hub game registered');
     } else {
       console.error('[Server] ✗ Failed to register Hub game');
+    }
+
+    // Register Jackpot Crusaders game
+    const jackpotCrusadersRegistered = await this.registerGame(jackpotCrusadersPlugin);
+    if (jackpotCrusadersRegistered) {
+      console.log('[Server] ✓ Jackpot Crusaders game registered');
+    } else {
+      console.error('[Server] ✗ Failed to register Jackpot Crusaders game');
     }
 
     // TODO: Load games dynamically from games/ directory

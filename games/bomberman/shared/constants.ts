@@ -85,6 +85,9 @@ export const TILE = {
   POWERUP_PIERCE: 9,   // Pierce bomb - explosion goes through soft blocks
   POWERUP_BOMBPASS: 10, // Walk through bombs
   SKULL: 11,           // Curse item - random negative effect
+  // PvE mode tiles
+  EXIT: 12,            // Exit to next room/floor
+  FIRE_HAZARD: 13,     // Arena hazard from boss
 } as const;
 
 // Game phases
@@ -99,6 +102,7 @@ export const GAME_PHASE = {
 export const GAME_MODE = {
   LAST_MAN_STANDING: 0,
   DEATHMATCH: 1,
+  DUNGEON: 2,  // PvE co-op dungeon mode
 } as const;
 
 // Direction enum for movement

@@ -1,4 +1,5 @@
 import { GamePhase, Direction, CurseType } from './shared/constants.js';
+import type { BomberClassId, RuneId, PlayerProfile, MatchRewards } from './shared/progression.js';
 
 // ============================================
 // Game State Types
@@ -10,6 +11,13 @@ export interface FallingBlock {
   fallTime: number;
 }
 
+export interface Team {
+  id: string;
+  name: string;
+  color: string;
+  playerIds: string[];
+}
+
 export interface BombermanGameState {
   phase: GamePhase;
   tiles: number[];
@@ -18,6 +26,7 @@ export interface BombermanGameState {
   countdown: number;
   timeRemaining: number;
   gameMode: number;
+  gameModeString: 'classic' | 'teams' | 'dungeon'; // Human-readable game mode
   winnerId: string | null;
   usedSpawnIndices: Set<number>;
   bombIdCounter: number;
@@ -27,6 +36,8 @@ export interface BombermanGameState {
   lastBlockFallTime: number;
   fallingBlockIndex: number;
   fallingBlocks: FallingBlock[];
+  // Teams mode
+  teams: Team[];
 }
 
 // ============================================
@@ -58,6 +69,29 @@ export interface BombermanPlayerData {
   curseType: CurseType | null;
   curseEndTime: number;
   originalSpeed: number; // To restore after curse ends
+
+  // === ROGUELITE PROGRESSION ===
+  // Bomber class
+  bomberClass: BomberClassId;
+
+  // Ultimate ability
+  ultimateCharge: number;       // Current charge (0 to required)
+  ultimateActive: boolean;      // Is ultimate currently active
+  ultimateEndTime: number;      // When ultimate effect ends
+
+  // Rune effects (runtime state)
+  equippedRunes: RuneId[];
+  runeState: {
+    curseImmunityUsed: boolean;   // Iron Boots: first curse blocked
+    ghostWalkUsesLeft: number;    // Ghost Walk: remaining phases
+    hasRevivedOnce: boolean;      // Second Wind: used auto-revive
+    explosionImmunityUntil: number; // Fire Walker: immunity timer
+    momentumKills: number;        // Momentum: kills this match for speed bonus
+    extraLivesRemaining: number;  // Tank passive: extra hits
+  };
+
+  // Souls (Necromancer)
+  soulsCollected: number;
 }
 
 // ============================================
@@ -124,6 +158,15 @@ export interface SerializedPlayer {
   hasBombPass: boolean;
   curseType: number | null;
   curseEndTime: number;
+
+  // Roguelite progression
+  bomberClass: BomberClassId;
+  ultimateCharge: number;
+  ultimateActive: boolean;
+  ultimateEndTime: number;
+  equippedRunes: RuneId[];
+  soulsCollected: number;
+  extraLivesRemaining: number;
 }
 
 export interface SerializedBomb {
@@ -194,7 +237,13 @@ export interface SetModePayload {
 // Default Factory Functions
 // ============================================
 
-export function createDefaultPlayerData(spawnIndex: number, spawn: { x: number; y: number }, color: number): BombermanPlayerData {
+export function createDefaultPlayerData(
+  spawnIndex: number,
+  spawn: { x: number; y: number },
+  color: number,
+  bomberClass: BomberClassId = 'classic',
+  equippedRunes: RuneId[] = []
+): BombermanPlayerData {
   return {
     gridX: spawn.x,
     gridY: spawn.y,
@@ -219,6 +268,22 @@ export function createDefaultPlayerData(spawnIndex: number, spawn: { x: number; 
     curseType: null,
     curseEndTime: 0,
     originalSpeed: 150,
+
+    // Roguelite progression
+    bomberClass,
+    ultimateCharge: 0,
+    ultimateActive: false,
+    ultimateEndTime: 0,
+    equippedRunes,
+    runeState: {
+      curseImmunityUsed: false,
+      ghostWalkUsesLeft: 0,
+      hasRevivedOnce: false,
+      explosionImmunityUntil: 0,
+      momentumKills: 0,
+      extraLivesRemaining: 0,
+    },
+    soulsCollected: 0,
   };
 }
 
@@ -231,6 +296,7 @@ export function createDefaultGameState(): BombermanGameState {
     countdown: 0,
     timeRemaining: 0,
     gameMode: 0,
+    gameModeString: 'classic',
     winnerId: null,
     usedSpawnIndices: new Set(),
     bombIdCounter: 0,
@@ -240,5 +306,7 @@ export function createDefaultGameState(): BombermanGameState {
     lastBlockFallTime: 0,
     fallingBlockIndex: 0,
     fallingBlocks: [],
+    // Teams
+    teams: [],
   };
 }

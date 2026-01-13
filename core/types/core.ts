@@ -65,6 +65,7 @@ export interface RoomSettings {
   minPlayers: number;
   maxPlayers: number;
   language?: 'en' | 'de'; // Language for question content filtering
+  allowLateJoin?: boolean; // If true, players can join even after game has started (e.g., Hub)
   gameSpecific?: any; // Game-specific settings
 }
 

@@ -41,6 +41,7 @@ class HubPlugin implements GamePlugin {
   defaultSettings: RoomSettings = {
     minPlayers: 1,
     maxPlayers: 50,
+    allowLateJoin: true, // Hub is a virtual world - players can join anytime
     gameSpecific: {}
   };
 

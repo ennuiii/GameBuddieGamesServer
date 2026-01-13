@@ -32,6 +32,9 @@ import { BombManager } from './game/BombManager.js';
 import { PlayerManager, MoveResult } from './game/PlayerManager.js';
 import { CurseManager } from './game/CurseManager.js';
 import { SuddenDeathManager } from './game/SuddenDeathManager.js';
+import { ProgressionManager } from './game/ProgressionManager.js';
+import type { BomberClassId, RuneId, PlayerProfile, MatchRewards } from './shared/progression.js';
+import { BOMBER_CLASS } from './shared/progression.js';
 
 class BombermanPlugin implements GamePlugin {
   // Plugin metadata
@@ -56,6 +59,10 @@ class BombermanPlugin implements GamePlugin {
   private io: any;
   private gameLoops = new Map<string, GameLoop>();
   private respawnTimers = new Map<string, NodeJS.Timeout>();
+  // Progression: player loadouts (stored per room:player)
+  private playerLoadouts = new Map<string, { bomberClass: BomberClassId; runes: RuneId[] }>();
+  // Match rewards to send at game end
+  private pendingRewards = new Map<string, Map<string, MatchRewards>>();
 
   // ============================================================================
   // LIFECYCLE HOOKS
@@ -218,6 +225,14 @@ class BombermanPlugin implements GamePlugin {
         hasBombPass: data?.hasBombPass ?? false,
         curseType: data?.curseType ?? null,
         curseEndTime: data?.curseEndTime ?? 0,
+        // Roguelite progression
+        bomberClass: data?.bomberClass ?? BOMBER_CLASS.CLASSIC,
+        ultimateCharge: data?.ultimateCharge ?? 0,
+        ultimateActive: data?.ultimateActive ?? false,
+        ultimateEndTime: data?.ultimateEndTime ?? 0,
+        equippedRunes: data?.equippedRunes ?? [],
+        soulsCollected: data?.soulsCollected ?? 0,
+        extraLivesRemaining: data?.runeState?.extraLivesRemaining ?? 0,
       };
     });
 
@@ -259,6 +274,11 @@ class BombermanPlugin implements GamePlugin {
       mySocketId: socketId,
       players,
       state: gameState.phase,
+      settings: {
+        minPlayers: room.settings?.minPlayers || GAME_CONFIG.MIN_PLAYERS,
+        maxPlayers: room.settings?.maxPlayers || GAME_CONFIG.MAX_PLAYERS,
+        gameMode: gameState.gameModeString || 'classic',
+      },
       gameData: {
         tiles: gameState.tiles,
         bombs,
@@ -274,6 +294,8 @@ class BombermanPlugin implements GamePlugin {
           y: fb.y,
           fallTime: fb.fallTime,
         })),
+        // Teams
+        teams: gameState.teams || [],
       },
     };
   }
@@ -393,7 +415,7 @@ class BombermanPlugin implements GamePlugin {
     },
 
     /**
-     * Set game mode (host only)
+     * Set game mode (host only) - Legacy numeric mode
      */
     'game:setMode': async (socket: Socket, data: { mode: number }, room: Room) => {
       const player = Array.from(room.players.values()).find(p => p.socketId === socket.id);
@@ -403,6 +425,127 @@ class BombermanPlugin implements GamePlugin {
       if (gameState.phase !== 'lobby') return;
 
       gameState.gameMode = data.mode;
+      this.broadcastRoomState(room);
+    },
+
+    /**
+     * Update game settings (host only) - Handles string game modes
+     */
+    'settings:update': async (socket: Socket, data: { settings: { gameMode?: 'classic' | 'teams' | 'dungeon' } }, room: Room) => {
+      const player = Array.from(room.players.values()).find(p => p.socketId === socket.id);
+      if (!player?.isHost) {
+        socket.emit('error', { message: 'Only host can update settings' });
+        return;
+      }
+
+      const gameState = room.gameState.data as BombermanGameState;
+      if (gameState.phase !== 'lobby') {
+        socket.emit('error', { message: 'Can only update settings in lobby' });
+        return;
+      }
+
+      const newSettings = data.settings;
+
+      // Handle game mode change
+      if (newSettings.gameMode !== undefined && newSettings.gameMode !== gameState.gameModeString) {
+        gameState.gameModeString = newSettings.gameMode;
+
+        // Map string mode to numeric mode
+        switch (newSettings.gameMode) {
+          case 'classic':
+            gameState.gameMode = GAME_MODE.LAST_MAN_STANDING;
+            gameState.teams = [];
+            break;
+          case 'teams':
+            gameState.gameMode = GAME_MODE.LAST_MAN_STANDING; // Teams use same win condition
+            // Initialize teams
+            gameState.teams = [
+              { id: 'red', name: 'Team Red', color: '#ff4444', playerIds: [] },
+              { id: 'blue', name: 'Team Blue', color: '#4444ff', playerIds: [] },
+            ];
+            // Auto-assign all players to teams
+            room.players.forEach(p => {
+              this.autoAssignToTeam(room, p);
+            });
+            console.log(`[${this.name}] Teams mode enabled, ${room.players.size} players assigned`);
+            break;
+          case 'dungeon':
+            gameState.gameMode = GAME_MODE.DUNGEON;
+            gameState.teams = [];
+            console.log(`[${this.name}] Dungeon mode enabled`);
+            break;
+        }
+      }
+
+      console.log(`[${this.name}] Settings updated by ${player.name}: gameMode=${newSettings.gameMode}`);
+      this.broadcastRoomState(room);
+    },
+
+    /**
+     * Shuffle teams (host only)
+     */
+    'game:shuffle-teams': async (socket: Socket, data: any, room: Room) => {
+      const player = Array.from(room.players.values()).find(p => p.socketId === socket.id);
+      if (!player?.isHost) {
+        socket.emit('error', { message: 'Only host can shuffle teams' });
+        return;
+      }
+
+      const gameState = room.gameState.data as BombermanGameState;
+      if (gameState.gameModeString !== 'teams' || gameState.teams.length === 0) {
+        return;
+      }
+
+      // Clear all team assignments
+      gameState.teams.forEach(team => {
+        team.playerIds = [];
+      });
+
+      // Shuffle players and reassign
+      const shuffledPlayers = Array.from(room.players.values()).sort(() => Math.random() - 0.5);
+      shuffledPlayers.forEach(p => {
+        this.autoAssignToTeam(room, p);
+      });
+
+      console.log(`[${this.name}] Teams shuffled by ${player.name}`);
+      this.broadcastRoomState(room);
+    },
+
+    /**
+     * Switch team (player request)
+     */
+    'game:switch-team': async (socket: Socket, data: { teamId: string }, room: Room) => {
+      const player = Array.from(room.players.values()).find(p => p.socketId === socket.id);
+      if (!player) return;
+
+      const gameState = room.gameState.data as BombermanGameState;
+      if (gameState.gameModeString !== 'teams' || gameState.teams.length === 0) {
+        return;
+      }
+
+      const targetTeam = gameState.teams.find(t => t.id === data.teamId);
+      if (!targetTeam) return;
+
+      // Check balance - don't allow if it would create imbalance > 1
+      const currentTeam = gameState.teams.find(t => t.playerIds.includes(player.socketId));
+      if (currentTeam && currentTeam.id !== targetTeam.id) {
+        const newTargetSize = targetTeam.playerIds.length + 1;
+        const newCurrentSize = currentTeam.playerIds.length - 1;
+        if (newTargetSize - newCurrentSize > 1) {
+          socket.emit('error', { message: 'Cannot switch - would create team imbalance' });
+          return;
+        }
+
+        // Remove from current team
+        currentTeam.playerIds = currentTeam.playerIds.filter(id => id !== player.socketId);
+      }
+
+      // Add to target team (if not already on it)
+      if (!targetTeam.playerIds.includes(player.socketId)) {
+        targetTeam.playerIds.push(player.socketId);
+      }
+
+      console.log(`[${this.name}] ${player.name} switched to ${targetTeam.name}`);
       this.broadcastRoomState(room);
     },
 
@@ -417,6 +560,85 @@ class BombermanPlugin implements GamePlugin {
       }
 
       this.resetGame(room);
+    },
+
+    // ============================================================================
+    // PROGRESSION HANDLERS
+    // ============================================================================
+
+    /**
+     * Sync player profile from client
+     */
+    'profile:sync': async (socket: Socket, data: { profile: Partial<PlayerProfile> }, room: Room) => {
+      const player = Array.from(room.players.values()).find(p => p.socketId === socket.id);
+      if (!player) return;
+
+      // Sync profile with server cache
+      const profile = ProgressionManager.syncProfile(player.id, data.profile);
+
+      // Send back validated profile
+      socket.emit('profile:synced', { profile: ProgressionManager.serializeProfile(profile) });
+    },
+
+    /**
+     * Set loadout (bomber class + runes)
+     */
+    'loadout:set': async (socket: Socket, data: { bomberClass: BomberClassId; runes: RuneId[] }, room: Room) => {
+      const gameState = room.gameState.data as BombermanGameState;
+      if (gameState.phase !== 'lobby') {
+        socket.emit('error', { message: 'Can only change loadout in lobby' });
+        return;
+      }
+
+      const player = Array.from(room.players.values()).find(p => p.socketId === socket.id);
+      if (!player) return;
+
+      // Get player profile and validate loadout
+      const profile = ProgressionManager.getProfile(player.id);
+      const validated = ProgressionManager.validateLoadout(profile, data.bomberClass, data.runes);
+
+      // Store loadout for when game starts
+      const loadoutKey = `${room.code}:${player.id}`;
+      this.playerLoadouts.set(loadoutKey, validated);
+
+      // Send back validated loadout
+      socket.emit('loadout:validated', validated);
+
+      console.log(`[${this.name}] Player ${player.name} set loadout: ${validated.bomberClass}, runes: ${validated.runes.join(', ')}`);
+    },
+
+    /**
+     * Get profile (for initial load)
+     */
+    'profile:get': async (socket: Socket, data: any, room: Room) => {
+      const player = Array.from(room.players.values()).find(p => p.socketId === socket.id);
+      if (!player) return;
+
+      const profile = ProgressionManager.getProfile(player.id);
+      socket.emit('profile:data', { profile: ProgressionManager.serializeProfile(profile) });
+    },
+
+    /**
+     * Activate ultimate ability
+     */
+    'player:ultimate': async (socket: Socket, data: any, room: Room) => {
+      const gameState = room.gameState.data as BombermanGameState;
+      if (gameState.phase !== 'playing') return;
+
+      const player = Array.from(room.players.values()).find(p => p.socketId === socket.id);
+      if (!player) return;
+
+      const playerData = player.gameData as BombermanPlayerData;
+      if (!playerData.alive) return;
+
+      // Try to activate ultimate
+      const activated = ProgressionManager.activateUltimate(playerData, gameState);
+
+      if (activated) {
+        // Handle instant ultimates
+        this.handleUltimateActivation(room, player, playerData);
+        this.broadcastRoomState(room);
+      }
     },
   };
 
@@ -526,6 +748,30 @@ class BombermanPlugin implements GamePlugin {
   }
 
   // ============================================================================
+  // TEAM HELPERS
+  // ============================================================================
+
+  /**
+   * Auto-assign a player to the team with fewer players
+   */
+  private autoAssignToTeam(room: Room, player: Player): void {
+    const gameState = room.gameState.data as BombermanGameState;
+    if (gameState.teams.length === 0) return;
+
+    // Find team with fewest players
+    const sortedTeams = [...gameState.teams].sort((a, b) => a.playerIds.length - b.playerIds.length);
+    const targetTeam = sortedTeams[0];
+
+    // Remove from any existing team
+    gameState.teams.forEach(team => {
+      team.playerIds = team.playerIds.filter(id => id !== player.socketId);
+    });
+
+    // Add to target team
+    targetTeam.playerIds.push(player.socketId);
+  }
+
+  // ============================================================================
   // GAME LOGIC
   // ============================================================================
 
@@ -535,14 +781,60 @@ class BombermanPlugin implements GamePlugin {
     gameState.countdown = GAME_CONFIG.COUNTDOWN_TIME;
     gameState.phase = 'countdown';
 
+    // Apply player loadouts (class + runes)
+    room.players.forEach((player) => {
+      const loadoutKey = `${room.code}:${player.id}`;
+      const loadout = this.playerLoadouts.get(loadoutKey) || {
+        bomberClass: BOMBER_CLASS.CLASSIC as BomberClassId,
+        runes: [] as RuneId[],
+      };
+
+      const playerData = player.gameData as BombermanPlayerData;
+      if (playerData) {
+        // Set bomber class and runes
+        playerData.bomberClass = loadout.bomberClass;
+        playerData.equippedRunes = loadout.runes;
+
+        // Apply class passive
+        ProgressionManager.applyClassPassive(playerData, loadout.bomberClass);
+
+        // Apply rune starting effects
+        ProgressionManager.applyRuneEffects(playerData, loadout.runes);
+
+        console.log(`[${this.name}] Applied loadout to ${player.name}: ${loadout.bomberClass}, runes: ${loadout.runes.join(', ')}`);
+      }
+    });
+
     console.log(`[${this.name}] Countdown started in room ${room.code}!`);
     this.broadcastRoomState(room);
   }
 
   private handlePlayerKill(room: Room, player: Player, killerId: string): void {
     const gameState = room.gameState.data as BombermanGameState;
+    const playerData = player.gameData as BombermanPlayerData;
 
+    // Check if player is saved by Tank passive or Second Wind rune
+    const actuallyDied = ProgressionManager.handleDeath(playerData, room);
+
+    if (!actuallyDied) {
+      // Player was saved! Broadcast the survival
+      this.broadcastRoomState(room);
+      return;
+    }
+
+    // Player actually died
     PlayerManager.killPlayer(player, killerId, room, gameState);
+
+    // Credit the killer with ultimate charge and souls
+    if (killerId && killerId !== player.id) {
+      const killer = room.players.get(killerId);
+      if (killer) {
+        const killerData = killer.gameData as BombermanPlayerData;
+        if (killerData) {
+          ProgressionManager.handleKill(killerData, playerData);
+        }
+      }
+    }
 
     // Handle based on game mode
     if (gameState.gameMode === GAME_MODE.DEATHMATCH) {
@@ -571,6 +863,25 @@ class BombermanPlugin implements GamePlugin {
 
     const winner = room.players.get(winnerId);
     console.log(`[${this.name}] Game ended in room ${room.code}! Winner: ${winner?.name || 'None'}`);
+
+    // Process match rewards for all players
+    const rewards = ProgressionManager.processMatchEnd(room, gameState);
+    this.pendingRewards.set(room.code, rewards);
+
+    // Send rewards to each player
+    const namespace = this.io?.of(this.namespace);
+    if (namespace) {
+      room.players.forEach((player) => {
+        const playerRewards = rewards.get(player.id);
+        if (playerRewards) {
+          namespace.to(player.socketId).emit('match:rewards', {
+            rewards: playerRewards,
+            profile: ProgressionManager.serializeProfile(ProgressionManager.getProfile(player.id)),
+          });
+          console.log(`[${this.name}] Sent rewards to ${player.name}: +${playerRewards.xpGained} XP, +${playerRewards.fameGained} Fame`);
+        }
+      });
+    }
 
     this.broadcastRoomState(room);
 
@@ -606,6 +917,61 @@ class BombermanPlugin implements GamePlugin {
 
     console.log(`[${this.name}] Game reset in room ${room.code}!`);
     this.broadcastRoomState(room);
+  }
+
+  // ============================================================================
+  // ULTIMATE ABILITIES
+  // ============================================================================
+
+  private handleUltimateActivation(room: Room, player: Player, playerData: BombermanPlayerData): void {
+    const gameState = room.gameState.data as BombermanGameState;
+
+    switch (playerData.bomberClass) {
+      case BOMBER_CLASS.CLASSIC:
+        // Mega Bomb: Next bomb has 3x range
+        // This is handled in BombManager when placing bomb
+        break;
+
+      case BOMBER_CLASS.SPEEDSTER:
+        // Time Warp: Freeze all bomb timers for 3 seconds
+        // Duration-based ultimate - bombs won't tick down while active
+        // This is handled in the update loop
+        break;
+
+      case BOMBER_CLASS.TANK:
+        // Shield Dome: Block all explosions for 4 seconds
+        // Duration-based ultimate - handled in explosion damage check
+        break;
+
+      case BOMBER_CLASS.PYROMANIAC:
+        // Inferno: All player's bombs on field detonate instantly
+        const playerBombs: string[] = [];
+        gameState.bombs.forEach((bomb, id) => {
+          if (bomb.ownerId === player.id) {
+            playerBombs.push(id);
+          }
+        });
+        // Trigger all bombs
+        for (const bombId of playerBombs) {
+          const bomb = gameState.bombs.get(bombId);
+          if (bomb) {
+            bomb.timer = 0; // Force immediate detonation
+          }
+        }
+        break;
+
+      case BOMBER_CLASS.TRICKSTER:
+        // Decoy Bombs: Place 3 fake bombs nearby
+        // TODO: Implement decoy bomb placement
+        break;
+
+      case BOMBER_CLASS.NECROMANCER:
+        // Revive: This is handled when player dies and has enough souls
+        // For now, just mark as used
+        break;
+    }
+
+    console.log(`[${this.name}] ${player.name} activated ultimate: ${playerData.bomberClass}`);
   }
 
   // ============================================================================
