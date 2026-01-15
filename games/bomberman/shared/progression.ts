@@ -468,7 +468,7 @@ export function isRuneUnlocked(runeId: RuneId, playerLevel: number): boolean {
 
   // Original logic:
   // const rune = RUNES[runeId];
-  return rune ? playerLevel >= rune.unlockLevel : false;
+  // return rune ? playerLevel >= rune.unlockLevel : false;
 }
 
 // ============================================================================

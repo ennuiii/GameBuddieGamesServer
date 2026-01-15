@@ -5,7 +5,7 @@
  * Future: Integrate with GameBuddies platform API for cloud persistence.
  */
 
-import type { Room, Player } from '../../../../core/types/core.js';
+import type { Room, Player } from '../../../core/types/core.js';
 import type { BombermanPlayerData, BombermanGameState } from '../types.js';
 import {
   type BomberClassId,
@@ -286,7 +286,7 @@ export class ProgressionManager {
     gameState: BombermanGameState
   ): Map<string, MatchRewards> {
     const results = new Map<string, MatchRewards>();
-    const players = Array.from(room.players.values());
+    const players: Player[] = Array.from(room.players.values());
 
     // Calculate placements
     const placements = this.calculatePlacements(players, gameState);

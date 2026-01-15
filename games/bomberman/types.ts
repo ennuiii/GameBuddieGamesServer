@@ -210,6 +210,14 @@ export interface SerializedGameData {
   // Sudden Death
   suddenDeathActive: boolean;
   fallingBlocks: SerializedFallingBlock[];
+  // Teams mode
+  teams: Team[];
+}
+
+export interface SerializedRoomSettings {
+  minPlayers: number;
+  maxPlayers: number;
+  gameMode: string;
 }
 
 export interface SerializedRoom {
@@ -218,6 +226,7 @@ export interface SerializedRoom {
   mySocketId: string;
   players: SerializedPlayer[];
   state: GamePhase;
+  settings: SerializedRoomSettings;
   gameData: SerializedGameData;
 }
 
