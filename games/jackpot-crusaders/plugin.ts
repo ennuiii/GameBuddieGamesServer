@@ -14,7 +14,7 @@ import type {
   SocketEventHandler,
   GameHelpers,
   RoomSettings
-} from '../../core/types/core';
+} from '../../core/types/core.js';
 import type { Socket } from 'socket.io';
 import type {
   JackpotGameState,
@@ -26,14 +26,14 @@ import type {
   SpinEffect,
   BattleLogEntry,
   GamePhase
-} from './types';
+} from './types.js';
 import {
   DEFAULT_SETTINGS,
   BOSSES,
   SHOP_ITEMS_BY_TIER,
   GOLD_REWARDS,
   TIMING
-} from './constants';
+} from './constants.js';
 import {
   createSlotMachine,
   processPlayerSpin,
@@ -41,7 +41,7 @@ import {
   removeSymbol,
   removeAllOfType,
   upgradeAllSymbols
-} from './SlotMachine';
+} from './SlotMachine.js';
 
 // ============================================================================
 // PLUGIN CLASS

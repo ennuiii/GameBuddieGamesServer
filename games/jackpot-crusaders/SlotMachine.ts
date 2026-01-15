@@ -12,8 +12,8 @@ import type {
   SpinResult,
   SpinEffect,
   JackpotPlayerData
-} from './types';
-import { SYMBOL_EFFECTS, STARTING_SYMBOLS } from './constants';
+} from './types.js';
+import { SYMBOL_EFFECTS, STARTING_SYMBOLS } from './constants.js';
 
 // ============================================================================
 // SLOT MACHINE CREATION

@@ -12,7 +12,7 @@ import type {
   ShopItem,
   SpinEffect,
   JackpotGameSettings
-} from './types';
+} from './types.js';
 
 // ============================================================================
 // DEFAULT SETTINGS
